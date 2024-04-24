@@ -2,7 +2,7 @@
 title: "2019 Pandalus Prey"
 author: "Krista Kenyon"
 date: "`r Sys.Date()`"
-output: html_document
+output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
@@ -13,11 +13,19 @@ knitr::opts_chunk$set(echo = TRUE)
 
 This version is testing and learning how to ensure my local documents are updated to GitHub folloing a tutorial!
 
-My *first* version controlled project in RStudio.
+I will now be modifying this report, staging and commiting changes and then pushing to GitHub.
 
-Below is a test plot:
+Let's create a test plot of distance (miles) and speed (mph)
 
 ```{r, test-plot}
-plot(cars)
+plot(cars, col = "red", xlab = "speed (mph)", ylab = "distance(miles)")
+```
+
+A summary of the data frame is given below
+
+```{r, cars-summary}
+library(knitr)
+kable(summary(cars))
+
 ```
 
