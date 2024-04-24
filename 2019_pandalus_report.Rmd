@@ -1,0 +1,23 @@
+---
+title: "2019 Pandalus Prey"
+author: "Krista Kenyon"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Setting Up Document Structure
+
+This version is testing and learning how to ensure my local documents are updated to GitHub folloing a tutorial!
+
+My *first* version controlled project in RStudio.
+
+Below is a test plot:
+
+```{r, test-plot}
+plot(cars)
+```
+
