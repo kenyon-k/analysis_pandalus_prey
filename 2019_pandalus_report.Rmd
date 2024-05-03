@@ -2,30 +2,364 @@
 title: "2019 Pandalus Prey"
 author: "Krista Kenyon"
 date: "`r Sys.Date()`"
-output: pdf_document
+output:
+  bookdown::word_document2:
+    global_numbering: true
+    fig_caption: true
+  
 ---
 
+<!---
+Comments for the YAML header above (I can't place this comment above it)
+
+If I want to customize settings of a component (e.g. output), place a ':' at the end.
+  I couldn't realize why, say 'toc: true' kept producing errors despite being spaced
+  appropriately. It turned out, I did not include the ':' after word_document2:
+
+bookdown::word_document2 = produce a word document AND allow me to cross reference
+  figures, tables, and headings.They are only hyperlinked in pdf and html outputs (not word)
+
+NOT NEEDED WITH BOOKDOWN -> number_sections: true = automatically numbering the sections.
+
+global_numbering: true -> word and html outputs label Figures as Fig 1, 2, etc and sections as 1.0, 1.1 etc. This automatically happens with pdf outputs but not the other two.
+
+** At end add in -> 'toc: true'. This adds a  table of contents at the beginning of the document
+
+fig_caption: true = render figures with captions
+
+One user also used 'bibliography' (main function like 'output') to insert which 
+  files he had his citations stored. He included 2 files and could reference them.
+  (didn't show how). https://www.youtube.com/watch?v=YlcK9Ef31KE
+
+?rmarkdown::word_document= = shows me all the formatting options 
+
+***** I would LOVE to learn how to direct where the output documents are saved.
+  I know there are ways.... I just can't find them right now
+  
+***** For formating pdf text size, fonts, line spacing or insert line numbers etc look at https://www.youtube.com/watch?v=kC6JFcM5e9M
+--->
+
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE) 
+
+# Below are the packages needed for this markdown document
+       # The 'include=FALSE' parameter means this r chunk won't be shown in the report
+
+# library(ggplot2) 
+# library(tidyverse)
+
+
+### Notes on cross-referencing figures and tables ###
+
+# In the YAML Header, the 'bookdown::word_document2' parameter gives the ability to cross-reference
+# I can reference in text using Figure \@ref(fig:label). It hyperlinks it in pdf but not word. It also gives different Figure number in pdf and word. So there are still things to figure out.
+  # to cross reference the figure needs a unique code-chunk name, and have a figure caption
+
+# Code chunk names should be one word or separated with '-', not with spaces, '_', or '.'
+  #{r code-chunk}
+# I can create figure captions by including 'fig.cap=' in the {r code-chunk, fig.cap=caption text}.
+
+  # If text \@ref(fig:label) is included in notes in the R markdown portion, there will be an error that occurs when Knitting. Therefore included here.
 ```
 
-### Setting Up Document Structure
+<!--
+This will form the template for the annual reports presenting the raw fish stomach content species data.
+-->
 
-This version is testing and learning how to ensure my local documents are updated to GitHub folloing a tutorial!
+<!--
+General formatting notes unique to Rmarkdown.
 
-I will now be modifying this report, staging and commiting changes and then pushing to GitHub.
+- If you want text to be on separate lines, you NEED to include 2 spaces at the end of the proceeding line.
 
-Let's create a test plot of distance (miles) and speed (mph)
+- There needs to be a line in between text and a list in order for the formatting to create the list. This does create a space between them in the output as well. I have not looked up if there is a way to adjust the output spacing.
+-->
 
-```{r, test-plot}
-plot(cars, col = "red", xlab = "speed (mph)", ylab = "distance(miles)")
+**The following are the pre-amble pages that will need to be included at some point.**
+
+- Document Title Page  <!--- look here https://www.youtube.com/watch?v=kC6JFcM5e9M --->
+- Canadian Data Report of Fisheries and Aquatic Sciences (smaller heading)  
+- Report Title Page  
+- Page of Ownership and How to Cite Report  
+- Table of Contents  
+- List of Tables  
+- List of Figures   
+
+One way to create the Table of Contents is the 'settings function' to the right of 'Knit' -> Output Options -> check Include TOC. This will need to be formatted though to fit the style of the DFO documents.  
+
+<!--- \newpage creates a page break --->
+\newpage
+
+
+# Abstract
+
+# Introduction
+
+This section will include Figure 1
+<!--
+Figure 1: jpeg of different fishing zones
+-->
+
+
+# Methods
+
+This section will include Figure 2 
+<!--
+Figure 2: jpeg of the different stomach sampling locations. Looks like made in ArcGIS
+-->
+
+This section will include Table 1
+<!--
+Table 1: # of stomach sampling locations in each zone per depth stratum.
+
+Data that I will need include sample location depths in each stratum.
+-->
+
+
+## Collection of Stomach Samples
+
+## Stomach Content Analysis
+
+## Data Analysis
+
+# Results
+
+```{r import_data, include=FALSE}
+
+### THIS IS ASSUMING THAT DATASET IS ALREADY SUBSETTED FOR YEAR, PREDATOR SPECIES, AND SURVEY AREA ###
+
+### import data
+stomach <- read.csv('data/raw/2013_test_stomach_data.csv') 
+  # assumes header=TRUE and knows it's separated by commas
+
+
+### Adding count of stomachs sampled per fish. Some figures will need this data
+
+stomach$count.stomach <- 1 
+  # add new column 'count.stomach' to give a numerical value for the number of stomachs sampled from each fish. Will be necessary when creating plots.
+
+
+### Adding a column with predatory 'category' names (i.e. skate, redfish, Greenland halibut, Atlantic cod) based on species code (column pred.sp)
+
+stomach$pred.name = stomach$pred.sp  
+  # creates new column that is duplicate of pred.sp, and renames to pred. name
+library(dplyr)
+
+stomach <- stomach %>% 
+  mutate(pred.name=recode(pred.name, "438"="Atlantic cod", "892"="Greenland halibut", "793" ="redfish","794"="redfish", "90"="skate"))  
+  # replaces species codes with predatory categories. 
+  # currently the above code only includes the species codes for 2013
+
+### Possible species codes for predator species categories
+  ## Greenland halibut = 892
+  ## Atlantic cod = 438
+  ## Redfish = 792, 793, 794, 997, 998
+  ## Skates = 80, 88, 89, 90, 91, 92, 94, 95, 96, 97
+  ## See 'Predator Codes and Names.txt' file in 'Scripts' folder for list of species names attached to each code
+
+
+### Checking our modifications to the dataframe
+
+which(is.na(stomach))
+  # checking if there are blank values or NA's in the dataframe
+
+str(stomach) 
+  # checking new dataframe structure to ensure all updates are good
+
+### str(stomach) return 
+# Show in New Window
+# 'data.frame':	2300 obs. of  18 variables:
+#  $ content.key  : chr  "72138002_892_1_1_-171_212" "72138002_892_1_1_-171_212" "72138002_892_1_1_-171_212" "72138002_892_1_1_-171_212" ...
+#  $ prey.sp      : int  9998 9998 9998 9998 4770 4770 4770 4770 9998 9998 ...
+#  $ weight       : num  0 0 0 0 0.0015 0.0015 0.0015 0.0015 0 0 ...
+#  $ count        : int  0 0 0 0 1 1 1 1 0 0 ...
+#  $ pred.sp      : int  892 892 892 892 892 892 892 892 892 892 ...
+#  $ length       : int  40 40 40 40 45 45 45 45 52 52 ...
+#  $ year         : int  2013 2013 2013 2013 2013 2013 2013 2013 2013 2013 ...
+#  $ start.depth  : int  823 823 823 823 823 823 823 823 823 823 ...
+#  $ end.depth    : int  829 829 829 829 829 829 829 829 829 829 ...
+#  $ lat.deg      : int  64 64 64 64 64 64 64 64 64 64 ...
+#  $ lat.min      : num  27.9 27.9 27.9 27.9 27.9 ...
+#  $ long.deg     : int  57 57 57 57 57 57 57 57 57 57 ...
+#  $ long.min     : num  59.8 59.8 59.8 59.8 59.8 ...
+#  $ sa.code      : chr  "2G" "RISA" "SFA2EX" "SFA3" ...
+#  $ sort.key     : int  10 7 6 8 10 7 6 8 10 7 ...
+#  $ trawl.id     : int  72138002 72138002 72138002 72138002 72138002 72138002 72138002 72138002 72138002 72138002 ...
+#  $ count.stomach: num  1 1 1 1 1 1 1 1 1 1 ...
+#  $ pred.name    : chr  "Greenland halibut" "Greenland halibut" "Greenland halibut" "Greenland halibut" 
 ```
 
-A summary of the data frame is given below
 
-```{r, cars-summary}
-library(knitr)
-kable(summary(cars))
+## Predator Distribution by Assessment Area, Length, and Depth
+
+This section will include Figure 3. 
+
+It will contain cool text that will reference Figure \@ref(fig:pie-chart)
+<!--
+Figure 3: pie chart showing proportion of fish species caught
+
+Data I will need is simply # of fish caught per species
+-->
+
+```{r pie-chart, echo=FALSE, fig.cap="*Proportion of Atlantic Cod (*Gadus morhua*), Greenland Halibut (*Reinhardtius hippoglossides*), redfish (*Sebastes sp.*), and skate (*Rajidae*) stomachs analyzed, calculated as a percent total.*"}
+
+
+### Creating new dataframe detailing total sum of stomachs sampled per predatory category
+
+predsp.total <- aggregate(stomach$count.stomach, list(stomach$pred.name), sum)
+  ## aggregate sum of number of predator stomachs sampled
+
+# predsp.total  #    !!!! Make it a 'comment' before knitting !!!! otherwise table enters output
+  # checking dataframe. 
+
+### Renaming the columns in the new dataframe
+names(predsp.total)[names(predsp.total)=="Group.1"] <- "pred.name"
+names(predsp.total)[names(predsp.total)=="x"] <- "sum.count.stomach"
+# names(predsp.total)  #  !!!! Make it a 'comment' before knitting !!!! 
+
+## I tried the below code to rename with 'dyplr' package but it wasn't working
+# predsp.total %>% 
+#   rename(
+#     pred.name = Group.1, 
+#     sum.count.stomach = x
+#     )
+# str(predsp.total)
+
+#str(predsp.total)    #  !!!! Make it a 'comment' before knitting !!!!
+  ## saving dataframe structure
+# 'data.frame':	4 obs. of  2 variables:
+#  $ pred.name        : chr  "Atlantic cod" "Greenland halibut" "redfish" "skate"
+#  $ sum.count.stomach: num  20 1340 900 40
+
+
+### Creating the Pie Chart
+
+pie(predsp.total$sum.count.stomach, labels=predsp.total$pred.name)
+
+
+### Formatting the Pie Chart ######################## STILL NEED TO DO ###################3
+
+# This will be completed once I have the 2019 data.
+
 
 ```
 
+
+This section will include Figure 4 
+<!--
+Figure 4: bar chart of fish caught per region.
+
+Data I will need is # fish caught per species per region
+-->
+
+This section will include Figure 5  
+
+<!--
+Figure 5: 4-paneled bar chart of number of stomach's sampled from different fish caught at each depth stratum. Each panel shows different fish species. 
+
+Data I will need is # fish caught per depth stratum per species
+-->
+
+## Proportion of Full vs. Empty Stomachs
+
+This section will include Table 2
+<!--
+Table 2: Table showing total fish with full and empty stomachs for each fish class size for each fish species
+
+Data I will need includes length (cm) of caught fish, if stomach was full or empty, for each fish species.
+-->
+
+## Composition of Prey Items
+
+### Composition of Prey Items by %W
+
+### Composition of Prey Items by %N
+
+This section will include Table 3  
+
+<!--
+Table 3: Table showing percent weight and percent number of each prey species taxa within the Atlantic cod stomachs. 
+
+Data I will need includes weight and number of prey species within Atlantic cod stomachs
+-->
+
+This section will include Table 4  
+
+<!--
+Table 4: Table showing percent weight and percent number of each prey species taxa within the Greenland Halibut stomachs. 
+
+Data I will need includes weight and number of prey species within Atlantic cod stomachs
+-->
+
+This section will include Table 5
+
+<!--
+Table 5: Table showing percent weight and percent number of each prey species taxa within the redfish stomachs. 
+
+Data I will need includes weight and number of prey species within redfish stomachs
+-->
+
+This section will include Table 6  
+
+<!--
+Table 6: Table showing percent weight and percent number of each prey species taxa within the skates stomachs. 
+
+Data I will need includes weight and number of prey species within skates stomachs
+-->
+
+## Pandalus as Prey
+
+### Relative Proportion of Pandalid Prey by Predatory Species
+
+This section will include Figure 6
+
+<!--
+Figure 6: 2-paneled bar chart of percent weight and percent number of different shrimp species within the stomachs of the four fish species.  
+
+Data I will need is weight and number of shrimp in each target fish species
+-->
+
+### Relative Proportion of Pandalid Prey by Survey Area and Depth
+
+This section will include Figure 7
+
+<!--
+Figure 7: 2-paneled bar chart of percent weight and percent number of pandalus shrimp species (combined) within all stomachs by the different depth stratum by fishing area  
+
+Data I will need is weight and number of pandalus shrimp, depth stratum fish was caught, and fishing region that fish were caught
+-->
+
+### Relative Proportion of Pandalid Prey by Size Class for Atlantic Cod (*Gadus morhua*) 
+
+This section will include Figure 8
+
+<!--
+Figure 8: 2-paneled bar chart of percent weight and percent number different shrimp species within Atlantic cod 
+
+Data I will need is weight and number of shrimp species in Atlantic cod stomachs. 
+-->
+
+### Relative Proportion of Pandalid Prey by Size Class for Greenland Halibut (*Reinhardtius hippoglossides*)
+
+This section will include Figure 9
+
+<!--
+Figure 9: 2-paneled bar chart of percent weight and percent number different shrimp species within Greenland halibut 
+
+Data I will need is weight and number of shrimp species in Greenland halibut stomachs. 
+-->
+
+### Relative Proportion of Pandalid Prey by Size Class for Redfishes (*Sebastes sp.*)
+
+### Relative Proportion of Pandalid Prey by Size Class for Skates (*Rajidae*)
+
+This section will include Figure 10
+
+<!--
+Figure 10: 2-paneled bar chart of percent weight and percent number different shrimp species within skate
+
+Data I will need is weight and number of shrimp species in skate stomachs. 
+-->
+
+# Acknowledgements
+
+# References
