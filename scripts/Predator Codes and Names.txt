@@ -1,0 +1,24 @@
+Predator Fish Codes and Names as Found in the Access Database
+
+Atlantic Cod and Greenland Halibut
+	• 438 = Atlantic cod
+	• 892 = Greenland halibut
+	
+Redfishes
+	• 792 = redfish, Sebastes sp.
+	• 793 = golden (marinus) redfish, sebastes marinus
+	• 794 = deep water redfish, sebastes mentella
+	• 997 = small deepwater redfish, sebastes mentella
+	• 998 = large deepwater redfish, Sebastes mentella
+	
+Skates
+	• 80 = skates and rays, rajiformes (hypotremata)
+	• 88 = skate, Rajidae
+	• 89 = skate, Raja sp.
+	• 90 = thorny skate, Raja radiata
+	• 91 = smooth skate, Raja senta
+	• 92 = Anyssal skate, Raja bathyphila
+	• 94 = deepwater skate, Raja fyllae
+	• 95 = arctic skate, Raja hyperborea
+	• 96 = Jensen's skate, Raja jenseni
+	• 97 = barn door skate, Raja Laevis
