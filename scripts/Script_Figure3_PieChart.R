@@ -41,10 +41,12 @@
     # If I still need labels, the last formatting will need to be done anyway with 
         # the correct data set.
 
+# Choose colour-blindness friendly colour scheme
+
 ################################################################################
 ####################### Library's to Load ######################################
 ################################################################################
-# library(ggplot2) 
+# library(ggplot2)
 # library(tidyverse)
 # library(dplyr)
 # library(ggrepel)
@@ -55,8 +57,9 @@
 
 # This code chunk:
     # imports the data
-    # manipulates the data it to create the base dataframe that will be used throughout the document
-    # checks the dataframe structure
+    # manipulates the data it to create the base prey dataframe
+    # manipulates the data it to create the base predator dataframe
+    # checks & saves the dataframe structures
 
 # The data imported must be structured consistently in order to utilize this coding.
 
@@ -67,7 +70,7 @@
 
 # It is assumed that the imported data will initially have a structure consistent to the example saved immediately below. Particularly the variable names and variable data type (e.g. chr, int, num)
 
-### Example dataset structure 
+### Example initial imported dataset structure 
 
 # 'data.frame':	2300 obs. of  16 variables:
 #  $ content.key: chr  "72138002_892_1_1_-171_212" "72138002_892_1_1_-171_212" "72138002_892_1_1_-171_212" "72138002_892_1_1_-171_212" ...
@@ -93,54 +96,62 @@
 
 ### import data
 
-stomach <- read.csv('data/raw/2013_test_stomach_data.csv') 
-# assumes header=TRUE and knows it's separated by commas
+prey <- read.csv('data/raw/2019_StomachContent_test.csv') 
+    # assumes header=TRUE and knows it's separated by commas
 
-# str(stomach)
-# check initial data structure. Does it match example?
-
-
-################### Transforming Data into Base Dataframe ######################
-
-# Additional data variables will be needed in the base dataframe for future figures tables including:
-# column containing count of stomachs sampled per fish. 
-# column with predator 'category' names
-# Categories: Atlantic cod, Greenland halibut, Redfish, Skate
+# str(prey)
+    # check initial data structure. Does it match example?
 
 
-### Adding number stomach sampled per fish
+########################## Creating Base Prey Dataframe ########################
 
-stomach$stomach.count <- 1 
+# 'prey' dataframe: each row is a new prey item per sampled stomachs
+
+# Dataframe transformations:
+    # add column with shrimp fishing regions (EAZ, WAZ, SFA4)
+    # add column with predator 'category' names (Atlantic code, Greenland halibut, Redfish, Skate)
+
+# Finish with checking and storing dataframe structure
+
+
+
+### Adding 'region' category (WAZ, EAZ, SFA4) 
+
+prey$region = prey$Study.Area  
+    # creates new column that is duplicate of sa.code, and renames to pred. name
+
+prey <- prey %>% 
+  mutate(region=recode(region, "RISA"="EAZ", "SFA2EX"="EAZ", "SFA3" ="WAZ","2G"="SFA4"))
+    # renaming values in the prey$region column
+
 
 
 ### Adding predator category
 
-stomach$pred.name = stomach$pred.sp  
-# creates new column that is duplicate of pred.sp, and renames to pred. name
+prey$pred.name = prey$OS_ID  
+    # creates new column that is duplicate of pred.sp, and renames to pred. name
+
+prey <- prey %>%
+  mutate(pred.name=recode(pred.name, "892" = "Greenland halibut",
+                          "438" = "Atlantic cod",
+                          "792" = "Redfish", "793" = "Redfish", "794" = "Redfish",
+                          "997" = "Redfish", "998" = "Redfish",
+                          "80" = "Skate", "88" = "Skate", "89" = "Skate",
+                          "90" = "Skate", "91" = "Skate", "92" = "Skate",
+                          "94" = "Skate", "95" = "Skate", "96" = "Skate",
+                          "97" = "Skate"))
+    # replaces species codes with predatory categories in new column. 
+    # See 'Predator Codes and Names.txt' file in 'Scripts' folder for list of species names attached to each code
 
 
-stomach <- stomach %>% 
-  mutate(pred.name=recode(pred.name, "438"="Atlantic cod", "892"="Greenland halibut", "793" ="Redfish","794"="Redfish", "90"="Skate"))  
-# replaces species codes with predatory categories in new column. 
-# currently the above code only includes the species codes for 2013
 
+### Checking our Base Prey Dataframe Modifications
 
-### Possible species codes for predator species categories
-# Greenland halibut = 892
-# Atlantic cod = 438
-# Redfish = 792, 793, 794, 997, 998
-# Skates = 80, 88, 89, 90, 91, 92, 94, 95, 96, 97
+which(is.na(prey))
+    # checking if there are blank values or NA's in the dataframe
 
-# See 'Predator Codes and Names.txt' file in 'Scripts' folder for list of species names attached to each code
-
-
-################### Checking our Base Dataframe Modifications ##################
-
-which(is.na(stomach))
-# checking if there are blank values or NA's in the dataframe
-
-str(stomach) 
-# checking new dataframe structure to ensure all updates are good
+str(prey) 
+    # checking new dataframe structure to ensure all updates are good
 
 
 ### Saving Structure of Base Dataframe
@@ -165,6 +176,81 @@ str(stomach)
 #  $ count.stomach: num  1 1 1 1 1 1 1 1 1 1 ...
 #  $ pred.name    : chr  "Greenland halibut" "Greenland halibut" "Greenland halibut" "Greenland halibut" 
 
+
+
+###################### Creating Base Predator Dataframe ########################
+
+# 'pred' dataframe: each row is a new fish that's stomach was sampled 
+
+# Dataframe transformations:
+    # check number of fish sampled
+    # duplicate prey dataframe
+    # remove duplicate fish-id values (from multiple prey found within stomachs)
+    # confirm number of sampled fish retained is correct
+    # add column for number of stomachs sampled
+
+# Finish with checking and storing dataframe structure
+
+
+
+### checking how many unique fish were sampled
+
+length(unique(prey$FishKey))
+    # 2019 data: 644 observations
+
+
+### duplicating base prey dataframe
+
+pred <- prey
+
+
+### Retain one row per sampled fish
+
+# removing duplicated values for FishKey so that there is one entry per predator
+pred <- pred[!duplicated(pred$FishKey),]
+    # removes duplicates in FishKey
+
+# CHECK NUMBER VARIABLES! Does it match # unique fish sampled above
+str(pred) 
+  # for 2019 data: 644 observations
+
+
+### Adding category for the number of stomachs sampled per fish
+
+pred$sampled.stomach <- 1 
+
+
+### Saving Structure of Base Dataframe
+str(pred)
+
+# 'data.frame':	644 obs. of  22 variables:
+#   $ ContentKey        : chr  "62114003_892_3_1_-14_1733" "62114003_892_3_1_-15_1732" "62114003_892_3_1_-16_1728" "62114003_892_3_1_-17_1729" ...
+# $ Prey_OS_ID        : int  6967 9998 6967 6967 6967 6967 8020 8020 8530 8020 ...
+# $ PreyWt            : num  0.3 NA 0.286 0.091 0.079 ...
+# $ Prey_Count        : int  NA NA NA NA NA NA NA NA NA NA ...
+# $ OS_ID             : int  892 892 892 892 892 892 892 892 892 892 ...
+# $ Length            : num  24.5 20 20 20.5 17 14 37.5 27 33 33.5 ...
+# $ Trawl_ID          : int  62114003 62114003 62114003 62114003 62114003 62114003 62114003 62114003 62114003 62114003 ...
+# $ Year              : int  2019 2019 2019 2019 2019 2019 2019 2019 2019 2019 ...
+# $ Start.Depth       : int  269 269 269 269 269 269 269 269 269 269 ...
+# $ End.Depth         : int  271 271 271 271 271 271 271 271 271 271 ...
+# $ Depth.Range       : chr  "201-300" "201-300" "201-300" "201-300" ...
+# $ Study.Area        : chr  "2G" "2G" "2G" "2G" ...
+# $ Scientific.Name   : chr  "REINHARDTIUS HIPPOGLOSSOIDES" "REINHARDTIUS HIPPOGLOSSOIDES" "REINHARDTIUS HIPPOGLOSSOIDES" "REINHARDTIUS HIPPOGLOSSOIDES" ...
+# $ CommonName        : chr  "GREENLAND HALIBUT, TURBOT" "GREENLAND HALIBUT, TURBOT" "GREENLAND HALIBUT, TURBOT" "GREENLAND HALIBUT, TURBOT" ...
+# $ Start.Lat.Degree  : int  57 57 57 57 57 57 57 57 57 57 ...
+# $ Start.Lat.Minutes : num  45.1 45.1 45.1 45.1 45.1 ...
+# $ Start.Long.Degree : int  60 60 60 60 60 60 60 60 60 60 ...
+# $ Start.Long.Minutes: num  24.2 24.2 24.2 24.2 24.2 ...
+# $ FishKey           : chr  "62114003_892_3_1_-14" "62114003_892_3_1_-15" "62114003_892_3_1_-16" "62114003_892_3_1_-17" ...
+# $ region            : chr  "SFA4" "SFA4" "SFA4" "SFA4" ...
+# $ pred.name         : chr  "Greenland halibut" "Greenland halibut" "Greenland halibut" "Greenland halibut" ...
+# $ sampled.stomach      : num  1 1 1 1 1 1 1 1 1 1 ...
+
+
+
+
+
 ################################################################################
 ############## Chunk B: Creating the Pie Chart Figure ##########################
 ################################################################################
@@ -181,7 +267,9 @@ str(stomach)
 # Those notes include other pie chart packages, functions, and arguments that I learned but did not end up using
 
 
-################### Creating new dataframe for Figure #########################
+
+################### Creating new dataframe for Figure  #########################
+
 
 # This dataframe will detail the total sum of stomachs sampled per predator category
 
@@ -189,9 +277,10 @@ str(stomach)
 
 
 
-### create figure dataframe
 
-pred.total <- aggregate(stomach$stomach.count, list(stomach$pred.name), sum)
+### Create figure dataframe
+
+pred.total <- aggregate(pred$sampled.stomach, list(pred$pred.name), sum)
 
 # pred.total  
 
