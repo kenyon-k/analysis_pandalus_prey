@@ -14,6 +14,7 @@
     # PLOTYL Pie Chart
         # subsection: plotyl example
     # GGPLOT2 Code for Pie Charts
+        # subsection: tutorials
     # Attempted dyplr coding to rename columns
 
 
