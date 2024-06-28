@@ -15,7 +15,8 @@
         # subsection: tutorials
     # GGPLOT2 Code for Paneled Bar Charts
         # subsection: tutorials
-    #  Unused but Interesting ggplot2 arguments
+    # Unused but Interesting ggplot2 arguments
+    # Unused Code for Binning Predator Length
 
 
 ################################################################################
@@ -518,3 +519,152 @@ My_Theme = theme(
 g + My_Theme
 
 g1 + My_Theme
+
+
+################################################################################
+#################################################################################
+#                 Unused Code for Binning Predator Length
+#################################################################################
+################################################################################
+
+
+# I don't like how clunky my current code is and that it's tied to max predator length for annual repeatability.
+    # If future years sample fish outside the current defined length categories, they will appear as NAs on the chart
+
+# With binning the data, I like that it can be tied to predator max length, and that it's a smoother code
+    # There are 2 issues:
+
+# Issue 1 with binning: 
+    # I can't figure out how have the binning say [length < 6] then [length >= 6 & <11] etc.
+    # That is how the OG report presents the data. And I would like it to be consistent.
+    # The binning so far goes to say, 0-5, and then 5-10, and then 5-15. Vs 0-5, 6-10, 11-15.
+
+# Issue 2 with binning:
+    # I figured out how to convert the default binning output (0,6] into the 'range' format 0-6.
+    # However each bin perfectly boarders each other. 
+        #(0,5] , (5,10] (10,15] etc. So converted 0-5, 5-10, 10-15 etc
+    # I would want the ranges to read 0-5, 6-10, 11-15 etc.
+        # I could probably put some code to replace the first number in the series by 'it's number + 1'.
+            # That would be something I would have to test out
+        # But the problem is that those ranges are the data the bins are actually grabbing.
+            # So then I'm mis-labelling the graph or mis-representing the data
+
+# So I would need to solve 'Issue 1' before I look into 'Issue 2'
+
+# Both would need to be solved to create the figure I would want, but Issue 1 is the key problem
+      
+
+### TESTING HOW TO BEST CREATE PREDATOR LENGTH CATEGORY
+
+
+########################### Summary of Test ##################################
+
+pred # main OG file - manual breaks.
+
+testA <- pred # first attempt of binning (breaks of 5)
+testB <- pred # second attempt of binning (breaks to 6, then breaks of 5)
+testC <- pred # third attempt of binning (start at 1, breaks at 5)
+
+
+########################## First Bin Attempt #################################
+
+
+# Source: https://www.statology.org/data-binning-in-r/ 
+
+# Issue: Below results in 0-4.99, then 5 to 9.99 etc. I want 0-5.99, 6-10.99
+
+# create the bins
+testA <- testA %>% 
+  mutate(length.range = cut(Length, breaks=seq(from = 0, 
+                                               to = max(Length) +5, 
+                                               # max(Length) ends bins based on largest Length value. 
+                                               # The '+5' ensures the max value itself is included in the bin
+                                               by = 5)))
+                                               # each bin is 5 units large
+
+# Reformat the bin output (#,#] to range output #-#
+testA$length.range <- gsub(',', '-', testA$length.range)
+    # gsub -> replaces all occurrences of first specified character(s) with the second
+testA$length.range <- gsub('[(]', '', testA$length.range) 
+    # When replacing a bracket (, [, -> the bracket needs to be surrounded by []
+testA$length.range <- gsub('[]]', '', testA$length.range)
+
+
+############################# Second Bin Attempt ##############################
+
+
+# Trying to solve the issue with the First Bin Attempt :
+    # Bin it to 6, and then bin every 5 numbers from there
+    # Hoped that it would split the ranges into:
+        # [length < 6] then [length >= 6 & <11] etc.
+
+# It did not solve the issue
+
+# create the bins
+testB <- testB %>% 
+  mutate(length.range = cut(Length, breaks=seq(from = 0, to = 6, by = 6))) %>%
+  mutate(length.range = cut(Length, breaks=seq(from = 6, to = max(Length)+5, by = 4)))
+
+# reformat the bin output
+testB$length.range <- gsub(',', '-', testB$length.range) 
+testB$length.range <- gsub('[(]', '', testB$length.range) 
+testB$length.range <- gsub('[]]', '', testB$length.range)
+
+# This did not solve the issue. It just bumped the ranges up by 1 value
+
+
+######################### Third Bin Attempt ####################################
+
+
+# Trying to solve the issue with the First Bin Attempt :
+    # Start bins at 1, and then bin every 5 numbers from there
+    # Hoped that it would split the ranges into:
+        # [length < 6] then [length >= 6 & <11] etc.
+
+# It did not solve the issue
+
+# create the bins
+testC <- testC %>% 
+  mutate(length.range = cut(Length, breaks=seq(from = 1, to = max(Length)+5, by = 5)))
+
+# reformat the bin output
+testC$length.range <- gsub(',', '-', testC$length.range) 
+testC$length.range <- gsub('[(]', '', testC$length.range) 
+testC$length.range <- gsub('[]]', '', testC$length.range)
+
+# This did not solve the issue. It just bumped the ranges up by 1 value
+
+
+#################### Comparing the Tests to OG Output ##########################
+
+
+# creating vectors with the number of observations within each number range
+p <- pred %>% count(length.range)
+
+ta <- testA %>% count(length.range)
+
+tb <- testB %>% count(length.range)
+
+tc <- testC %>% count(length.range)
+
+# visually comparing them (I'm sure there's cleaner ways but)
+p
+ta
+tb
+tc
+
+# The results are different between the defined ranges that I want, and my binned coding
+
+######################### Testing new Code in charts ##########################
+
+ggplot(testB, aes(reorder(length.range, Length))) +  
+  
+  geom_bar(aes(fill = depth),
+           position = "stack",
+           stat="count",
+           width = 0.4) +    
+  
+  facet_wrap(~ pred.name, 
+             nrow = 5, 
+             scale = "free_y",
+             axes = "all_x")
