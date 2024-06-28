@@ -6,7 +6,7 @@
 
 # Author: Krista Kenyon (KAK)
 # Date Created: June 17/2024
-# Date Last Modified: June 27/2024 by KAK
+# Date Last Modified: June 28/2024 by KAK
 
 # Document Purpose: Working document for creating the Figure 5 paneled bar charts.
     # Working in code is simpler and faster here than in the R Markdown document
@@ -33,14 +33,17 @@
 ######################### Remaining Tasks ######################################
 ################################################################################
 
-## Step 1: research youtube or web-links that show same graph so that I can learn/confirm necessary data structure
+## Step 1: Select which chart style I will go with
 
+## Step 2: Save base prey and pred dataframe outputs for cleaner code
 
-# create dataset required for figure
-    # NEXT STEP: have the facet wrap be horizontal instead of vertical
+## Step 3: Clean up Document Code
+
+## Step 4: Clean up Draft Script doc
   
-# format figure
-# cleaning up the code
+## Step 5: Decide if I want to mess around with panel boarders right now
+
+## BACKBURNER: Is there a way to clean up my predator length codes
 
 
 ################################################################################
@@ -328,18 +331,16 @@ pred$depth[pred$Start.Depth >= 500 & pred$End.Depth >= 500 &
 colSums(is.na(pred))   
 
 
-### Adding predator length category
-    # !!!!!!    Check length range to see if defined ranges make sense or need adjustments
-    # It's clunky code. I don't like it.
-    # BUT after searching for a while I decided to give in and use it.
-    # GOAL IS TO RETURN TO THIS SECTION TO IMPROVE THE CODE FOR REPEATABILITY
 
+
+
+### Adding predator length range category
 
 ## creating new column filled with NAs (makes QA easier)
- pred$length.range <- NA
-# 
-# # Creating the depth range categories
-pred$length.range[pred$Length < 6] <- "0-5"
+pred$length.range <- NA
+
+# Creating the depth range categories
+pred$length.range[pred$Length < 6] <- "0-5" 
 pred$length.range[pred$Length >= 6 & pred$Length < 11] <- "6-10"
 pred$length.range[pred$Length >= 11 & pred$Length < 16] <- "11-15"
 pred$length.range[pred$Length >= 16 & pred$Length < 21] <- "16-20"
@@ -352,85 +353,45 @@ pred$length.range[pred$Length >= 46 & pred$Length < 51] <- "46-50"
 pred$length.range[pred$Length >= 51 & pred$Length < 56] <- "51-55"
 pred$length.range[pred$Length >= 56 & pred$Length < 61] <- "56-60"
 pred$length.range[pred$Length >= 61 & pred$Length < 66] <- "61-65"
-# pred$length.range[pred$Length >= 66 & pred$Length < 71] <- "66-70"
-# pred$length.range[pred$Length >= 71 & pred$Length < 76] <- "71-75"
-# pred$length.range[pred$Length >= 76 & pred$Length < 81] <- "76-80"
-# pred$length.range[pred$Length >= 81 & pred$Length < 85] <- "81-85"
-# pred$length.range[ pred$Length > 140] <- "140+"
+pred$length.range[pred$Length >= 66 & pred$Length < 71] <- "66-70"
+pred$length.range[pred$Length >= 71 & pred$Length < 76] <- "71-75"
+pred$length.range[pred$Length >= 76 & pred$Length < 81] <- "76-80"
+pred$length.range[pred$Length >= 81 & pred$Length < 85] <- "81-85"
+pred$length.range[pred$Length >= 86 & pred$Length < 91] <- "86-90"
+pred$length.range[pred$Length >= 91 & pred$Length < 96] <- "91-95"
+pred$length.range[pred$Length >= 96 & pred$Length < 101] <- "96-100"
+pred$length.range[pred$Length >= 101 & pred$Length < 106] <- "101-105"
+pred$length.range[pred$Length >= 106 & pred$Length < 111] <- "106-110"
+pred$length.range[pred$Length >= 111 & pred$Length < 116] <- "111-115"
+pred$length.range[pred$Length >= 116 & pred$Length < 121] <- "116-120"
+pred$length.range[pred$Length >= 121 & pred$Length < 126] <- "121-125"
+pred$length.range[pred$Length >= 126 & pred$Length < 131] <- "126-130"
+pred$length.range[pred$Length >= 131 & pred$Length < 136] <- "131-135"
+pred$length.range[pred$Length >= 136 & pred$Length < 141] <- "136-140"
+pred$length.range[pred$Length >= 141 & pred$Length < 146] <- "141-145"
+pred$length.range[pred$Length >= 146 & pred$Length < 151] <- "146-150"
+pred$length.range[pred$Length >= 151 & pred$Length < 156] <- "151-155"
+pred$length.range[pred$Length >= 156 & pred$Length < 161] <- "156-160"
+pred$length.range[pred$Length >= 161 & pred$Length < 166] <- "161-165"
+pred$length.range[pred$Length >= 166 & pred$Length < 171] <- "166-170"
+pred$length.range[pred$Length >= 171 & pred$Length < 176] <- "171-175"
+pred$length.range[pred$Length >= 176 & pred$Length < 181] <- "176-180"
+pred$length.range[pred$Length >= 181 & pred$Length < 185] <- "181-185"
+pred$length.range[pred$Length >= 186 & pred$Length < 191] <- "186-190"
+pred$length.range[pred$Length >= 191 & pred$Length < 196] <- "191-195"
+pred$length.range[pred$Length >= 196 & pred$Length < 201] <- "196-200"
 
-# max value be the highest in the length value
+
+colSums(is.na(pred)) 
 
 
-# for each value in bin
+# I still don't like the above code. It's super clunky. BUT it will give the desired effects.
+# Any values outside of these defined ranges in future years will appear as NA in the charts.
 
-pred <- pred %>% 
-  mutate(length.range = cut(Length, breaks=seq(from = 0, to = max(Length)+5, by = 5)))
-# Defines the bin ranges based on max value. The '+5' ensures the max value itself is included
-# Code inspiration from https://www.statology.org/data-binning-in-r/ 
-pred$length.range <- gsub(',', '-', pred$length.range) 
-pred$length.range <- gsub('[(]', '', pred$length.range) 
-pred$length.range <- gsub('[]]', '', pred$length.range)
+# For my attempts at cleaner binning code, and rational as to why those methods were not used:
+    # See the bottom of scripts/draft code/Draft_Script_Fig5_Stomach-by-Length.R
 
 
-
-colSums(is.na(pred))  
-
-############## Testing new Code 
-library(stringr)
-
-testB$length.range <- gsub(',', '-', testB$length.range) 
-testB$length.range <- gsub('[(]', '', testB$length.range) 
-testB$length.range <- gsub('[]]', '', testB$length.range) 
-
-test <- pred
-
- 
- testB <- test %>% 
-   mutate(length.range = cut(Length, breaks=seq(from = 0, to = max(Length)+5, by = 5)))
-      # Defines the bin ranges based on max value. The '+5' ensures the max value itself is included
-      # Code inspiration from https://www.statology.org/data-binning-in-r/ 
- testB$length.range <- gsub(',', '-', testB$length.range) 
- testB$length.range <- gsub('[(]', '', testB$length.range) 
- testB$length.range <- gsub('[]]', '', testB$length.range)
- 
- testB
-
- testc <- test %>% 
-   mutate(length.range = cut(Length, breaks=seq(from = 0, to = max(Length)+5, by = 5))) %>% 
-   gsub(',', '-', testB$length.range)  %>% test$length.range %>%
-   gsub('[(]', '', testB$length.range) %>% test$length.range
-   gsub('[]]', '', testB$length.range) %>% test$length.range
-   
- 
- #testC <- testB %>%
-testC<-  as.character(testB$length.range)
-str(testC)
-
-%>%
-  str_replace_all("(|]", "", length.range)
-
-testC <- testB %>%
-  gsub("(", "", testB)
- 
- testC
- 
-?gsub
- 
- colSums(is.na(testB)) 
-
- 
- ggplot(testB, aes(reorder(length.range, Length))) +  # orders the X-axis categories based on numerical length of fish
-   # basically makes ggplot see and order the x-axis as numbers vs text
-      
-   geom_bar(aes(fill = depth),
-            position = "stack",
-            stat="count",
-            width = 0.4) +   # changes the width of the bars 
-   
-   facet_wrap(~ pred.name, 
-              nrow = 5, 
-              scale = "free_y",
-              axes = "all_x")
 
 ############### Building and Formatting the Grouped Bar Chart ##################
 
