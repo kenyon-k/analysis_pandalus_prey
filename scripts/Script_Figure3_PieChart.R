@@ -4,6 +4,7 @@
 ################################################################################
 ################################################################################
 
+
 # Author: Krista Kenyon (KAK)
 # Date Created: May 6/2024
 # Date Last Modified: May 8/2024 by KAK
@@ -16,14 +17,13 @@
 
 # Document Sections:
     # Remaining Tasks
-    # Library's to Load
+    # Load Libraries
     # Chunk A: Importing and Prepping the Data
-        # copy of R Markdown Chunk 2: import data
-        # no modifications were made to this chunk
     # Chunk B: Creating the Pie Chart Figure
-        # code transferred into the R Markdown Chunk 3: pie chart
     # Additional Notes
 
+# Chunk A was transferred into the R Markdown Chunk 2: import data
+# Chunk B was transferred into the R Markdown Chunk 3: pie chart
 
 # To see tutorials, key webpages, and key videos I used to create and format the 
     # pie chart, please see the 'Draft_Script_Fig3_PieChart.R' in the 'Draft Code' folder
@@ -38,16 +38,20 @@
 
 
 ################################################################################
-#                             Library's to Load 
+#                             Load Libraries
 ################################################################################
+
+
 library(ggplot2)
 library(tidyverse)
 library(dplyr)
-library(ggrepel)  # formats figure labels so they don't overlap
+library(ggrepel)        # formats figure labels so they don't overlap
+
 
 ################################################################################
 #                     Importing and Prepping the Data 
 ###############################################################################
+
 
 # This code chunk:
     # imports the data
@@ -271,6 +275,7 @@ write.csv(pred, file="data/processed/2019_basePred.csv")
 #                    Chunk B: Creating the Pie Chart Figure 
 ################################################################################
 
+
 # The purpose of this code chunk is to create Figure 3
 
 # The sections of this code chunk are:
@@ -345,7 +350,14 @@ write.csv(pred, file="data/processed/2019_F3_pred.total.csv")
 ################### Building and Formatting the Pie Chart ######################
 
 
+### Load Fig 3 dataframe
+
+#pred.total <- read.csv('data/processed/2019_F3_pred.total.csv')
+
+
+
 ### Creating the pie chart
+
 ggplot(pred.total, aes(x="", y=stomach.total, fill=pred.name)) +
   coord_polar(theta = "y") +                         # basing the circular coordinates on the y value (stomach.total)
   geom_col(color = "white", linewidth = 0.5) +       # creates white line separations between pieces
@@ -370,6 +382,7 @@ ggplot(pred.total, aes(x="", y=stomach.total, fill=pred.name)) +
 ################################################################################
 #                             Additional Notes 
 ################################################################################
+
 
 # Notes on different packages not used, or not yet used, are below.
 

@@ -4,6 +4,7 @@
 ################################################################################
 ################################################################################
 
+
 # Author: Krista Kenyon
 # Date: May 8/2024
 
@@ -23,13 +24,16 @@
 #                        Base Dataframe Coding
 ################################################################################
 
-# (remove duplicates) https://stackoverflow.com/questions/52038660/how-to-subset-your-dataframe-to-only-keep-the-first-duplicate
+# Removing duplicates:
 
+    # https://stackoverflow.com/questions/52038660/how-to-subset-your-dataframe-to-only-keep-the-first-duplicate
+        # QA/QC'd that only duplicates were removed by comparing variable count in R to unique values in excel pivot tables
 
 
 ################################################################################
 #                        PLOTLY Pie Chart
 ################################################################################
+
 
 # the plotyl() package is fabulous and user friendly for creating functional and 
     # elegent pie charts. It naturally contained all the formatting features I wanted
@@ -47,6 +51,7 @@
 
 
 ######################### PLOTLY Pie Chart Example Code ########################
+
 
 # code uses data from 2013 trail shrimp dataframe
 
@@ -71,6 +76,7 @@ test <- plot_ly(predsp.total, labels = ~pred.name, values = ~stomach.sum, type =
 #                        GGPLOT2 Code for Pie Charts
 ################################################################################
 
+
 # ggplot2 is not ideal for pie charts. It is not designed for it.
     # pie charts aren't often used in 'rigorous science' so there aren't many modifications...
 
@@ -78,9 +84,13 @@ test <- plot_ly(predsp.total, labels = ~pred.name, values = ~stomach.sum, type =
     # this makes formatting more interesting and finicky
     # the default arguments are for figures in a standard 'grid' format vs 'circle'
 
+
 ########################## links to helpful sources ############################
 
+
 # My web-browser closed somehow so this isn't a comprehensive list. But should get people started
+
+
 
 ### Helpful tutorials:
 
@@ -108,6 +118,7 @@ test <- plot_ly(predsp.total, labels = ~pred.name, values = ~stomach.sum, type =
         # goes through common issues with pie charts and how to make them anyway
 
 
+
 ### Specific questions:
 
     # (formatting labels for 'count (%)') https://stackoverflow.com/questions/48184645/how-can-i-put-the-labels-outside-of-piechart
@@ -118,6 +129,7 @@ test <- plot_ly(predsp.total, labels = ~pred.name, values = ~stomach.sum, type =
 
 
 ########################## ggplot2 tutorial 1 ##################################
+
 
 # R Charts Adding % to Pie (https://r-charts.com/part-whole/pie-chart-percentages-ggplot2/)
 
@@ -161,6 +173,7 @@ ggplot(df, aes(x = "", y = perc, fill = answer)) +
 
 ########################## ggplot2 tutorial 2 ##################################
 
+
 # page outlining how to convert ggplot2 to pie charts https://r-graph-gallery.com/piechart-ggplot2.html
 
 
@@ -182,7 +195,9 @@ testB <- ggplot(pred, aes(x="", y=prop, fill=pred.name)) +
   scale_fill_brewer(palette = "Set1")
 testB
 
+
 ########################## ggplot2 tutorial 3 ##################################
+
 
 # From StackOverflow (https://stackoverflow.com/questions/48184645/how-can-i-put-the-labels-outside-of-piechart)
 
@@ -192,6 +207,7 @@ testB
 
 # I found a better system to put the labels away from the center of the pie chart (i.e. along x-axis)
     # geom_label(aes(x = #)). The x=# argument adjusts the x-axis placement
+
 
 
 ### Code from the website
@@ -207,6 +223,7 @@ ggplot(df, aes(x = 1, y = Value, fill = Product)) + geom_bar(stat = "identity") 
   coord_polar(theta = 'y') + 
   theme_void() +
   geom_text(aes(label = Label), position = position_stack(vjust = 0.5))
+
 
 
 ### My version or testing of this code
@@ -228,7 +245,9 @@ ggplot(predsp.total, aes(x="", y= stomach.sum, fill = pred.name)) +
   theme_void() +                           # removes default theme (ticks etc)
   theme(legend.title = element_blank())    # In new theme: removes legend title
 
+
 ########################## ggplot2 tutorial 4 ##################################
+
 
 # From Data to Fish group (memorable name): https://datatofish.com/pie-chart-r/
   
@@ -264,6 +283,7 @@ pie_chart +
 ################################################################################
 #                        Attempted dyplr Coding
 ################################################################################
+
 
 ## I tried the below code to rename with 'dyplr' package to rename column headings
     # but it wasn't working
