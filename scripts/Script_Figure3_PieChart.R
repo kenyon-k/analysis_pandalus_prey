@@ -30,29 +30,23 @@
 
 
 ################################################################################
-######################### Remaining Tasks ######################################
+#                              Remaining Tasks 
 ################################################################################
 
-# I have stopped working on the pie chart formatting until I have the 2019 data set
-    # The last issue is connecting the labels to their corresponding pieces while
-        # outside the pie chart. To have this formatting look nice and connect properly
-    # I am hoping the the 2019 data set has bigger slices to where I can just have
-        # the labels be inside the pie pieces (potentially angled)
-    # If I still need labels, the last formatting will need to be done anyway with 
-        # the correct data set.
 
 # Choose colour-blindness friendly colour scheme
 
-################################################################################
-####################### Library's to Load ######################################
-################################################################################
-# library(ggplot2)
-# library(tidyverse)
-# library(dplyr)
-# library(ggrepel)
 
 ################################################################################
-################### Importing and Prepping the Data ########################
+#                             Library's to Load 
+################################################################################
+library(ggplot2)
+library(tidyverse)
+library(dplyr)
+library(ggrepel)  # formats figure labels so they don't overlap
+
+################################################################################
+#                     Importing and Prepping the Data 
 ###############################################################################
 
 # This code chunk:
@@ -68,27 +62,31 @@
 
 ############################ Key Data Structure Assumption #####################
 
+
 # It is assumed that the imported data will initially have a structure consistent to the example saved immediately below. Particularly the variable names and variable data type (e.g. chr, int, num)
 
 ### Example initial imported dataset structure 
 
-# 'data.frame':	2300 obs. of  16 variables:
-#  $ content.key: chr  "72138002_892_1_1_-171_212" "72138002_892_1_1_-171_212" "72138002_892_1_1_-171_212" "72138002_892_1_1_-171_212" ...
-#  $ prey.sp    : int  9998 9998 9998 9998 4770 4770 4770 4770 9998 9998 ...
-#  $ weight     : num  0 0 0 0 0.0015 0.0015 0.0015 0.0015 0 0 ...
-#  $ count      : int  0 0 0 0 1 1 1 1 0 0 ...
-#  $ pred.sp    : int  892 892 892 892 892 892 892 892 892 892 ...
-#  $ length     : int  40 40 40 40 45 45 45 45 52 52 ...
-#  $ year       : int  2013 2013 2013 2013 2013 2013 2013 2013 2013 2013 ...
-#  $ start.depth: int  823 823 823 823 823 823 823 823 823 823 ...
-#  $ end.depth  : int  829 829 829 829 829 829 829 829 829 829 ...
-#  $ lat.deg    : int  64 64 64 64 64 64 64 64 64 64 ...
-#  $ lat.min    : num  27.9 27.9 27.9 27.9 27.9 ...
-#  $ long.deg   : int  57 57 57 57 57 57 57 57 57 57 ...
-#  $ long.min   : num  59.8 59.8 59.8 59.8 59.8 ...
-#  $ sa.code    : chr  "2G" "RISA" "SFA2EX" "SFA3" ...
-#  $ sort.key   : int  10 7 6 8 10 7 6 8 10 7 ...
-#  $ trawl.id   : int  72138002 72138002 72138002 72138002 72138002 72138002 72138002 72138002 72138002 72138002 ...
+# 'data.frame':	1236 obs. of  19 variables:
+# $ ContentKey        : chr  "62114003_892_3_1_-14_1733" "62114003_892_3_1_-15_1732" "62114003_892_3_1_-16_1728" "62114003_892_3_1_-17_1729" ...
+# $ Prey_OS_ID        : int  6967 9998 6967 6967 6967 6967 8020 8020 4950 8530 ...
+# $ PreyWt            : num  0.3 NA 0.286 0.091 0.079 ...
+# $ Prey_Count        : int  NA NA NA NA NA NA NA NA NA NA ...
+# $ OS_ID             : int  892 892 892 892 892 892 892 892 892 892 ...
+# $ Length            : num  24.5 20 20 20.5 17 14 37.5 27 27 33 ...
+# $ Trawl_ID          : int  62114003 62114003 62114003 62114003 62114003 62114003 62114003 62114003 62114003 62114003 ...
+# $ Year              : int  2019 2019 2019 2019 2019 2019 2019 2019 2019 2019 ...
+# $ Start.Depth       : int  269 269 269 269 269 269 269 269 269 269 ...
+# $ End.Depth         : int  271 271 271 271 271 271 271 271 271 271 ...
+# $ Depth.Range       : chr  "201-300" "201-300" "201-300" "201-300" ...
+# $ Study.Area        : chr  "2G" "2G" "2G" "2G" ...
+# $ Scientific.Name   : chr  "REINHARDTIUS HIPPOGLOSSOIDES" "REINHARDTIUS HIPPOGLOSSOIDES" "REINHARDTIUS HIPPOGLOSSOIDES" "REINHARDTIUS HIPPOGLOSSOIDES" ...
+# $ CommonName        : chr  "GREENLAND HALIBUT, TURBOT" "GREENLAND HALIBUT, TURBOT" "GREENLAND HALIBUT, TURBOT" "GREENLAND HALIBUT, TURBOT" ...
+# $ Start.Lat.Degree  : int  57 57 57 57 57 57 57 57 57 57 ...
+# $ Start.Lat.Minutes : num  45.1 45.1 45.1 45.1 45.1 ...
+# $ Start.Long.Degree : int  60 60 60 60 60 60 60 60 60 60 ...
+# $ Start.Long.Minutes: num  24.2 24.2 24.2 24.2 24.2 ...
+# $ FishKey           : chr  "62114003_892_3_1_-14" "62114003_892_3_1_-15" "62114003_892_3_1_-16" "62114003_892_3_1_-17" ...
 
 
 ####################### Importing Your Data ####################################
@@ -105,6 +103,7 @@ prey <- read.csv('data/raw/2019_StomachContent_test.csv')
 
 ########################## Creating Base Prey Dataframe ########################
 
+
 # 'prey' dataframe: each row is a new prey item per sampled stomachs
 
 # Dataframe transformations:
@@ -112,6 +111,8 @@ prey <- read.csv('data/raw/2019_StomachContent_test.csv')
     # add column with predator 'category' names (Atlantic code, Greenland halibut, Redfish, Skate)
 
 # Finish with checking and storing dataframe structure
+
+# Export dataframe to data/processed/
 
 
 
@@ -147,8 +148,8 @@ prey <- prey %>%
 
 ### Checking our Base Prey Dataframe Modifications
 
-which(is.na(prey))
-    # checking if there are blank values or NA's in the dataframe
+colSums(is.na(prey)) 
+    # check if there are any NAs remaining (shows # NA's per column)
 
 str(prey) 
     # checking new dataframe structure to ensure all updates are good
@@ -178,7 +179,13 @@ str(prey)
 
 
 
+### Exporting Base Prey Dataframe
+
+write.csv(prey, file="data/processed/2019_basePrey.csv")
+
+
 ###################### Creating Base Predator Dataframe ########################
+
 
 # 'pred' dataframe: each row is a new fish that's stomach was sampled 
 
@@ -199,25 +206,31 @@ length(unique(prey$FishKey))
     # 2019 data: 644 observations
 
 
+
 ### duplicating base prey dataframe
 
 pred <- prey
 
 
+
 ### Retain one row per sampled fish
 
-# removing duplicated values for FishKey so that there is one entry per predator
 pred <- pred[!duplicated(pred$FishKey),]
-    # removes duplicates in FishKey
+    # removing duplicated values for FishKey. Results in one entry per predator
+
 
 # CHECK NUMBER VARIABLES! Does it match # unique fish sampled above
+
+
 str(pred) 
   # for 2019 data: 644 observations
+
 
 
 ### Adding category for the number of stomachs sampled per fish
 
 pred$sampled.stomach <- 1 
+
 
 
 ### Saving Structure of Base Dataframe
@@ -249,10 +262,13 @@ str(pred)
 
 
 
+### Exporting Base Predator Dataframe
+
+write.csv(pred, file="data/processed/2019_basePred.csv")
 
 
 ################################################################################
-############## Chunk B: Creating the Pie Chart Figure ##########################
+#                    Chunk B: Creating the Pie Chart Figure 
 ################################################################################
 
 # The purpose of this code chunk is to create Figure 3
@@ -267,14 +283,12 @@ str(pred)
 # Those notes include other pie chart packages, functions, and arguments that I learned but did not end up using
 
 
-
 ################### Creating new dataframe for Figure  #########################
 
 
 # This dataframe will detail the total sum of stomachs sampled per predator category
 
 # All code to check dataframe structure are commented out. If not they will produce outputs into the report.
-
 
 
 
@@ -285,6 +299,7 @@ pred.total <- aggregate(pred$sampled.stomach, list(pred$pred.name), sum)
 # pred.total  
 
 
+
 ### Renaming the columns in the new dataframe
 
 names(pred.total)[names(pred.total) == "Group.1"] <- "pred.name"
@@ -292,6 +307,7 @@ names(pred.total)[names(pred.total) == "Group.1"] <- "pred.name"
 names(pred.total)[names(pred.total) == "x"] <- "stomach.total"
 
 # names(pred.total)
+
 
 
 ### Creating figure labels
@@ -305,9 +321,11 @@ paste0( "(", round(100 * pred.total$stomach.total / sum(pred.total$stomach.total
     # paste0() does not have spaces between labels. Which means there is no space between # and % (e.g. 40% vs 40 %)
 
 
+
 ### Checking Final Database Structure
 
 # str(pred.total)
+
 
 
 ### Saving Final Database Structure 
@@ -318,9 +336,13 @@ paste0( "(", round(100 * pred.total$stomach.total / sum(pred.total$stomach.total
 #  $ label        : chr  "20\n(1%)" "1340\n(58%)" "900\n(39%)" "40\n(2%)"
 
 
-################### Building and Formatting the Pie Chart ######################
 
-# library(ggrepel)   # formats figure labels so they don't overlap
+### Exporting Figure 3 pie-chart Dataframe
+
+write.csv(pred, file="data/processed/2019_F3_pred.total.csv")
+
+
+################### Building and Formatting the Pie Chart ######################
 
 
 ### Creating the pie chart
@@ -344,14 +366,16 @@ ggplot(pred.total, aes(x="", y=stomach.total, fill=pred.name)) +
         legend.key.spacing.y = unit(1, "mm"),)       # defines space between legend items
 
 
+
 ################################################################################
-########################### Additional Notes ###################################
+#                             Additional Notes 
 ################################################################################
 
 # Notes on different packages not used, or not yet used, are below.
 
 
 ################## Additional Notes on geom_label() ############################
+
 
 # geom_label creates a box around the label. geom_text does not
 
@@ -371,6 +395,7 @@ ggplot(pred.total, aes(x="", y=stomach.total, fill=pred.name)) +
 
 
 ######################### Notes on geom_label_repel ############################
+
 
 # replaces geom_label() with geom_label_repel()
 
