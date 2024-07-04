@@ -418,7 +418,7 @@ paste0( "(", round(100 * pred.total$stomach.total / sum(pred.total$stomach.total
 
 ### Exporting Figure 3 pie-chart Dataframe
 
-write.csv(pred, file="data/processed/2019_F3_pred.total.csv")
+write.csv(pred.total, file="data/processed/2019_F3_pred.total.csv")
 
 
 ################### Building and Formatting the Pie Chart ######################
