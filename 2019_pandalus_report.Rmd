@@ -713,7 +713,7 @@ Figure 5: 4-paneled bar chart of number of stomach's sampled per size class with
 
 Data I will need is fish length and the # fish caught per depth stratum per species
 -->
-```{r stomach-length, echo=FALSE, fig.cap="*Number of stomachs sampled from (a) Atlantic Cod (*Gadus morhua*), (b) Greenland Halibut (*Reinhardtius hippoglossides*), (c) redfish (*Sebastes sp.*), and (d) skate (*Rajidae*) per size class within each depth stratum. Total length was used to measure all predators.*"}
+```{r stomach-length, echo=FALSE, fig.height = 9.7, fig.width = 7, fig.cap="*Number of stomachs sampled from (a) Atlantic Cod (*Gadus morhua*), (b) Greenland Halibut (*Reinhardtius hippoglossides*), (c) redfish (*Sebastes sp.*), and (d) skate (*Rajidae*) per size class within each depth stratum. Total length was used to measure all predators.*"}
 # The purpose of this code chunk is to create Figure 5
 
 # The sections of this code chunk are:
@@ -792,6 +792,11 @@ Table 2: Table showing total fish with full and empty stomachs for each fish cla
 
 Data I will need includes length (cm) of caught fish, if stomach was full or empty, for each fish species.
 -->
+
+```{r table-stomachs, echo=FALSE, fig.cap="*Number of full1, empty, and total (full and empty) stomachs collected for Atlantic Cod (*Gadus morhua*), Greenland Halibut (*Reinhardtius hippoglossides*), redfish (*Sebastes sp.*), and skates (*Rajidae*) within each size class2*"}
+
+```
+
 
 ## Composition of Prey Items
 
