@@ -56,9 +56,9 @@ knitr::opts_chunk$set(echo = TRUE)
 library(ggplot2)
 library(tidyverse)
 library(dplyr)
-library(ggrepel)
-library(reshape2)  # Figure 4
-library(colorBlindness)
+library(ggrepel)           # Fig 3: ensures labels don't overlap
+library(reshape2)          # Fig 4
+library(viridis)                 # Fig 5 - color blind friendly palette
 
 ######## Setting up the Theme
 
@@ -165,6 +165,8 @@ Data that I will need include sample location depths in each stratum.
 
 # It is assumed that the imported data will initially have a structure consistent to the example saved immediately below. Particularly the variable names and variable data type (e.g. chr, int, num)
 
+
+
 ### Example initial imported dataset structure 
 
 # 'data.frame':	2300 obs. of  16 variables:
@@ -194,17 +196,24 @@ Data that I will need include sample location depths in each stratum.
 prey <- read.csv('data/raw/2019_StomachContent_test.csv') 
     # assumes header=TRUE and knows it's separated by commas
 
-# str(prey)
-    # check initial data structure. Does it match example?
+str(prey)
+    # check initial data structure. Does it match example above?
 
 
 ########################## Creating Base Prey Dataframe ########################
+
+
+# This code chunk:
+    # manipulates the data it to create the base prey dataframe
+    # checks & saves the dataframe structure
 
 # 'prey' dataframe: each row is a new prey item per sampled stomachs
 
 # Dataframe transformations:
     # add column with shrimp fishing regions (EAZ, WAZ, SFA4)
     # add column with predator 'category' names (Atlantic code, Greenland halibut, Redfish, Skate)
+    # add column with depth range category (100-200 m, 200-300 m, 300-400 m, 400-500 m, 500-750 m)
+    # add predator length range category (binned into 5 cm length groups)
 
 # Finish with checking and storing dataframe structure
 
@@ -241,40 +250,109 @@ prey <- prey %>%
 
 
 
-### Checking our Base Prey Dataframe Modifications
+### Adding depth range category
 
-# which(is.na(prey))
-    # checking if there are blank values or NA's in the dataframe
+# The Access database does have a depth-range column BUT it has with a variety of overlapping ranges.
+# Below code creates desired depth ranges based on start-end depths
+# This ensures code is repeatable even if new depth ranges are added into the database
 
-# str(prey) 
-    # checking new dataframe structure to ensure all updates are good
+prey <- prey %>% 
+  mutate(depth = case_when(Start.Depth >= 100 & End.Depth >= 100 & 
+                             Start.Depth <= 200 & End.Depth <= 200 ~ "100-200 m",
+                           
+                           Start.Depth >= 200 & End.Depth >= 200 & 
+                             Start.Depth <= 300 & End.Depth <= 300 ~ "200-300 m",
+                           
+                           Start.Depth >= 300 & End.Depth >= 300 & 
+                             Start.Depth <= 400 & End.Depth <= 400 ~ "300-400 m",
+                           
+                           Start.Depth >= 400 & End.Depth >= 400 & 
+                             Start.Depth <= 500 & End.Depth <= 500 ~ "300-400 m",
+                           
+                           Start.Depth >= 500 & End.Depth >= 500 & 
+                             Start.Depth <= 750 & End.Depth <= 750 ~ "500-750 m"))
+    # yes multiple categories both use the same 'start/end' points.
+    # the combination of requirements within each depth category means there isn't actually overlap
 
 
-### Saving Structure of Base Dataframe
 
-# 'data.frame':	2300 obs. of  18 variables:
-#  $ content.key  : chr  "72138002_892_1_1_-171_212" "72138002_892_1_1_-171_212" "72138002_892_1_1_-171_212" "72138002_892_1_1_-171_212" ...
-#  $ prey.sp      : int  9998 9998 9998 9998 4770 4770 4770 4770 9998 9998 ...
-#  $ weight       : num  0 0 0 0 0.0015 0.0015 0.0015 0.0015 0 0 ...
-#  $ count        : int  0 0 0 0 1 1 1 1 0 0 ...
-#  $ pred.sp      : int  892 892 892 892 892 892 892 892 892 892 ...
-#  $ length       : int  40 40 40 40 45 45 45 45 52 52 ...
-#  $ year         : int  2013 2013 2013 2013 2013 2013 2013 2013 2013 2013 ...
-#  $ start.depth  : int  823 823 823 823 823 823 823 823 823 823 ...
-#  $ end.depth    : int  829 829 829 829 829 829 829 829 829 829 ...
-#  $ lat.deg      : int  64 64 64 64 64 64 64 64 64 64 ...
-#  $ lat.min      : num  27.9 27.9 27.9 27.9 27.9 ...
-#  $ long.deg     : int  57 57 57 57 57 57 57 57 57 57 ...
-#  $ long.min     : num  59.8 59.8 59.8 59.8 59.8 ...
-#  $ sa.code      : chr  "2G" "RISA" "SFA2EX" "SFA3" ...
-#  $ sort.key     : int  10 7 6 8 10 7 6 8 10 7 ...
-#  $ trawl.id     : int  72138002 72138002 72138002 72138002 72138002 72138002 72138002 72138002 72138002 72138002 ...
-#  $ count.stomach: num  1 1 1 1 1 1 1 1 1 1 ...
-#  $ pred.name    : chr  "Greenland halibut" "Greenland halibut" "Greenland halibut" "Greenland halibut" 
+### Adding predator length range category
 
+# Binning the data
+prey <- prey %>% 
+  mutate(length.range = cut(Length, breaks=seq(from = 0, to = 5.99, by = 5.99))) %>% 
+    # sets first bin as < 6
+  
+  mutate(length.range = cut(Length, breaks=seq(from = 5.99, to = max(Length)+5, by = 5)))   
+    # sets remaining bins as # >=6 and <11 (or range 6-10). Etc
+    # max(Length) ends the sequence at the length of the longest fish sampled
+    # longest fish ends up being excluded with this
+    # max(Length)+5 ensures the longest fish will be included
+
+
+# Reformatting the binned outputs 
+prey <- prey %>%
+  mutate(length.range = str_replace(length.range, ',', '-')) %>%        
+    # replaces , with -
+  
+  mutate(length.range = gsub("[(]|[]]", '', length.range,)) %>%        
+    # removes ( or ]. Equivalent code wasn't working with str_replace
+  
+  mutate(length.range = str_replace(length.range, "5.99", "6"))  %>%    
+    # replaces 5.99 with 6
+  
+  mutate(length.range = str_replace(length.range, "1$", "0")) %>%       
+    # if the last digit is 1, it is replaced with a 0
+  
+  mutate(length.range = str_replace(length.range, "6$", "5"))           
+    # if the last digit is 6, it is replaced with a 5
+
+
+
+### Any missing values?
+
+colSums(is.na(prey)) 
+    # check if there are any NAs remaining (shows # NA's per column)
+
+
+
+### Saving the prey dataframe structure
+
+str(prey) 
+
+# 'data.frame':	1236 obs. of  23 variables:
+ 
+# $ ContentKey        : chr  "62114003_892_3_1_-14_1733" "62114003_892_3_1_-15_1732" "62114003_892_3_1_-16_1728"...
+# $ Prey_OS_ID        : int  6967 9998 6967 6967 6967 6967 8020 8020 4950 8530 ...
+# $ PreyWt            : num  0.3 NA 0.286 0.091 0.079 ...
+# $ Prey_Count        : int  NA NA NA NA NA NA NA NA NA NA ...
+# $ OS_ID             : int  892 892 892 892 892 892 892 892 892 892 ...
+# $ Length            : num  24.5 20 20 20.5 17 14 37.5 27 27 33 ...
+# $ Trawl_ID          : int  62114003 62114003 62114003 62114003 62114003 62114003 62114003 62114003 62114003 ...
+# $ Year              : int  2019 2019 2019 2019 2019 2019 2019 2019 2019 2019 ...
+# $ Start.Depth       : int  269 269 269 269 269 269 269 269 269 269 ...
+# $ End.Depth         : int  271 271 271 271 271 271 271 271 271 271 ...
+# $ Depth.Range       : chr  "201-300" "201-300" "201-300" "201-300" ...
+# $ Study.Area        : chr  "2G" "2G" "2G" "2G" ...
+# $ Scientific.Name   : chr  "REINHARDTIUS HIPPOGLOSSOIDES" "REINHARDTIUS HIPPOGLOSSOIDES" ...
+# $ CommonName        : chr  "GREENLAND HALIBUT, TURBOT" "GREENLAND HALIBUT, TURBOT" ...
+# $ Start.Lat.Degree  : int  57 57 57 57 57 57 57 57 57 57 ...
+# $ Start.Lat.Minutes : num  45.1 45.1 45.1 45.1 45.1 ...
+# $ Start.Long.Degree : int  60 60 60 60 60 60 60 60 60 60 ...
+# $ Start.Long.Minutes: num  24.2 24.2 24.2 24.2 24.2 ...
+# $ FishKey           : chr  "62114003_892_3_1_-14" "62114003_892_3_1_-15" "62114003_892_3_1_-16" ...
+# $ region            : chr  "SFA4" "SFA4" "SFA4" "SFA4" ...
+# $ pred.name         : chr  "Greenland halibut" "Greenland halibut" "Greenland halibut" "Greenland halibut" ...
+# $ depth             : chr  "200-300 m" "200-300 m" "200-300 m" "200-300 m" ...
+# $ length.range      : chr  "21-25" "16-20" "16-20" "16-20" ...
 
 
 ###################### Creating Base Predator Dataframe ########################
+
+
+# This code chunk:
+    # manipulates the data it to create the base predator dataframe
+    # checks & saves the dataframe structure
 
 # 'pred' dataframe: each row is a new fish that's stomach was sampled 
 
@@ -310,8 +388,9 @@ pred <- pred[!duplicated(pred$FishKey),]
 
 # CHECK NUMBER VARIABLES! Does it match # unique fish sampled above
 
-# str(pred) 
+ str(pred) 
     # for 2019 data: 644 observations
+
 
 
 ### Adding category for the number of stomachs sampled per fish
@@ -319,29 +398,32 @@ pred <- pred[!duplicated(pred$FishKey),]
 pred$sampled.stomach <- 1 
 
 
+
 ### Saving Structure of Base Dataframe
+
 # str(pred)
 
 # 'data.frame':	644 obs. of  22 variables:
-#   $ ContentKey        : chr  "62114003_892_3_1_-14_1733" "62114003_892_3_1_-15_1732" "62114003_892_3_1_-16_1728" "62114003_892_3_1_-17_1729" ...
+
+# $ ContentKey        : chr  "62114003_892_3_1_-14_1733" "62114003_892_3_1_-15_1732" ...
 # $ Prey_OS_ID        : int  6967 9998 6967 6967 6967 6967 8020 8020 8530 8020 ...
 # $ PreyWt            : num  0.3 NA 0.286 0.091 0.079 ...
 # $ Prey_Count        : int  NA NA NA NA NA NA NA NA NA NA ...
 # $ OS_ID             : int  892 892 892 892 892 892 892 892 892 892 ...
 # $ Length            : num  24.5 20 20 20.5 17 14 37.5 27 33 33.5 ...
-# $ Trawl_ID          : int  62114003 62114003 62114003 62114003 62114003 62114003 62114003 62114003 62114003 62114003 ...
+# $ Trawl_ID          : int  62114003 62114003 62114003 62114003 62114003 62114003 62114003 62114003 62114003 ...
 # $ Year              : int  2019 2019 2019 2019 2019 2019 2019 2019 2019 2019 ...
 # $ Start.Depth       : int  269 269 269 269 269 269 269 269 269 269 ...
 # $ End.Depth         : int  271 271 271 271 271 271 271 271 271 271 ...
 # $ Depth.Range       : chr  "201-300" "201-300" "201-300" "201-300" ...
 # $ Study.Area        : chr  "2G" "2G" "2G" "2G" ...
-# $ Scientific.Name   : chr  "REINHARDTIUS HIPPOGLOSSOIDES" "REINHARDTIUS HIPPOGLOSSOIDES" "REINHARDTIUS HIPPOGLOSSOIDES" "REINHARDTIUS HIPPOGLOSSOIDES" ...
-# $ CommonName        : chr  "GREENLAND HALIBUT, TURBOT" "GREENLAND HALIBUT, TURBOT" "GREENLAND HALIBUT, TURBOT" "GREENLAND HALIBUT, TURBOT" ...
+# $ Scientific.Name   : chr  "REINHARDTIUS HIPPOGLOSSOIDES" "REINHARDTIUS HIPPOGLOSSOIDES" ...
+# $ CommonName        : chr  "GREENLAND HALIBUT, TURBOT" "GREENLAND HALIBUT, TURBOT" ...
 # $ Start.Lat.Degree  : int  57 57 57 57 57 57 57 57 57 57 ...
 # $ Start.Lat.Minutes : num  45.1 45.1 45.1 45.1 45.1 ...
 # $ Start.Long.Degree : int  60 60 60 60 60 60 60 60 60 60 ...
 # $ Start.Long.Minutes: num  24.2 24.2 24.2 24.2 24.2 ...
-# $ FishKey           : chr  "62114003_892_3_1_-14" "62114003_892_3_1_-15" "62114003_892_3_1_-16" "62114003_892_3_1_-17" ...
+# $ FishKey           : chr  "62114003_892_3_1_-14" "62114003_892_3_1_-15" "62114003_892_3_1_-16" ...
 # $ region            : chr  "SFA4" "SFA4" "SFA4" "SFA4" ...
 # $ pred.name         : chr  "Greenland halibut" "Greenland halibut" "Greenland halibut" "Greenland halibut" ...
 # $ sampled.stomach      : num  1 1 1 1 1 1 1 1 1 1 ...
@@ -371,15 +453,22 @@ Data I will need is simply # of fish caught per species
     # Creating and Formatting Figure 3 pie chart
     # Recording Additional Geom_Label arguments that we may want to include in further edits 
 
-# Tutorial and experimental codes for Fig 3 are saved in (scripts/draft code/Draft_Script_Fig3_PieChart.R). This includes links to webpages/youtube
+# Tutorial and experimental codes for Fig 3 are saved in (scripts/draft code/Draft_Script_Fig03_PieChart.R).
+
+# Those notes include other pie chart packages, functions, and arguments that I learned but did not end up using
 
 # Additional notes on geom_label and geom_label_repel are saved at the bottom of (Script_Figure3_PieChart.R)
 
+
 #################### Creating new dataframe for Figure #########################
+
 
 # This dataframe will detail the total sum of stomachs sampled per predator category
 
 # All code to check dataframe structure are commented out. If not they will produce outputs into the report.
+
+# library(ggrepel) 
+    # included in code chunk 'r setup'
 
 
 
@@ -388,6 +477,7 @@ Data I will need is simply # of fish caught per species
 pred.total <- aggregate(pred$sampled.stomach, list(pred$pred.name), sum)
 
 # pred.total 
+
 
 
 ### Renaming the columns in the new dataframe
@@ -399,6 +489,7 @@ names(pred.total)[names(pred.total) == "x"] <- "stomach.total"
 # names(pred.total)
 
 
+
 ### Creating figure labels
 
 pred.total$label <- paste(pred.total$stomach.total, sep = "
@@ -408,6 +499,7 @@ pred.total$label <- paste(pred.total$stomach.total, sep = "
     # DO NOT ADJUST THE SPACING AFTER [sep = "..."]. This splits the values into 2 lines. Adding spaces will uncenter second line. 
     # paste() puts spaces between labels
     # paste0() does not have spaces between labels. Which means there is no space between # and % (e.g. 40% vs 40 %)
+
 
 
 ### Checking Final Database Structure
@@ -425,12 +517,11 @@ pred.total$label <- paste(pred.total$stomach.total, sep = "
 
 ################### Building and Formatting the Pie Chart ######################
 
-# library(ggrepel)   # formats figure labels so they don't overlap
-
 
 ### Creating the pie chart
 
 ggplot(pred.total, aes(x = "", y = stomach.total, fill = pred.name)) +
+  
   coord_polar(theta = "y") + 
         # basing the circular coordinates on the y value (stomach.total)
   
@@ -450,7 +541,7 @@ ggplot(pred.total, aes(x = "", y = stomach.total, fill = pred.name)) +
         # defines 'y-axis' position of label. 'vjus=0.5' is centered.
     show.legend = FALSE) +
         # Removes geom_label default of adding an 'a' to legend colors
-    scale_fill_manual(values = c("#999999", "#E69F00", "#56B4E9", "#009E73")) +
+  
   theme(
     legend.title = element_blank(), 
         # removes legend title
@@ -461,28 +552,6 @@ ggplot(pred.total, aes(x = "", y = stomach.total, fill = pred.name)) +
     legend.key.spacing.y = unit(1, "mm"),
         # defines space between legend items
   )
-
-
-
-####################### Additional geom_label arguments ########################
-
-# These particular arguments are used to adjust features included within the current code parameters. Depending on future formatting, they may be helpful.
-
-# fill = "white",                       
-    # changes label fill colour. Default colour matches pie chart chunk colours
-
-# label.padding = unit(1.2, "mm"),       
-    # adjusts space between label name and boarder
-
-# label.size =  nit(0.2, "mm"),          
-    # adjusts thickness of label boarders
-
-# label.r = unit(3, "mm"),               
-    # adjusts roundness of label corners
-
-# family = "montserrat",                
-    # this argument would change the font
-    # "montserrat" being a font style (would need to import before chart)
 
 ```
 
@@ -533,16 +602,18 @@ Data I will need is # fish caught per species per region
 
 
 
-# create new dataframe that sums the stomach samples per species, per region
+### create Fig 4 dataframe: sum stomach samples per species, per region
+
 wide.data <- dcast(pred, region~pred.name, value.var="sampled.stomach", sum)
     # creates a dataframe in a 'wide format' and we will want a 'long format' dataframe
-    # found code from https://stackoverflow.com/questions/25366929/manipulating-seperated-species-quantity-data-into-a-species-abundance-matrix
-
+    # Tutorial 1 in Fig 4 draft code doc
 
 # wide.data
 
 
-# converting 'wide format' to 'long format' dataframe
+
+### converting 'wide format' to 'long format'
+
 region.total <- melt(data = wide.data,                       
       # melt() converts from wide (sp. spread across rows) to long format (sp. compiled into one row)
                      id.vars = "region",                     
@@ -556,12 +627,18 @@ region.total <- melt(data = wide.data,
                      value.name = "stomach.sum")             
       # value.name : name of the column of my stacked measurements in my output data frame
     
-# See https://intro2r.com/wrangling-data-frames.html (section 3.4.6 'Reshaping data frames') for more details on melt()
+      # Tutorial 2 in Fig 4 draft code doc melt()
     
 
 # region.total
 
+
+
+### Checking Final Database Structure
+
 # str(region.total)
+
+
 
 ### Saving Final Database Structure 
 
@@ -571,11 +648,11 @@ region.total <- melt(data = wide.data,
 # $ stomach.sum: num  2 1 0 198 92 43 34 28 3 120 ...
 
 
-
 ############### Building and Formatting the Grouped Bar Chart ##################
 
 
-# Grouped Bar Chart
+### Grouped Bar Chart
+
 ggplot(data = region.total,
        aes(fill=pred.name, y=stomach.sum, x=region)) + 
   
@@ -636,8 +713,74 @@ Figure 5: 4-paneled bar chart of number of stomach's sampled per size class with
 
 Data I will need is fish length and the # fish caught per depth stratum per species
 -->
-```{r stomach-length, echo=FALSE, fig.cap="*Number of stomachs sampled from (a) Atlantic Cod (*Gadus morhua*), (b) Greenland Halibut (*Reinhardtius hippoglossides*), (c) redfish (*Sebastes sp.*), and (d) skate (*Rajidae*) per size class within each depth stratum. Total length was used to measure all predators.}
+```{r stomach-length, echo=FALSE, fig.cap="*Number of stomachs sampled from (a) Atlantic Cod (*Gadus morhua*), (b) Greenland Halibut (*Reinhardtius hippoglossides*), (c) redfish (*Sebastes sp.*), and (d) skate (*Rajidae*) per size class within each depth stratum. Total length was used to measure all predators.*"}
+# The purpose of this code chunk is to create Figure 5
 
+# The sections of this code chunk are:
+    # Creating and Formatting Figure 5 paneled-bar chart
+
+# No creation of a new dataframe is required for Fig 5
+
+
+# This figure will detail the total sum of stomachs sampled per size class within each depth stratum.
+    # Different panel for each predator category
+
+# Figure structure will need:
+    # Three categorical variables:
+        # x-axis: predator length
+        # fill: depth range
+        # facet: predator category
+    # One numerical variable:
+        # y-axis: sum stomach samples that falls within categories
+
+
+# If desired, old/test code and additional links to tutorial youtubes/webpages I used to create Figure 5 are recorded in (scripts/draft code/Draft_Script_Fig5_Stomach-by-Length.R)
+
+# Those notes include sites and tutorials that assisted me with:
+    # Data structure for figure
+    # Building faceted stacked bar charts
+    # Formatting faceted stacked bar charts
+    # Unused but Interesting ggplot2 arguments
+    # Creating a Base Theme for R Markdown Plots
+
+
+############### Building and Formatting the Grouped Bar Chart ##################
+
+
+### Faceted Stacked Bar Chart
+
+ggplot(pred, aes(reorder(length.range, Length))) +  
+  # orders the X-axis categories based on numerical length of fish
+  # basically makes ggplot see and order the x-axis as numbers vs text
+  
+  geom_bar(aes(fill = depth),
+           position = "stack",
+           stat="count",
+           width = 0.4) +   # changes the width of the bars 
+  
+  facet_wrap(~ pred.name, 
+             nrow = 5, 
+             scale = "free_y",
+             axes = "all_x") +
+  
+  theme_minimal() + 
+  
+  theme(axis.text.x = element_text(angle = 45,hjust = 1, size = 8 ),
+        axis.title = element_text(size = 8),
+        axis.title.y = element_text(vjust = +3),                 # pulls y-axis title away from chart
+        axis.title.x = element_text(vjust = -2),                 # pulls x-axis title away from chart
+        legend.title = element_blank(),                          # removes legend title
+        legend.key.size = unit(3, "mm"),                         # adjusts width of legend color symbols
+        legend.key.height = unit(3, "mm"),                       # adjusts height of legend color symbols
+        legend.key.spacing.y = unit(1, "mm"),                    # defines space between legend items
+        panel.grid.minor = element_blank(),                      # removes all minor grid-lines
+        panel.grid.major.x = element_blank(),
+        panel.spacing = unit(13, 'point'),                         # adds space between panels
+        strip.text = element_text(face = "bold",      # bolds the panel titles
+                                  hjust = 0)) +       # pulls panel titles to the top left
+  
+  labs(x = "Predator Length (cm)",
+       y = "Number of Stomachs")
 ```
 
 
@@ -741,6 +884,28 @@ Figure 10: 2-paneled bar chart of percent weight and percent number different sh
 
 Data I will need is weight and number of shrimp species in skate stomachs. 
 -->
+
+```{r df-exports, include=FALSE}
+
+# This section will export the dataframes you have created.
+
+# !! Make sure you update the years appropriately or old data will be written over !!
+
+write.csv(prey, file="data/processed/2019rm_basePrey.csv")
+    # base prey dataframe
+
+write.csv(pred, file="data/processed/2019rm_basePred.csv")
+    # base predator dataframe
+
+write.csv(pred.total, file="data/processed/2019_F3_pred.total.csv")
+    # Fig 3 dataframe
+
+write.csv(region.total, file="data/processed/2019rm_F4_region.total.csv")
+    # Fig 4 dataframe
+
+
+```
+
 
 # Acknowledgements
 
