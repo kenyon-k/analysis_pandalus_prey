@@ -23,11 +23,6 @@
 #                        Creating figure dataset
 ################################################################################
 
-# Removing duplicates:
-
-    # https://stackoverflow.com/questions/52038660/how-to-subset-your-dataframe-to-only-keep-the-first-duplicate
-        # QA/QC'd that only duplicates were removed by comparing variable count in R to unique values in excel pivot tables
-
 
 # sums data that fit 2 criteria. Creates new dataframe
 
