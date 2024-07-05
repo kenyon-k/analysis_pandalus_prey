@@ -27,6 +27,11 @@
 # To see tutorials, key webpages, and key videos I used to create and format the 
 # bar chart, please see the 'Draft_Script_Fig04_Bar-sample-region.R' in the 'Draft Code' folder
 
+# Those notes include sites and tutorials that assisted me with:
+    # Creating figure dataset
+    # GGPLOT2 Code for Grouped Pie Charts
+    # additional ggplot2 arguments not used in this chart
+
 
 ################################################################################
 #                            Remaining Tasks 
@@ -68,14 +73,6 @@ pred <- read.csv('data/processed/2019_basePred.csv')
 # The sections of this code chunk are:
     # Creating a new dataframe for Figure 4
     # Creating and Formatting Figure 4 grouped-bar chart
-
-
-# If desired, additional notes and links to tutorial youtubes/webpages I used to create Figure 4 are recorded in (scripts/draft code/Draft_Script_Fig4_Bar-sample-region.R)
-
-# Those notes include sites and tutorials that assisted me with:
-    # Creating figure dataset
-    # GGPLOT2 Code for Grouped Pie Charts
-    # additional ggplot2 arguments not used in this chart
 
 
 ################### Creating New Dataframe for Fig 4 ###########################
@@ -128,7 +125,7 @@ region.total <- melt(data = wide.data,                       # melt() converts f
 
 
 
-### Saving Final Database Structure 
+### Saving Final Dataframe Structure 
 
 # 'data.frame':	12 obs. of  3 variables:
 # $ region     : chr  "EAZ" "SFA4" "WAZ" "EAZ" ...
