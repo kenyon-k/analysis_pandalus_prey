@@ -47,6 +47,24 @@
         # Insert distribution graphs within the table
         # a bit on themes
 
+    # (defining column widths) https://gt.rstudio.com/reference/cols_width.html
+        # available arguments
+
+    # (colors in present themes) https://gt.rstudio.com/reference/opt_stylize.html
+        # available arguments
+
+
+
+### Changing colors for rows
+
+# I haven't looked at these websites but they are stored here for future reference
+
+# https://gt.rstudio.com/reference/tab_style.html
+
+# https://jthomasmock.github.io/gtExtras/reference/gt_highlight_rows.html
+
+# https://stackoverflow.com/questions/75958889/how-can-i-color-every-alternate-table-row-in-gt-table-in-r
+
 
 ###########################    Tutorial 1   ###################################
 
@@ -250,9 +268,37 @@ mtcars %>%
     # table header
 
 
+###########################    Tutorial 3   ###################################
+
+
+# From https://gt.rstudio.com/reference/cols_width.html
+
+# arguments for define column widths
+
+df %>%
+gt() %>%
+cols_width(depth ~ px(130),                # specific column name (within df vs renamed in column)
+           ends_with("Z") ~ px(130),       # Any column that ends with 'Z'
+           starts_with("S") ~ px(130))     # Any column that starts with 'S'
+
+
+df %>%
+  gt() %>%
+cols_width(everything() ~ px(60))          # All columns set to 50 pixels
+
 
 ################################################################################
 #                                 Unused Code
 ################################################################################
 
+# gt() code that I found but did not use
 
+df %>%
+  gt() %>%
+  
+  # define individual column widths
+  cols_width(depth ~ px(130),                # specific column name (within df vs renamed in column)
+             ends_with("Z") ~ px(130),       # Any column that ends with 'Z'
+             starts_with("S") ~ px(130))     # Any column that starts with 'S'
+
+  cols_width(everything() ~ px(60))          # All columns set to 50 pixels

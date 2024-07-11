@@ -170,14 +170,14 @@ write.csv(samp, file="data/processed/2019_T1_sampleLocation.csv")
 ### Load Table 1 dataframe
 
 
-#samp <- read.csv('data/processed/2019_T1_sampleLocation.csv')
+samp <- read.csv('data/processed/2019_T1_sampleLocation.csv')
 
 
 # Below doesn't group it the way I want for the table. Which is  what the default table() provides
-samp.loc <- samp %>%
-  select(depth, region)
-
-view(samp.loc)
+# samp.loc <- samp %>%
+#   select(depth, region)
+# 
+# view(samp.loc)
 
 
 ### create Table 1 dataframe: sum survey locations per regions, per depth
@@ -212,7 +212,13 @@ s1 %>%
   cols_label(depth ~ "Depth Stratum (m)",
              SFA4 ~ "SFA 4")  %>% 
   tab_spanner(label = "Assessment Area",
-              columns = EAZ:SFA4) 
+              columns = EAZ:SFA4) %>%
+  opt_stylize(style = 5, color = "gray") %>%
+ # cols_width(everything() ~ px(130))
+  
+  cols_width(depth ~ px(150),
+             ends_with("Z") ~ px(130),
+             SFA4 ~ px(130))
 
 
 
