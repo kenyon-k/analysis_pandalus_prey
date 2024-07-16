@@ -6,7 +6,7 @@
 
 
 # Author: Krista Kenyon
-# Date: July 5/2024
+# Date: July 16/2024
 
 # Document Purpose: Saving sources and example code I encountered/used while 
     # creating Table 1 in case it's useful in the future.
@@ -14,9 +14,9 @@
 # Document 'Sections' Include:
     # Creating figure dataset
         # subsection: tutorials
-    # Table Code
+    # Table Formatting - gt & gtExtra
         # subsection: tutorials
-    # Unused but Interesting code......
+    # Unused but Interesting code
 
 
 ################################################################################
@@ -24,11 +24,7 @@
 ################################################################################
 
 
-### Coding Category
-
-    # (highlight details) website
-        # Tutorial ?
-        # What did I learn or use from it?
+# I used code that I learned while making Fig 3-5
 
 
 ################################################################################
@@ -47,15 +43,36 @@
         # Insert distribution graphs within the table
         # a bit on themes
 
+    # (gt OPTIONS OVERVIEW) https://gt.rstudio.com/reference/
+        # GREAT RESOURCE
+        # most arguments for table customization were quickly available here
+        # most below references are branches from this
+
+    # (table parts) https://gt.rstudio.com/articles/gt.html
+        # terms for the different table sections
+
     # (defining column widths) https://gt.rstudio.com/reference/cols_width.html
         # available arguments
 
+    # (alignment within columns) https://gt.rstudio.com/reference/cols_align.html
+        # available arguments. I centered text
+
     # (colors in present themes) https://gt.rstudio.com/reference/opt_stylize.html
+        # available arguments
+
+    # (cell boarders) https://gt.rstudio.com/reference/cell_borders.html
+        # available arguments
+
+    # (formatting multiple cells) https://gt.rstudio.com/reference/tab_style.html
         # available arguments
 
 
 
 ### Changing colors for rows
+
+    # (codes for colours) https://r-charts.com/colors/
+        # GREAT RESOURCE
+        # commonly used colors & many color gradiants
 
 # I haven't looked at these websites but they are stored here for future reference
 
@@ -288,7 +305,7 @@ cols_width(everything() ~ px(60))          # All columns set to 50 pixels
 
 
 ################################################################################
-#                                 Unused Code
+#                        Unused but Interesting Code
 ################################################################################
 
 # gt() code that I found but did not use
@@ -297,8 +314,18 @@ df %>%
   gt() %>%
   
   # define individual column widths
-  cols_width(depth ~ px(130),                # specific column name (within df vs renamed in column)
-             ends_with("Z") ~ px(130),       # Any column that ends with 'Z'
-             starts_with("S") ~ px(130))     # Any column that starts with 'S'
+  cols_width(depth ~ px(130),                    # specific column name (within df vs renamed in column)
+             ends_with("Z") ~ px(130),           # Any column that ends with 'Z'
+             starts_with("S") ~ px(130))         # Any column that starts with 'S'
 
-  cols_width(everything() ~ px(60))          # All columns set to 50 pixels
+  cols_width(everything() ~ px(60))              # All columns set to 50 pixels
+  
+  # adjusting cell boarders
+  tab_style(style = list(                        # multiple styles will be specified
+    cell_borders(                                # formatting will be for cell boarders
+      sides = c("left", "right"),                # boarders on the left and right side
+      color = "black"),                          # boarders are black
+      weight = px(30)),                          # boarder thickness
+    locations = list(cells_body(),               # styles will apply to the table body
+                     cells_column_labels(),      # styles will apply to the table header
+                     cells_column_spanners()))   # styles will apply to the table header spanner
