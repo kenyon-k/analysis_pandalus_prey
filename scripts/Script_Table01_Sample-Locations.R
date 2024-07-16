@@ -19,8 +19,7 @@
 # Document Sections:
     # Remaining Tasks
     # Load Libraries & Base Data
-    # Code Chunk: ............
-    # .......
+    # Code Chunk: Creating Table 1 Sample Locations
 
 
 # Code Chunk was transferred into the R Markdown Table 1: sample-loc
@@ -67,66 +66,76 @@ prey <- read.csv('data/processed/2019_basePrey.csv')
 
 
 ################################################################################
-#              Code Chunk: Creating Fig 5 Paneled-Bar Chart 
+#              Code Chunk: Creating Table 1 Sample Locations
 ################################################################################
 
 
-# The purpose of this code chunk is to create Table 1
+# This code chunk:
+    # creates a sample location dataframe containing all metadata (detailed df = samp.detail)
+    # restructures above dataframe into the format required for Table 1 (table 1 df = samp.table)
+    # build and format Table 1
 
-# The sections of this code chunk are:
-    # ................
-    # ...............
+# 'samp.detail' dataframe: one row per sample location. Contains all metadata.
+# 'samp.table' dataframe: summed total of all sample locations per depth stratum and assessment area
+
+# Dataframe transformations:
+    # removing duplicates Trawl IDs so there is only one row per sample location
+    # add column for number of trawls that occurred at each sample location
+        # required for reformatting later on
+    # reformatted text in 'depth' category
+    # export samp.detail dataframe data/processed/
+    # restructure dataframe into the total sum of sample stations per depth structure within each assessment area
+    # reorder assessment areas for table
+    # export samp.table dataframe to data/processed/
+
+
+# Table 1 Dataframe structure will need:
+    # Two categorical variables:
+        # depth stratum
+        # fishing zones (EAZ, WAZ, SFA4)
+    # One numerical variable:
+        # sum sample locations that falls within categories
 
 
 ################### Creating New Dataframe for Table 1 ###########################
 
 
-# This dataframe will detail (the total sum of sample stations per depth category in each region)
 
-######################################## Old Section
-# New Dataframe structure will need:
-    # Three categorical variables:
-        # x-axis: predator length
-        # fill: depth range
-        # facet: predator category
-    # One numerical variable:
-        # y-axis: sum stomach samples that falls within categories
-
-########################################### Back to new section
-
-
-### create Table 1 dataframe:
-
-### checking how many unique sample locations occurred
+### reformatting dataframe to have one row per sample location
 
 length(unique(prey$Trawl_ID))
+    # checking how many unique sample locations occurred
     # 2019 data: 92 observations
 
-
-
-### duplicating base prey dataframe
-
 samp <- prey
-
-
-
-### Retain one row per sampled Trawl ID
+    # duplicating base prey dataframe
 
 samp <- samp[!duplicated(samp$Trawl_ID),]
-    # removing duplicated values for Trawl_ID. Results in one entry per trawl (i.e. sample locations)
-
+    # Retain one row per sampled Trawl ID by removing duplicated values for Trawl_ID
 
 # CHECK NUMBER VARIABLES! Does it match # unique Trawl_ID sampled above
-
 
 str(samp) 
     # for 2019 data: 92 observations
 
 
 
-### Saving Final Dataframe Structure 
+### Adding column for the number of trawls per Trawl ID (or location)
+    # formula later will need a number column to calculate total sums
 
-# str(samp)
+samp$trawl.sample <- 1 
+
+
+
+### format depth column data for table
+samp.detail <- samp %>%
+  mutate(depth = str_replace(depth, "m$", ""))
+
+
+
+### Saving Dataframe Structure for samp.detail 
+
+# str(samp.detail)
 
 # 'data.frame':	92 obs. of  24 variables:
 
@@ -157,69 +166,91 @@ str(samp)
 
 
 
-### Exporting Table 1 Sample Location Dataframe
+### Exporting Table 1 Detailed Sample Location Dataframe
 
-write.csv(samp, file="data/processed/2019_T1_sampleLocation.csv")
+write.csv(samp.detail, 
+          file="data/processed/2019_T1_sampleLocation_detailed.csv",
+          row.names = FALSE)
 
-###################    Building and Formatting Table 1    ######################
-
-
-# ..... Any Notes? .......
-
-
-### Load Table 1 dataframe
-
-
-samp <- read.csv('data/processed/2019_T1_sampleLocation.csv')
-
-
-# Below doesn't group it the way I want for the table. Which is  what the default table() provides
-# samp.loc <- samp %>%
-#   select(depth, region)
-# 
-# view(samp.loc)
 
 
 ### create Table 1 dataframe: sum survey locations per regions, per depth
 
-# formula will need something to sum. trawl.sample is the number of trawls per trawl_id (or location)
-samp$trawl.sample <- 1 
-
-# reformatting the data into the structure gt() will want
-s1 <- dcast(samp, depth~region, value.var="trawl.sample", sum) %>%
+samp.table <- dcast(samp.detail, depth~region, value.var="trawl.sample", sum) %>%
+    # reformatting the data into the structure gt() will want
   relocate(SFA4, .after = WAZ)
-      # moves the SFA4 column after WAZ. the '.' in .after is important!
-      # used the dyplr cheat sheet and copilot
+    # moves the SFA4 column after WAZ. the '.' in .after is important!
+    # used the dyplr cheat sheet and copilot
+
+sum(samp.table$EAZ + samp.table$SFA + samp.table$WAZ)
+    # checking that we still have correct # of survey locations
+    # 2019 data = 92 survey locations
 
 
-view(s1)
+### Saving Final Dataframe Structure 
 
-# checking that we still have correct # of survey locations
-sum(s1$EAZ + s1$SFA + s1$WAZ)
-  # 2019 data = 92 survey locations
+ str(samp.table)
+
+# 'data.frame':	5 obs. of  4 variables:
+#   
+# $ depth: chr  "100-200 " "200-300 " "300-400 " "400-500 " ...
+# $ EAZ  : num  4 18 20 8 13
+# $ WAZ  : num  0 3 4 2 0
+# $ SFA4 : num  7 3 3 4 3
+ 
+ 
+### Exporting Table 1 Dataframe
+ 
+write.csv(samp.table, 
+          file="data/processed/2019_T1_sampleLocation_final.csv", 
+          row.names = FALSE)
+
+
+###################    Building and Formatting Table 1    ######################
+
+
+### Load Table 1 dataframe
+
+samp.table <- read.csv('data/processed/2019_T1_sampleLocation_final.csv')
 
 
 
-### Table 1
+### Create Table 1
 
-# table(samp$depth, samp$region) # option 1 - I think formatting will be tricky
-
-# I WILL NEED TO RE-ORDER EAZ, WAZ, and SFA4
-# I WILL ALSO WANT TO REMOVE THE 'm' FROM THE DEPTH COLUMN ROWS
-
-s1 %>%
+samp.table %>%
   gt() %>%
   cols_label(depth ~ "Depth Stratum (m)",
-             SFA4 ~ "SFA 4")  %>% 
-  tab_spanner(label = "Assessment Area",
-              columns = EAZ:SFA4) %>%
-  opt_stylize(style = 5, color = "gray") %>%
- # cols_width(everything() ~ px(130))
+             SFA4 ~ "SFA 4")  %>%            # change column names
   
-  cols_width(depth ~ px(150),
-             ends_with("Z") ~ px(130),
-             SFA4 ~ px(130))
+  tab_spanner(label = "Assessment Area",     # add a 'spanner' or sub-heading titled Assessment Area
+              columns = EAZ:SFA4) %>%        # spanner is over columns EAZ through SFA4 (goes off column names from df itself - not what you renamed it)
+  
+  opt_stylize(style = 1, color = "gray") %>%  # uses preset theme in the 'gray' color
+      # I like elements of this theme (boarders and shading)
+      # header text and fill color will be adjusted below
+  
+  cols_width(depth ~ px(160),                # sets width of the 'depth' column to specified pixel number
+             ends_with("Z") ~ px(130),       # sets width of columns ending in 'Z' to specified pixel number
+             SFA4 ~ px(130)) %>%             # sets width of the 'SFA4' column to specified pixel number
+  
+  cols_align(align = c("center"),            # centers text
+             columns = everything()) %>%     # alignment applies throughout table
+  
+  tab_style(                                 # forces styles onto cells
+    style = list(                            # applies multiple styles
+      cell_fill(color = "lightgray"),        # fill color to 'light gray', because the opt_stylize 'gray' looks black
+      cell_text(weight = "bold",             # bold text
+                color = "black")),           # make text black
+            locations = list(cells_column_labels(),      # formatting applies to the column headers
+                             cells_column_spanners()))   # formatting applies to the column spanner
+  
 
+# below is coding if I want to make further boarder adjustments.
+# current version feels cleaner than adding additional boarders.
 
-
-
+  # tab_style(style = list(
+  #   cell_borders(
+  #     sides = c("left", "right"),
+  #     color = "black"),
+  #     weight = px(30)),
+  #   locations = list(cells_body(), cells_column_labels(), cells_column_spanners()))
