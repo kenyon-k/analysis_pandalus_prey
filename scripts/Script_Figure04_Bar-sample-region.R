@@ -136,7 +136,9 @@ region.total <- melt(data = wide.data,                       # melt() converts f
 
 ### Exporting Figure 4 Dataframe
 
-write.csv(region.total, file="data/processed/2019_F4_region.total.csv")
+write.csv(region.total, 
+          file="data/processed/2019_F4_region.total.csv",
+          row.names = FALSE)
 
 
 ############### Building and Formatting the Grouped Bar Chart ##################

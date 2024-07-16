@@ -167,7 +167,7 @@ prey <- prey %>%
                              Start.Depth <= 400 & End.Depth <= 400 ~ "300-400 m",
                            
                            Start.Depth >= 400 & End.Depth >= 400 & 
-                             Start.Depth <= 500 & End.Depth <= 500 ~ "300-400 m",
+                             Start.Depth <= 500 & End.Depth <= 500 ~ "400-500 m",
                            
                            Start.Depth >= 500 & End.Depth >= 500 & 
                              Start.Depth <= 750 & End.Depth <= 750 ~ "500-750 m"))
@@ -250,7 +250,9 @@ colSums(is.na(prey))
  
 ### Exporting Base Prey Dataframe
  
- write.csv(prey, file="data/processed/2019_basePrey.csv")
+ write.csv(prey, 
+           file="data/processed/2019_basePrey.csv",
+           row.names = FALSE)                # removes auto-generated unique ID row
 
 
 ################################################################################
@@ -342,7 +344,9 @@ str(pred)
 
 ### Exporting Base Predator Dataframe
 
-write.csv(pred, file="data/processed/2019_basePred.csv")
+write.csv(pred, 
+          file="data/processed/2019_basePred.csv",
+          row.names = FALSE)
 
 
 ################################################################################
@@ -418,7 +422,9 @@ paste0( "(", round(100 * pred.total$stomach.total / sum(pred.total$stomach.total
 
 ### Exporting Figure 3 pie-chart Dataframe
 
-write.csv(pred.total, file="data/processed/2019_F3_pred.total.csv")
+write.csv(pred.total, 
+          file="data/processed/2019_F3_pred.total.csv",
+          row.names = FALSE)
 
 
 ################### Building and Formatting the Pie Chart ######################
