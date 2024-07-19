@@ -32,16 +32,7 @@
 ################################################################################
 
 
-# Step 1: Select which chart style I will go with
-
-# Step 2: Save base prey and pred dataframe outputs for cleaner code
-
-# Step 3: Clean up Document Code
-
-# Step 4: Clean up Draft Script doc
-  
-# Step 5: Decide if I want to mess around with panel boarders right now
-
+# Have format approved by team
 
 
 ################################################################################
