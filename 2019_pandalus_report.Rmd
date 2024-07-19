@@ -61,6 +61,9 @@ library(reshape2)          # Fig 4
 library(viridis)                 # Fig 5 - color blind friendly palette
 library(gt)                      # Table formatting
 library(gtExtras)                # Additional table formatting options
+library(flextable)        # Table 1 options
+library(kableExtra)       # Table 1 extra Kable options that may only work in HTML
+
 
 ######## Setting up the Theme
 
@@ -425,22 +428,49 @@ Table 1: # of stomach sampling locations in each zone per depth stratum.
 Data that I will need include sample location depths in each stratum.
 -->
 
-```{r sample-loc, echo=FALSE, fig.cap="*Number of stomach sampling locations within each depth stratum of the Eastern ASsessment Zone (EAZ), Western Assessment Zone (WAZ), and Shrimp Fishing Area 4 (SFA 4)*"}
 
-# The purpose of this code chunk is to create Table 1
 
-# Figure Caption is currently from Polaczek 2023
+Table 1 with Kable Package. Replace with 'output/Table01_pretty.jpeg'
 
-# The sections of this code chunk are:
-    # .............
-    # ............
+```{r table-kable, echo=FALSE}
 
-# To see tutorials, key webpages, and key videos I used to create and format Table 1:
-    # please see the 'Draft_Script_Table01_sample-location.R' in the 'Draft Code' folder
+# !!!!! After Markdown knits Word doc, replace Table 1 with 'output/Table01_pretty.jpeg'
 
-# Tutorial and experimental codes for Table 1 are saved in (scripts/draft code/Draft_Script_Table01_sample-location.R).
 
-# Additional notes on unused gt arguments are saved at the bottom of (Draft_Script_Table01_sample-location.R)
+# This code chunk:
+    # creates a sample location dataframe containing all metadata (detailed df = samp.detail)
+    # restructures above dataframe into the format required for Table 1 (table 1 df = samp.table)
+    # build and format Table 1
+
+# 'samp.detail' dataframe: one row per sample location. Contains all metadata.
+# 'samp.table' dataframe: summed total of all sample locations per depth stratum and assessment area
+
+# Dataframe transformations:
+    # removing duplicates Trawl IDs so there is only one row per sample location
+    # add column for number of trawls that occurred at each sample location
+        # required for reformatting later on
+    # reformatted text in 'depth' category
+    # export samp.detail dataframe data/processed/
+    # restructure dataframe into the total sum of sample stations per depth structure within each assessment area
+    # reorder assessment areas for table
+    # export samp.table dataframe to data/processed/
+
+
+# Table 1 Dataframe structure will need:
+    # Two categorical variables:
+        # depth stratum
+        # fishing zones (EAZ, WAZ, SFA4)
+    # One numerical variable:
+        # sum sample locations that falls within categories
+
+
+# There are 3 table versions: 1a, 1b, and 1c
+    # There is only 1 table package compatable with Word: Table 1a
+        # Formatting is terrible
+        # BUT cross referencing happens
+    # Table 1b has better formatting and is exported to 'output/Table01_pretty.jpeg'
+        # After Markdown knits Word doc, replace Table 1a with Table 1b
+    # Table 1c is my ideal formatting, but some formatting not retained when exported to Word
 
 
 ################### Creating New Dataframe for Table 1 ###########################
@@ -449,7 +479,7 @@ Data that I will need include sample location depths in each stratum.
 
 ### reformatting dataframe to have one row per sample location
 
-length(unique(prey$Trawl_ID))
+#length(unique(prey$Trawl_ID))
     # checking how many unique sample locations occurred
     # 2019 data: 92 observations
 
@@ -461,7 +491,7 @@ samp <- samp[!duplicated(samp$Trawl_ID),]
 
 # CHECK NUMBER VARIABLES! Does it match # unique Trawl_ID sampled above
 
-# str(samp) 
+#str(samp) 
     # for 2019 data: 92 observations
 
 
@@ -515,7 +545,7 @@ samp.detail <- samp %>%
 ### Exporting Table 1 Detailed Sample Location Dataframe
 
 write.csv(samp.detail, 
-          file="data/processed/2019rm_T1_sampleLocation_detailed.csv",
+          file="data/processed/2019_T1_sampleLocation_detailed.csv",
           row.names = FALSE)
 
 
@@ -528,14 +558,14 @@ samp.table <- dcast(samp.detail, depth~region, value.var="trawl.sample", sum) %>
     # moves the SFA4 column after WAZ. the '.' in .after is important!
     # used the dyplr cheat sheet and copilot
 
-sum(samp.table$EAZ + samp.table$SFA + samp.table$WAZ)
+#sum(samp.table$EAZ + samp.table$SFA + samp.table$WAZ)
     # checking that we still have correct # of survey locations
     # 2019 data = 92 survey locations
 
 
 ### Saving Final Dataframe Structure 
 
-# str(samp.table)
+#str(samp.table)
 
 # 'data.frame':	5 obs. of  4 variables:
 #   
@@ -548,44 +578,88 @@ sum(samp.table$EAZ + samp.table$SFA + samp.table$WAZ)
 ### Exporting Table 1 Dataframe
  
 write.csv(samp.table, 
-          file="data/processed/2019rm_T1_sampleLocation_final.csv", 
+          file="data/processed/2019_T1_sampleLocation_final.csv", 
           row.names = FALSE)
 
 
-###################    Building and Formatting Table 1    ######################
+###################    Building and Formatting Table 1A    ######################
+
+
+# Insert into R Markdown code chunk:
+
+# This is the only package that I have found will export into Word and be cross-referenced
+# It has terrible formatting options
+# After the Markdown Word doc is knitted, replace this table (Table 1A) with the jpeg exported from Table 1B code
 
 
 
-### Create Table 1
+### Load Table 1 dataframe
 
-samp.table %>%
-  gt() %>%
-  cols_label(depth ~ "Depth Stratum (m)",
-             SFA4 ~ "SFA 4")  %>%            # change column names
-  
-  tab_spanner(label = "Assessment Area",     # add a 'spanner' or sub-heading titled Assessment Area
-              columns = EAZ:SFA4) %>%        # spanner is over columns EAZ through SFA4 (goes off column names from df itself - not what you renamed it)
-  
-  opt_stylize(style = 1, color = "gray") %>%  # uses preset theme in the 'gray' color
-      # I like elements of this theme (boarders and shading)
-      # header text and fill color will be adjusted below
-  
-  cols_width(depth ~ px(160),                # sets width of the 'depth' column to specified pixel number
-             ends_with("Z") ~ px(130),       # sets width of columns ending in 'Z' to specified pixel number
-             SFA4 ~ px(130)) %>%             # sets width of the 'SFA4' column to specified pixel number
-  
-  cols_align(align = c("center"),            # centers text
-             columns = everything()) %>%     # alignment applies throughout table
-  
-  tab_style(                                 # forces styles onto cells
-    style = list(                            # applies multiple styles
-      cell_fill(color = "lightgray"),        # fill color to 'light gray', because the opt_stylize 'gray' looks black
-      cell_text(weight = "bold",             # bold text
-                color = "black")),           # make text black
-            locations = list(cells_column_labels(),      # formatting applies to the column headers
-                             cells_column_spanners()))   # formatting applies to the column spanner
+#samp.table <- read.csv('data/processed/2019_T1_sampleLocation_final.csv')
+
+
+
+### Create Table 1A
+
+table01a <- samp.table %>%
+  knitr::kable(
+    align = 'c',
+    col.names = c("Depth Range", "EAZ", "WAZ", "SFA 4"),
+    caption = '*Number of stomach sampling locations within each depth stratum of the Eastern ASsessment Zone (EAZ), Western Assessment Zone (WAZ), and Shrimp Fishing Area 4 (SFA 4)*'
+  ) 
+
+table01a
+
 
 ```
+
+
+
+```{r sample-loc, include=FALSE}
+
+### Load Table 1 dataframe
+
+samp.table <- read.csv('data/processed/2019_T1_sampleLocation_final.csv')
+
+
+
+### Create Table 1B
+
+table01b <- samp.table %>%
+  gt() %>%
+  cols_label(depth ~ "Depth Stratum (m)",
+             SFA4 ~ "SFA 4")  %>%              # change column names
+  
+  opt_stylize(style = 1, color = "gray") %>%   # uses preset theme in the 'gray' color
+    # I like elements of this theme (boarders and shading)
+    # header text and fill color will be adjusted below
+  
+  cols_width(depth ~ px(160),                  # sets width of the 'depth' column to specified pixel number
+             ends_with("Z") ~ px(130),         # sets width of columns ending in 'Z' to specified pixel number
+             SFA4 ~ px(130)) %>%               # sets width of the 'SFA4' column to specified pixel number
+  
+  cols_align(align = c("center"),              # centers text
+             columns = everything()) %>%       # alignment applies throughout table
+  
+  tab_style(                                   # forces styles onto cells
+    style = list(                              # applies multiple styles
+      cell_fill(color = "lightgray"),          # fill color to 'light gray', because the opt_stylize 'gray' looks black
+      cell_text(weight = "bold",               # bold text
+                color = "black")),             # make text black
+    locations = list(cells_column_labels()))   # formatting applies to the column headers
+   
+                  
+### Exporting as jpeg
+
+jpeg(filename="output/Table01_pretty.jpeg", width = 480, height = 480)
+plot(table01b)
+dev.off()
+
+# replace jpeg() with png() if that becomes a desired format
+
+```
+
+Trying the Kable Package
 
 
 

@@ -6,7 +6,7 @@
 
 
 # Author: Krista Kenyon
-# Date: July 16/2024
+# Date: July 19/2024
 
 # Document Purpose: Saving sources and example code I encountered/used while 
     # creating Table 1 in case it's useful in the future.
@@ -28,8 +28,71 @@
 
 
 ################################################################################
+#                         Table Formatting - Piping Data Test
+################################################################################
+
+
+```{r test, include=FALSE, echo=FALSE}
+source("C:/Users/KenyonK/Documents/Pandalus Research/Pandalus Predator-Prey Studies/analysis_pandalus_prey/scripts/Script_Table01_Sample-Locations.R")
+table1
+# above is supposed to insert code without including the code itself into the document. But the code is still included for some reason
+
+
+################################################################################
+#                         Table Formatting - Kable Test
+################################################################################
+
+
+# kableExtras() requires a pdf or html output. R Markdown will stop knitting if output is Word.
+    # same as flextable()
+
+### Websites I'm looking into:
+ 
+https://bookdown.org/yihui/rmarkdown-cookbook/kableextra.html
+https://www.youtube.com/watch?v=DePaF-IkF94
+https://stackoverflow.com/questions/47704329/how-to-format-kable-table-when-knit-from-rmd-to-word-with-bookdown
+https://davidgohel.github.io/flextable/index.html
+https://stackoverflow.com/questions/49015578/space-after-every-five-rows-in-kable-output-with-booktabs-option-in-r-markdown
+    # adding horizontal lines into tables with kable()
+
+### Current test
+
+{r test1, include=FALSE, results='asis', echo=FALSE}
+
+# results='asis' required for kable. It means that Markdown will pump the results into kable as plain text
+
+### Load Table 1 dataframe
+library(flextable)
+library(kableExtra)
+library(tidyverse)
+
+samp.table <- read.csv('data/processed/2019_T1_sampleLocation_final.csv')
+
+t <- samp.table %>%
+  knitr::kable(
+    align = 'c',
+    col.names = c("Depth Range", "EAZ", "WAZ", "SFA 4"),
+    #  samp.table, booktabs = TRUE,
+    # digits = 2 will round the numbers to 2 decimal places
+    caption = '*Number of stomach sampling locations within each depth stratum of the Eastern ASsessment Zone (EAZ), Western Assessment Zone (WAZ), and Shrimp Fishing Area 4 (SFA 4)*'
+  ) #%>%
+  #kableExtra::kable_styling(bootstrap_options = "striped")
+
+t
+
+
+################################################################################
 #                         Table Formatting - gt & gtExtra
 ################################################################################
+
+
+### Trying to Export into Word
+
+    # (gt to Word) https://stackoverflow.com/questions/69400178/how-to-save-a-gt-table-to-either-an-excel-or-word-file
+        # Tutorial X
+        # saving to rtf format that is Word compatable
+        # still won't keep my desired heading colors beside a spanner
+
 
 
 ### Making Tables Pretty
@@ -81,6 +144,25 @@
 # https://jthomasmock.github.io/gtExtras/reference/gt_highlight_rows.html
 
 # https://stackoverflow.com/questions/75958889/how-can-i-color-every-alternate-table-row-in-gt-table-in-r
+
+
+###########################    Tutorial X   ###################################
+
+
+# From Stack Overflow https://stackoverflow.com/questions/69400178/how-to-save-a-gt-table-to-either-an-excel-or-word-file
+
+# Trying to find a way to use my gt() tables in R Markdown Word output
+# Not successful
+
+# saving to rtf format
+# still won't keep my desired heading colors beside a spanner
+
+#install.packages("gtsummary")
+library(gtsummary)
+
+table01 %>%
+  # gtsummary::as_gt() %>%
+  gt::gtsave(., filename = "output/Table1_pretty.rtf")
 
 
 ###########################    Tutorial 1   ###################################

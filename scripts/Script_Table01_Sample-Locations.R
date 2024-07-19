@@ -16,10 +16,37 @@
         # Not worried about accidentally knitting the whole document when testing out different code chunks
     # Current version is the draft code.
 
+
+# The only package that I have found that works in Word output is 'kable'
+    # it has no real formatting options!!!!
+        # kableExtra only works in pdf/HTML outputs. 
+        # kableExtra Will stop Markdown export if used for Word
+    # some packages will export partial formatting into Word, 
+        # BUT it won't be able to be cross-referenced in text or with captions
+        # This include gt()
+    # With pdf/html exports, formatting and cross-references can be used:
+        # gt()
+        # kableExtra()
+        # flextable()
+    # Additional pdf/html options I didn't look into re cross-referencing include:
+        # anything else listed here: https://rfortherestofus.com/2019/11/how-to-make-beautiful-tables-in-r/
+
+
+# CURRENT PLAN: we want a word output.
+    # those options with Markdown are terrible for formatting. BUT Cross-referencing works
+    # If I insert a nicer table, then there won't be a caption or cross-referencing
+    # Create a code chunk (Table01b) that is not included in the document to create a nice table and export it
+    # have the 'kable' table included in the word output (Table01a)
+    # have notes in the 'ReadMe' file to replace the kable table with the dt table once the word document is produced
+
+
 # Document Sections:
     # Remaining Tasks
     # Load Libraries & Base Data
-    # Code Chunk: Creating Table 1 Sample Locations
+    # Code Chunk: Creating Table 1A Sample Locations : Functional Version
+    # Code Chunk: Creating Table 1B Sample Locations : Pretty Version
+    # Unused Code - Table 1C - Ideal Version
+
 
 
 # Code Chunk was transferred into the R Markdown Table 1: sample-loc
@@ -30,16 +57,19 @@
 
 # Those notes include sites and tutorials that assisted me with:
     # Creating figure dataset
-    # GGPLOT2 Code for Grouped Pie Charts
-    # additional ggplot2 arguments not used in this chart
+    # Table formatting - gt and gtExtras
+    # additional gt arguments not used in this table
 
 
 ################################################################################
 #                            Remaining Tasks 
 ################################################################################
 
+# Clean code across documents
 
-# Step 1: Learn how to create tables in R and R Markdown
+# Team formatting approval
+
+# If find formatting solution, update code
 
 
 
@@ -57,6 +87,7 @@ library(reshape2)
 library(viridis)                 # Fig 5 - color blind friendly palette
 # library(ggrepel)               # formats figure labels so they don't overlap
 library(gt)                      # Table formatting
+library(gtExtras)                # Additional table formatting options
 
 
 
@@ -66,8 +97,10 @@ prey <- read.csv('data/processed/2019_basePrey.csv')
 
 
 ################################################################################
-#              Code Chunk: Creating Table 1 Sample Locations
+#     Code Chunk: Creating Table 1A Sample Locations : Functional Version
 ################################################################################
+
+# !!!!! After Markdown knits Word doc, replace Table 1 with 'output/Table01_pretty.jpeg'
 
 
 # This code chunk:
@@ -95,6 +128,15 @@ prey <- read.csv('data/processed/2019_basePrey.csv')
         # fishing zones (EAZ, WAZ, SFA4)
     # One numerical variable:
         # sum sample locations that falls within categories
+
+
+# There are 3 table versions: 1a, 1b, and 1c
+    # There is only 1 table package compatable with Word: Table 1a
+        # Formatting is terrible
+        # BUT cross referencing happens
+    # Table 1b has better formatting and is exported to 'output/Table01_pretty.jpeg'
+        # After Markdown knits Word doc, replace Table 1a with Table 1b
+    # Table 1c is my ideal formatting, but some formatting not retained when exported to Word
 
 
 ################### Creating New Dataframe for Table 1 ###########################
@@ -206,7 +248,15 @@ write.csv(samp.table,
           row.names = FALSE)
 
 
-###################    Building and Formatting Table 1    ######################
+###################    Building and Formatting Table 1A    ######################
+
+
+# Insert into R Markdown code chunk:
+
+# This is the only package that I have found will export into Word and be cross-referenced
+# It has terrible formatting options
+# After the Markdown Word doc is knitted, replace this table (Table 1A) with the jpeg exported from Table 1B code
+
 
 
 ### Load Table 1 dataframe
@@ -215,42 +265,135 @@ samp.table <- read.csv('data/processed/2019_T1_sampleLocation_final.csv')
 
 
 
-### Create Table 1
+### Create Table 1A
 
-samp.table %>%
+table01a <- samp.table %>%
+  knitr::kable(
+    align = 'c',
+    col.names = c("Depth Range", "EAZ", "WAZ", "SFA 4"),
+    caption = '*Number of stomach sampling locations within each depth stratum of the Eastern ASsessment Zone (EAZ), Western Assessment Zone (WAZ), and Shrimp Fishing Area 4 (SFA 4)*'
+  ) 
+
+table01a
+
+
+################################################################################
+#     Code Chunk: Creating Table 1B Sample Locations : Pretty Version
+################################################################################
+
+
+# Insert into R Markdown code chunk: 
+
+
+# The below code creates a nicely formatted table.
+# This version will be exported as a jpeg and inserted into the Markdown Word document post knit
+# Table 1c (below) is my favorite but does not retain the spanner formatting upon export.
+# The spanner is not really needed, so this version removes the spanner
+
+# If a future me discovers how to retain the spanner formatting, then update to use Table 1C
+
+
+######################    Table 1B - Pretty Version    ########################
+
+
+### Load Table 1 dataframe
+
+samp.table <- read.csv('data/processed/2019_T1_sampleLocation_final.csv')
+
+
+
+### Create Table 1B
+
+table01b <- samp.table %>%
   gt() %>%
   cols_label(depth ~ "Depth Stratum (m)",
-             SFA4 ~ "SFA 4")  %>%            # change column names
+             SFA4 ~ "SFA 4")  %>%              # change column names
   
-  tab_spanner(label = "Assessment Area",     # add a 'spanner' or sub-heading titled Assessment Area
-              columns = EAZ:SFA4) %>%        # spanner is over columns EAZ through SFA4 (goes off column names from df itself - not what you renamed it)
+  opt_stylize(style = 1, color = "gray") %>%   # uses preset theme in the 'gray' color
+    # I like elements of this theme (boarders and shading)
+    # header text and fill color will be adjusted below
   
-  opt_stylize(style = 1, color = "gray") %>%  # uses preset theme in the 'gray' color
-      # I like elements of this theme (boarders and shading)
-      # header text and fill color will be adjusted below
+  cols_width(depth ~ px(160),                  # sets width of the 'depth' column to specified pixel number
+             ends_with("Z") ~ px(130),         # sets width of columns ending in 'Z' to specified pixel number
+             SFA4 ~ px(130)) %>%               # sets width of the 'SFA4' column to specified pixel number
   
-  cols_width(depth ~ px(160),                # sets width of the 'depth' column to specified pixel number
-             ends_with("Z") ~ px(130),       # sets width of columns ending in 'Z' to specified pixel number
-             SFA4 ~ px(130)) %>%             # sets width of the 'SFA4' column to specified pixel number
+  cols_align(align = c("center"),              # centers text
+             columns = everything()) %>%       # alignment applies throughout table
   
-  cols_align(align = c("center"),            # centers text
-             columns = everything()) %>%     # alignment applies throughout table
+  tab_style(                                   # forces styles onto cells
+    style = list(                              # applies multiple styles
+      cell_fill(color = "lightgray"),          # fill color to 'light gray', because the opt_stylize 'gray' looks black
+      cell_text(weight = "bold",               # bold text
+                color = "black")),             # make text black
+    locations = list(cells_column_labels()))   # formatting applies to the column headers
+   
+                  
+### Exporting as jpeg
+
+jpeg(filename="output/Table01_pretty.jpeg", width = 480, height = 480)
+plot(table01b)
+dev.off()
+
+# replace jpeg() with png() if that becomes a desired format
+
+
+################################################################################
+#                    Unused Code - Table 1C - Ideal Version
+################################################################################
+
+
+######################    Table 1C - Ideal Version    ########################
+
+
+# The below code creates my ideal format.
+# It only keeps the grey beside the spanner within R itself. 
+# I'm retaining the code in case future me finds a solution for exporting with my desired formatting
+
+
+### Load Table 1 dataframe
+
+samp.table <- read.csv('data/processed/2019_T1_sampleLocation_final.csv')
+
+
+
+### Create Table 1C - full pretty formatting
+
+table01c <- samp.table %>%
+  gt() %>%
+  cols_label(depth ~ "Depth Stratum (m)",
+             SFA4 ~ "SFA 4")  %>%              # change column names
   
-  tab_style(                                 # forces styles onto cells
-    style = list(                            # applies multiple styles
-      cell_fill(color = "lightgray"),        # fill color to 'light gray', because the opt_stylize 'gray' looks black
-      cell_text(weight = "bold",             # bold text
-                color = "black")),           # make text black
-            locations = list(cells_column_labels(),      # formatting applies to the column headers
-                             cells_column_spanners()))   # formatting applies to the column spanner
+  tab_spanner(label = "Assessment Area",       # add a 'spanner' or sub-heading titled Assessment Area
+              columns = EAZ:SFA4) %>%          # spanner is over columns EAZ through SFA4 (goes off column names from df itself - not what you renamed it)
   
+  opt_stylize(style = 1, color = "gray") %>%    # uses preset theme in the 'gray' color
+    # I like elements of this theme (boarders and shading)
+    # header text and fill color will be adjusted below
+  
+  cols_width(depth ~ px(160),                  # sets width of the 'depth' column to specified pixel number
+             ends_with("Z") ~ px(130),         # sets width of columns ending in 'Z' to specified pixel number
+             SFA4 ~ px(130)) %>%               # sets width of the 'SFA4' column to specified pixel number
+  
+  cols_align(align = c("center"),              # centers text
+             columns = everything()) %>%       # alignment applies throughout table
+   
+  tab_style(                                   # forces styles onto cells
+    style = list(                              # applies multiple styles
+      cell_fill(color = "lightgray"),          # fill color to 'light gray', because the opt_stylize 'gray' looks black
+      cell_text(weight = "bold",               # bold text
+                color = "black")),             # make text black
+    locations = list(cells_column_spanners(),  #   # formatting applies to the column spanner
+                     cells_column_labels()))   # formatting applies to the column headers
+
 
 # below is coding if I want to make further boarder adjustments.
 # current version feels cleaner than adding additional boarders.
 
-  # tab_style(style = list(
-  #   cell_borders(
-  #     sides = c("left", "right"),
-  #     color = "black"),
-  #     weight = px(30)),
-  #   locations = list(cells_body(), cells_column_labels(), cells_column_spanners()))
+# tab_style(style = list(
+#   cell_borders(
+#     sides = c("left", "right"),
+#     color = "black"),
+#     weight = px(30)),
+#   locations = list(cells_body(), cells_column_labels(), cells_column_spanners()))
+
+
