@@ -7,7 +7,7 @@
 
 # Author: Krista Kenyon (KAK)
 # Date Created: July 5/2024
-# Date Last Modified: July 5/2024 by KAK
+# Date Last Modified: July 22/2024 by KAK
 
 
 # Document Purpose: Working document for creating Table 1.
@@ -18,12 +18,12 @@
 
 
 # The only package that I have found that works in Word output is 'kable'
-    # it has no real formatting options!!!!
+    # it has no real formatting options with kable()!!!!
         # kableExtra only works in pdf/HTML outputs. 
         # kableExtra Will stop Markdown export if used for Word
     # some packages will export partial formatting into Word, 
         # BUT it won't be able to be cross-referenced in text or with captions
-        # This include gt()
+        # This include gt() - which has great formatting options
     # With pdf/html exports, formatting and cross-references can be used:
         # gt()
         # kableExtra()
@@ -34,10 +34,11 @@
 
 # CURRENT PLAN: we want a word output.
     # those options with Markdown are terrible for formatting. BUT Cross-referencing works
-    # If I insert a nicer table, then there won't be a caption or cross-referencing
-    # Create a code chunk (Table01b) that is not included in the document to create a nice table and export it
-    # have the 'kable' table included in the word output (Table01a)
-    # have notes in the 'ReadMe' file to replace the kable table with the dt table once the word document is produced
+    # If I insert a nicer table, then there won't be a caption or cross-referencing. That's not okay.
+    # Step 1: Create Table01a with kable() for captions and cross-reference
+    # Step 2: Create Table01b with gt() with formatting. Export as .jpeg in '/output'
+        # Do not include in Markdown document via knitting
+    # Step 3: post knit, replace Table01a in output with Table01b .jpeg 
 
 
 # Document Sections:
@@ -49,28 +50,31 @@
 
 
 
-# Code Chunk was transferred into the R Markdown Table 1: sample-loc
+# Code Chunk Table 1A was transferred into the R Markdown: table-kable
+# Code Chunk Table 1B was transferred into R Markdown: sample-loc
 
 
 # To see tutorials, key webpages, and key videos I used to create and format Table 1:
     # please see the 'Draft_Script_Table01_sample-location.R' in the 'Draft Code' folder
 
-# Those notes include sites and tutorials that assisted me with:
+# Draft Script notes include sites and tutorials that assisted me with:
     # Creating figure dataset
+    # Piping script into R Markdown
+    # Table formatting - kable and kableExtras
     # Table formatting - gt and gtExtras
-    # additional gt arguments not used in this table
+    # Unused But Interesting gt() Code
 
 
 ################################################################################
 #                            Remaining Tasks 
 ################################################################################
 
+
 # Clean code across documents
 
 # Team formatting approval
 
 # If find formatting solution, update code
-
 
 
 ################################################################################
@@ -88,6 +92,7 @@ library(viridis)                 # Fig 5 - color blind friendly palette
 # library(ggrepel)               # formats figure labels so they don't overlap
 library(gt)                      # Table formatting
 library(gtExtras)                # Additional table formatting options
+library(flextable)               # Table package that may work in Word
 
 
 
@@ -99,6 +104,7 @@ prey <- read.csv('data/processed/2019_basePrey.csv')
 ################################################################################
 #     Code Chunk: Creating Table 1A Sample Locations : Functional Version
 ################################################################################
+
 
 # !!!!! After Markdown knits Word doc, replace Table 1 with 'output/Table01_pretty.jpeg'
 
@@ -114,10 +120,10 @@ prey <- read.csv('data/processed/2019_basePrey.csv')
 # Dataframe transformations:
     # removing duplicates Trawl IDs so there is only one row per sample location
     # add column for number of trawls that occurred at each sample location
-        # required for reformatting later on
+        # required for reformatting to samp.table dataframe
     # reformatted text in 'depth' category
     # export samp.detail dataframe data/processed/
-    # restructure dataframe into the total sum of sample stations per depth structure within each assessment area
+    # restructure dataframe into the total sum of sample stations per depth structure within each assessment area (samp.table)
     # reorder assessment areas for table
     # export samp.table dataframe to data/processed/
 
@@ -142,10 +148,9 @@ prey <- read.csv('data/processed/2019_basePrey.csv')
 ################### Creating New Dataframe for Table 1 ###########################
 
 
-
 ### reformatting dataframe to have one row per sample location
 
-length(unique(prey$Trawl_ID))
+#length(unique(prey$Trawl_ID))
     # checking how many unique sample locations occurred
     # 2019 data: 92 observations
 
@@ -157,13 +162,13 @@ samp <- samp[!duplicated(samp$Trawl_ID),]
 
 # CHECK NUMBER VARIABLES! Does it match # unique Trawl_ID sampled above
 
-str(samp) 
+#str(samp) 
     # for 2019 data: 92 observations
 
 
 
 ### Adding column for the number of trawls per Trawl ID (or location)
-    # formula later will need a number column to calculate total sums
+    # necessary to calculate total trawls per depth per region
 
 samp$trawl.sample <- 1 
 
@@ -172,6 +177,7 @@ samp$trawl.sample <- 1
 ### format depth column data for table
 samp.detail <- samp %>%
   mutate(depth = str_replace(depth, "m$", ""))
+    # if text ends in 'm', remove it
 
 
 
@@ -216,7 +222,7 @@ write.csv(samp.detail,
 
 
 
-### create Table 1 dataframe: sum survey locations per regions, per depth
+### create Table 1 final dataframe: sum survey locations per regions, per depth
 
 samp.table <- dcast(samp.detail, depth~region, value.var="trawl.sample", sum) %>%
     # reformatting the data into the structure gt() will want
@@ -224,14 +230,15 @@ samp.table <- dcast(samp.detail, depth~region, value.var="trawl.sample", sum) %>
     # moves the SFA4 column after WAZ. the '.' in .after is important!
     # used the dyplr cheat sheet and copilot
 
-sum(samp.table$EAZ + samp.table$SFA + samp.table$WAZ)
+#sum(samp.table$EAZ + samp.table$SFA + samp.table$WAZ)
     # checking that we still have correct # of survey locations
     # 2019 data = 92 survey locations
 
 
+
 ### Saving Final Dataframe Structure 
 
- str(samp.table)
+#str(samp.table)
 
 # 'data.frame':	5 obs. of  4 variables:
 #   
@@ -240,8 +247,9 @@ sum(samp.table$EAZ + samp.table$SFA + samp.table$WAZ)
 # $ WAZ  : num  0 3 4 2 0
 # $ SFA4 : num  7 3 3 4 3
  
+
  
-### Exporting Table 1 Dataframe
+### Exporting Table 1 Final Dataframe
  
 write.csv(samp.table, 
           file="data/processed/2019_T1_sampleLocation_final.csv", 
@@ -268,11 +276,12 @@ samp.table <- read.csv('data/processed/2019_T1_sampleLocation_final.csv')
 ### Create Table 1A
 
 table01a <- samp.table %>%
-  knitr::kable(
-    align = 'c',
-    col.names = c("Depth Range", "EAZ", "WAZ", "SFA 4"),
+  knitr::kable(                                              # creating kable() table
+    align = 'c',                                             # center alignment
+    col.names = c("Depth Range", "EAZ", "WAZ", "SFA 4"),     # defines column names
     caption = '*Number of stomach sampling locations within each depth stratum of the Eastern ASsessment Zone (EAZ), Western Assessment Zone (WAZ), and Shrimp Fishing Area 4 (SFA 4)*'
-  ) 
+        # caption - will be pulled into the R Markdown output. Not included in code chunk {fig.cap} equivalent like figures
+      )                                                          
 
 table01a
 
@@ -282,11 +291,11 @@ table01a
 ################################################################################
 
 
-# Insert into R Markdown code chunk: 
+# Insert into R Markdown code chunk: sample-loc 
 
 
 # The below code creates a nicely formatted table.
-# This version will be exported as a jpeg and inserted into the Markdown Word document post knit
+# This version will be exported as a jpeg and will need to be inserted into the Markdown Word document post knit
 # Table 1c (below) is my favorite but does not retain the spanner formatting upon export.
 # The spanner is not really needed, so this version removes the spanner
 
@@ -306,28 +315,28 @@ samp.table <- read.csv('data/processed/2019_T1_sampleLocation_final.csv')
 
 table01b <- samp.table %>%
   gt() %>%
-  cols_label(depth ~ "Depth Stratum (m)",
-             SFA4 ~ "SFA 4")  %>%              # change column names
-  
+  cols_label(depth ~ "Depth Stratum (m)",      # change column names
+             SFA4 ~ "SFA 4")  %>%              
+
   opt_stylize(style = 1, color = "gray") %>%   # uses preset theme in the 'gray' color
-    # I like elements of this theme (boarders and shading)
-    # header text and fill color will be adjusted below
-  
+                                               # I like elements of this theme (boarders and shading)
+                                               # header text and fill color will be adjusted below
+
   cols_width(depth ~ px(160),                  # sets width of the 'depth' column to specified pixel number
              ends_with("Z") ~ px(130),         # sets width of columns ending in 'Z' to specified pixel number
              SFA4 ~ px(130)) %>%               # sets width of the 'SFA4' column to specified pixel number
-  
+
   cols_align(align = c("center"),              # centers text
              columns = everything()) %>%       # alignment applies throughout table
-  
+
   tab_style(                                   # forces styles onto cells
     style = list(                              # applies multiple styles
       cell_fill(color = "lightgray"),          # fill color to 'light gray', because the opt_stylize 'gray' looks black
       cell_text(weight = "bold",               # bold text
                 color = "black")),             # make text black
     locations = list(cells_column_labels()))   # formatting applies to the column headers
-   
-                  
+
+
 ### Exporting as jpeg
 
 jpeg(filename="output/Table01_pretty.jpeg", width = 480, height = 480)
@@ -342,12 +351,12 @@ dev.off()
 ################################################################################
 
 
-######################    Table 1C - Ideal Version    ########################
-
-
-# The below code creates my ideal format.
-# It only keeps the grey beside the spanner within R itself. 
+# The below code creates my ideal table format & unused gt() arguments
+# It only keeps the grey beside the spanner within R itself.
 # I'm retaining the code in case future me finds a solution for exporting with my desired formatting
+
+
+######################    Table 1C - Ideal Version    ########################
 
 
 ### Load Table 1 dataframe
@@ -362,21 +371,21 @@ table01c <- samp.table %>%
   gt() %>%
   cols_label(depth ~ "Depth Stratum (m)",
              SFA4 ~ "SFA 4")  %>%              # change column names
-  
+
   tab_spanner(label = "Assessment Area",       # add a 'spanner' or sub-heading titled Assessment Area
               columns = EAZ:SFA4) %>%          # spanner is over columns EAZ through SFA4 (goes off column names from df itself - not what you renamed it)
-  
-  opt_stylize(style = 1, color = "gray") %>%    # uses preset theme in the 'gray' color
-    # I like elements of this theme (boarders and shading)
-    # header text and fill color will be adjusted below
-  
+
+  opt_stylize(style = 1, color = "gray") %>%   # uses preset theme in the 'gray' color
+                                               # I like elements of this theme (boarders and shading)
+                                               # header text and fill color will be adjusted below
+
   cols_width(depth ~ px(160),                  # sets width of the 'depth' column to specified pixel number
              ends_with("Z") ~ px(130),         # sets width of columns ending in 'Z' to specified pixel number
              SFA4 ~ px(130)) %>%               # sets width of the 'SFA4' column to specified pixel number
-  
+
   cols_align(align = c("center"),              # centers text
              columns = everything()) %>%       # alignment applies throughout table
-   
+
   tab_style(                                   # forces styles onto cells
     style = list(                              # applies multiple styles
       cell_fill(color = "lightgray"),          # fill color to 'light gray', because the opt_stylize 'gray' looks black
@@ -385,6 +394,53 @@ table01c <- samp.table %>%
     locations = list(cells_column_spanners(),  #   # formatting applies to the column spanner
                      cells_column_labels()))   # formatting applies to the column headers
 
+table01c
+
+
+######################    Table 1D - Flextable    ########################
+
+
+### Load Table 1 dataframe
+
+samp.table <- read.csv('data/processed/2019_T1_sampleLocation_final.csv')
+
+
+
+### Create Table 1D - flextable package
+
+install.packages("officer")
+library(officer)
+
+set_flextable_defaults(hline_top(), 
+                       hline_bottom(),
+                       hline(i=2, ))
+
+set_flextable_defaults(border.color = "darkgray", border.width = 1.5, border.style = "solid", odd_body = "#EFEFEF")
+#table01d <- 
+big_border <- fp_border(color = "darkgray", style = "solid" , width = 1.5)
+    # officer() need for above function
+
+row_odd <- seq_len(nrow(samp.table)) %% 2
+
+  flextable(samp.table) %>%
+   # hline_top(part = "all", border = big_border) %>%
+  # add_header_row(values = c("","Assessment Area"),
+  #                           colwidths = c(1,3)) %>%
+    set_header_labels(depth = "Depth Stratum (m)",           # renames columns
+                      SFA4 = "SFA 4") %>%
+    bg(bg = "lightgray", part = "header") %>%            # defines header colour
+    bold(part = "header") %>%                            # header text bold
+    #bg(i = seq_len(nrow(samp.table)) %% 2, bg = "gray", part = "body") %>%
+  align(part = "all", align = "center") %>%             # centers the entire document
+  set_caption(caption = "Does Flextable Work") %>%           # adds caption that R Markdown incorporates
+    width(j = 1, width = 4, unit = "cm") #  %>%
+  theme_zebra()                                              # theme
+
+table01d
+?set_header_labels
+?theme_fun
+ 
+###################       Unused gt() arguments      ##########################
 
 # below is coding if I want to make further boarder adjustments.
 # current version feels cleaner than adding additional boarders.
