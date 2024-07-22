@@ -13,7 +13,8 @@
 
 # Document 'Sections' Include:
     # Creating figure dataset
-        # subsection: tutorials
+    # Piping Data into R Markdown
+    # Table Formatting - kable & kableExtras
     # Table Formatting - gt & gtExtra
         # subsection: tutorials
     # Unused but Interesting code
@@ -24,39 +25,124 @@
 ################################################################################
 
 
-# I used code that I learned while making Fig 3-5
+# I used code that I learned while making Fig 3-5 to format the dataset
+
+
+
+### Export jpeg
+
+    # (export jpeg code) https://www.datamentor.io/r-programming/saving-plot
 
 
 ################################################################################
-#                         Table Formatting - Piping Data Test
+#                        Piping Data into R Markdown
 ################################################################################
 
 
-```{r test, include=FALSE, echo=FALSE}
-source("C:/Users/KenyonK/Documents/Pandalus Research/Pandalus Predator-Prey Studies/analysis_pandalus_prey/scripts/Script_Table01_Sample-Locations.R")
+# source: https://bookdown.org/yihui/rmarkdown-cookbook/option-code.html
+    # two options are provided 
+    # forces external R code into the Markdown code chunk
+    # keeps the Markdown document clean
+    # only need to maintain one chunk of code, rather than two
+    # cross-referencing still works
+
+
+
+### {file=}
+
+# Bookdown document says this is the best way to pipe in code
+
+# generates tables and exports data as if writing into the R Markdown code chunk
+
+# example code
+```{r, file='your-script.R'}
+```
+
+
+
+### 'source ='
+
+# tables called out in source code will not be generated within the R Markdown
+# exports within source code will not happen either.
+
+# So if I want to end up using this method I will need to include code within the Markdown chunk that:
+    # reveals tables/figures
+    # exports any desired codes
+
+# example code
+```{r test, echo=FALSE}
+source("C:scripts/Script_Table01_Sample-Locations.R")  # pathway within R Project works. Will be transferable
 table1
-# above is supposed to insert code without including the code itself into the document. But the code is still included for some reason
+```
 
 
 ################################################################################
-#                         Table Formatting - Kable Test
+#                  Table Formatting - kable & kableExtra
 ################################################################################
 
 
-# kableExtras() requires a pdf or html output. R Markdown will stop knitting if output is Word.
-    # same as flextable()
+# kable() can generate tables for Word outputs.
 
-### Websites I'm looking into:
- 
-https://bookdown.org/yihui/rmarkdown-cookbook/kableextra.html
-https://www.youtube.com/watch?v=DePaF-IkF94
-https://stackoverflow.com/questions/47704329/how-to-format-kable-table-when-knit-from-rmd-to-word-with-bookdown
-https://davidgohel.github.io/flextable/index.html
-https://stackoverflow.com/questions/49015578/space-after-every-five-rows-in-kable-output-with-booktabs-option-in-r-markdown
-    # adding horizontal lines into tables with kable()
+# kableExtra() provides formatting options for kable() tables. 
+    # ONLY WORKS for pdf or html outputs. NOT WORD 
+    # same as flextable() - a different table creation package
 
-### Current test
+# R Markdown will stop knitting word output if kableExtra() code is used 
+    
 
+
+### kable
+
+    # (chunk requirements) https://www.youtube.com/watch?v=DePaF-IkF94
+        # Tutorial 1
+        # kable requires {r, results='asis'} in Markdown code chunk
+
+
+
+### kableExtra
+
+    # (overview) https://bookdown.org/yihui/rmarkdown-cookbook/kableextra.html
+        # specifies allowed outputs
+        # overview of most common formatting options
+
+    # (only pdf & html) https://stackoverflow.com/questions/47704329/how-to-format-kable-table-when-knit-from-rmd-to-word-with-bookdown
+        # likely has other details on kableExtra
+        # This is where I learned kableExtras only works on pdf and html outputs
+
+    # (basic formatting) https://www.youtube.com/watch?v=DePaF-IkF94
+        # Tutorial 1
+        # formatting such as table striping and width
+
+    # (horizontal lines) https://stackoverflow.com/questions/49015578/space-after-every-five-rows-in-kable-output-with-booktabs-option-in-r-markdown
+        # removing or adjsuting default white line spaces after every 5 rows in table
+        # adding horizontal lines into tables
+
+
+
+### flextable
+
+     (overview) https://davidgohel.github.io/flextable/index.html
+        # there may be a package that lets me format tables with flextable, and maybe kableExtra for Word
+        # officer() and officedown() packages. I NEED TO LOOK INTO THESE
+
+
+
+### officer
+
+# LOOK INTO THIS
+
+https://davidgohel.github.io/officer/
+
+
+###########################    Tutorial 1   ###################################
+
+
+# From  https://www.youtube.com/watch?v=DePaF-IkF94
+
+# formatting tables with kable() and kableExtra()
+
+# code below
+```
 {r test1, include=FALSE, results='asis', echo=FALSE}
 
 # results='asis' required for kable. It means that Markdown will pump the results into kable as plain text
@@ -68,17 +154,14 @@ library(tidyverse)
 
 samp.table <- read.csv('data/processed/2019_T1_sampleLocation_final.csv')
 
-t <- samp.table %>%
+df %>%
   knitr::kable(
-    align = 'c',
-    col.names = c("Depth Range", "EAZ", "WAZ", "SFA 4"),
-    #  samp.table, booktabs = TRUE,
-    # digits = 2 will round the numbers to 2 decimal places
-    caption = '*Number of stomach sampling locations within each depth stratum of the Eastern ASsessment Zone (EAZ), Western Assessment Zone (WAZ), and Shrimp Fishing Area 4 (SFA 4)*'
-  ) #%>%
-  #kableExtra::kable_styling(bootstrap_options = "striped")
-
-t
+    digits = 2,                                              # will round the numbers to 2 decimal places
+    caption = 'Table 1: Summary Statistics'                 # table caption
+  ) %>%
+  kableExtra::kable_styling(bootstrap_options = "striped",  # colored stripes every other row
+                            full_width=FALSE)               # table doesn't go the full width
+```
 
 
 ################################################################################
@@ -89,7 +172,7 @@ t
 ### Trying to Export into Word
 
     # (gt to Word) https://stackoverflow.com/questions/69400178/how-to-save-a-gt-table-to-either-an-excel-or-word-file
-        # Tutorial X
+        # Tutorial 2
         # saving to rtf format that is Word compatable
         # still won't keep my desired heading colors beside a spanner
 
@@ -98,11 +181,11 @@ t
 ### Making Tables Pretty
 
     # (overview of gt) https://www.youtube.com/watch?v=jptX745mp7M
-        # Tutorial 1
+        # Tutorial 3
         # Really good overview about table manipulations and formatting in gt package
 
     # (overview of gtExtra) https://www.youtube.com/watch?v=AJ0_PCIVXD4
-        # Tutorial 2
+        # Tutorial 4
         # Insert distribution graphs within the table
         # a bit on themes
 
@@ -115,6 +198,7 @@ t
         # terms for the different table sections
 
     # (defining column widths) https://gt.rstudio.com/reference/cols_width.html
+        # Tutorial 5
         # available arguments
 
     # (alignment within columns) https://gt.rstudio.com/reference/cols_align.html
@@ -139,14 +223,14 @@ t
 
 # I haven't looked at these websites but they are stored here for future reference
 
-# https://gt.rstudio.com/reference/tab_style.html
+    # https://gt.rstudio.com/reference/tab_style.html
 
-# https://jthomasmock.github.io/gtExtras/reference/gt_highlight_rows.html
+    # https://jthomasmock.github.io/gtExtras/reference/gt_highlight_rows.html
 
-# https://stackoverflow.com/questions/75958889/how-can-i-color-every-alternate-table-row-in-gt-table-in-r
+    # https://stackoverflow.com/questions/75958889/how-can-i-color-every-alternate-table-row-in-gt-table-in-r
 
 
-###########################    Tutorial X   ###################################
+###########################    Tutorial 2   ###################################
 
 
 # From Stack Overflow https://stackoverflow.com/questions/69400178/how-to-save-a-gt-table-to-either-an-excel-or-word-file
@@ -165,7 +249,7 @@ table01 %>%
   gt::gtsave(., filename = "output/Table1_pretty.rtf")
 
 
-###########################    Tutorial 1   ###################################
+###########################    Tutorial 3   ###################################
 
 
 # From Equitable Equations channel https://www.youtube.com/watch?v=jptX745mp7M
@@ -326,7 +410,7 @@ scat_table2 %>%
 # gt() will always look for the name in the actual dataset, not whatever I label within the table
 
 
-###########################    Tutorial 2   ###################################
+###########################    Tutorial 4   ###################################
 
 
 # From R Programming 101 channel https://www.youtube.com/watch?v=AJ0_PCIVXD4
@@ -367,7 +451,7 @@ mtcars %>%
     # table header
 
 
-###########################    Tutorial 3   ###################################
+###########################    Tutorial 5   ###################################
 
 
 # From https://gt.rstudio.com/reference/cols_width.html
@@ -387,8 +471,9 @@ cols_width(everything() ~ px(60))          # All columns set to 50 pixels
 
 
 ################################################################################
-#                        Unused but Interesting Code
+#                      Unused but Interesting gt() Code
 ################################################################################
+
 
 # gt() code that I found but did not use
 
