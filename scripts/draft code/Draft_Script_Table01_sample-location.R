@@ -11,13 +11,33 @@
 # Document Purpose: Saving sources and example code I encountered/used while 
     # creating Table 1 in case it's useful in the future.
 
+
 # Document 'Sections' Include:
     # Creating figure dataset
     # Piping Data into R Markdown
-    # Table Formatting - kable & kableExtras
+    # Table Formatting - flextable & officer
+    # Table Formatting - kable & kableExtra
     # Table Formatting - gt & gtExtra
         # subsection: tutorials
-    # Unused but Interesting code
+    # Unused Tables with kable() 
+    # Unused Tables for gt()
+    # Unused gt() Code
+
+
+# I tried a few table packages while creating a Word compatable table with Markdown cross-references:
+
+    # flextable() offered Word compatibility, formatting, and Markdown cross-references
+        # this is the package I used
+
+    # kable() offered word compatibility and Markdown references
+        # no formatting!
+        # kableExtra() provides formatting but isn't Word compatible. Only pdf/html
+        # kableExtra() will make Markdown crash
+
+    # gt() provides smooth formating. But only compatable with pdf/html
+        # but it didn't keep all formatting even when exported to pdf.....
+
+    # additional non-Word compatible options https://rfortherestofus.com/2019/11/how-to-make-beautiful-tables-in-r/
 
 
 ################################################################################
@@ -77,6 +97,56 @@ table1
 
 
 ################################################################################
+#                  Table Formatting - flextable & officer
+################################################################################
+
+# A note is that I found very little youtube or webpage tutorials on flextable.
+
+# The Stacked Overflow pages just pointed to the excellent source book.
+
+# The ONE youtube video I found was an hour long presentation by the creator
+
+
+
+### Flextable works in word
+
+    # (export to Word) https://stackoverflow.com/questions/73120996/how-to-export-kableextra-output-in-r-to-word
+
+    # (gitHub Summary) https://davidgohel.github.io/flextable/index.html
+
+
+
+### Flextable Sources
+
+    # (flextable source book) https://ardata-fr.github.io/flextable-book/
+        # I found everything in this book
+
+    # (video overview) https://www.youtube.com/watch?v=-EuPFZCTnHE
+        # Creator explaining package
+        # I have not yet listened to the entirety (1.25 hrs)
+
+
+
+### officer
+
+    # (github Summary) https://davidgohel.github.io/officer/
+
+
+
+# some formatting options in flextable() use the officer() package
+    # As of July 23/2024 my completed first draft of Table 1 didn't use any
+
+# I have barely looked into officer or the related officedown package
+
+# It allows for improved manipulation of Word (.docx) and PowerPoint (.pptx) files in R
+
+# One Stacked Overflow post said that if incorporated the larger heavy-lifting components
+    # of officer to a large Markdown document, that Markdown knitting would slow or crash
+
+# definitely an interesting package to look into at some point
+
+
+################################################################################
 #                  Table Formatting - kable & kableExtra
 ################################################################################
 
@@ -118,22 +188,6 @@ table1
         # adding horizontal lines into tables
 
 
-
-### flextable
-
-     (overview) https://davidgohel.github.io/flextable/index.html
-        # there may be a package that lets me format tables with flextable, and maybe kableExtra for Word
-        # officer() and officedown() packages. I NEED TO LOOK INTO THESE
-
-
-
-### officer
-
-# LOOK INTO THIS
-
-https://davidgohel.github.io/officer/
-
-
 ###########################    Tutorial 1   ###################################
 
 
@@ -167,6 +221,9 @@ df %>%
 ################################################################################
 #                         Table Formatting - gt & gtExtra
 ################################################################################
+
+library(gt)                      # Table formatting
+library(gtExtras)                # Additional table formatting options
 
 
 ### Trying to Export into Word
@@ -471,7 +528,154 @@ cols_width(everything() ~ px(60))          # All columns set to 50 pixels
 
 
 ################################################################################
-#                      Unused but Interesting gt() Code
+#                      Unused Tables with kable()
+################################################################################
+
+
+# used flextable() rather than kable()
+
+# kable() creates tables that can be exported to Word and cross-referenced 
+# It has terrible formatting options. Almost unusable without kableExtra()
+# kableExtra() adds formatting but doesn't work with Word
+
+
+
+### Load Table 1 dataframe
+
+samp.table <- read.csv('data/processed/2019_T1_sampleLocation_final.csv')
+
+
+
+### Create Table 1A
+
+table01a <- samp.table %>%
+  knitr::kable(                                              # creating kable() table
+    align = 'c',                                             # center alignment
+    col.names = c("Depth Range", "EAZ", "WAZ", "SFA 4"),     # defines column names
+    caption = '*Number of stomach sampling locations within each depth stratum of the Eastern ASsessment Zone (EAZ), Western Assessment Zone (WAZ), and Shrimp Fishing Area 4 (SFA 4)*'
+    # caption - will be pulled into the R Markdown output. Not included in code chunk {fig.cap} equivalent like figures
+  )                                                          
+
+table01a
+
+
+################################################################################
+#                      Unused Tables with gt()
+################################################################################
+
+
+# flextable() was used for Table 1 
+
+# gt is my favourate package so far to create Tables. 
+# if feels intuitive, with good online examples, is easily custamizable
+# not all formatting from .jpeg holds in exporting to pdf or word
+# But it doesn't work with Word for formatting or cross-referencing
+
+# until I found flextable(), my plan was to: 
+    # use kable() table in Markdown
+    # export a gt() table .jpeg in /outputs
+    # cut kable() table from Word and paste in gt() jpeg
+
+
+######################    Table 1B - Pretty Version    ########################
+
+
+# The below code creates a nicely formatted table.
+# Table 1c (below) is my favorite but does not retain the spanner formatting upon export.
+# The spanner is not really needed, so this version removes the spanner
+
+
+
+### Load Table 1 dataframe
+
+samp.table <- read.csv('data/processed/2019_T1_sampleLocation_final.csv')
+
+
+
+### Create Table 1B
+
+table01b <- samp.table %>%
+  gt() %>%
+  cols_label(depth ~ "Depth Stratum (m)",      # change column names
+             SFA4 ~ "SFA 4")  %>%              
+  
+  opt_stylize(style = 1, color = "gray") %>%   # uses preset theme in the 'gray' color
+  # I like elements of this theme (boarders and shading)
+  # header text and fill color will be adjusted below
+  
+  cols_width(depth ~ px(160),                  # sets width of the 'depth' column to specified pixel number
+             ends_with("Z") ~ px(130),         # sets width of columns ending in 'Z' to specified pixel number
+             SFA4 ~ px(130)) %>%               # sets width of the 'SFA4' column to specified pixel number
+  
+  cols_align(align = c("center"),              # centers text
+             columns = everything()) %>%       # alignment applies throughout table
+  
+  tab_style(                                   # forces styles onto cells
+    style = list(                              # applies multiple styles
+      cell_fill(color = "lightgray"),          # fill color to 'light gray', because the opt_stylize 'gray' looks black
+      cell_text(weight = "bold",               # bold text
+                color = "black")),             # make text black
+    locations = list(cells_column_labels()))   # formatting applies to the column headers
+
+
+
+### Exporting as jpeg
+
+jpeg(filename="output/Table01_pretty.jpeg", width = 480, height = 480)
+plot(table01b)
+dev.off()
+
+# replace jpeg() with png() if that becomes a desired format
+
+
+######################    Table 1C - Ideal Version    ########################
+
+
+# The below code creates my ideal table format & unused gt() arguments
+# It only keeps the grey beside the spanner within R itself.
+
+
+
+### Load Table 1 dataframe
+
+samp.table <- read.csv('data/processed/2019_T1_sampleLocation_final.csv')
+
+
+
+### Create Table 1C - full pretty formatting
+
+table01c <- samp.table %>%
+  gt() %>%
+  cols_label(depth ~ "Depth Stratum (m)",
+             SFA4 ~ "SFA 4")  %>%              # change column names
+  
+  tab_spanner(label = "Assessment Area",       # add a 'spanner' or sub-heading titled Assessment Area
+              columns = EAZ:SFA4) %>%          # spanner is over columns EAZ through SFA4 (goes off column names from df itself - not what you renamed it)
+  
+  opt_stylize(style = 1, color = "gray") %>%   # uses preset theme in the 'gray' color
+  # I like elements of this theme (boarders and shading)
+  # header text and fill color will be adjusted below
+  
+  cols_width(depth ~ px(160),                  # sets width of the 'depth' column to specified pixel number
+             ends_with("Z") ~ px(130),         # sets width of columns ending in 'Z' to specified pixel number
+             SFA4 ~ px(130)) %>%               # sets width of the 'SFA4' column to specified pixel number
+  
+  cols_align(align = c("center"),              # centers text
+             columns = everything()) %>%       # alignment applies throughout table
+  
+  tab_style(                                   # forces styles onto cells
+    style = list(                              # applies multiple styles
+      cell_fill(color = "lightgray"),          # fill color to 'light gray', because the opt_stylize 'gray' looks black
+      cell_text(weight = "bold",               # bold text
+                color = "black")),             # make text black
+    locations = list(cells_column_spanners(),  #   # formatting applies to the column spanner
+                     cells_column_labels()))   # formatting applies to the column headers
+
+table01c
+
+
+################################################################################
+#                            Unused gt() Code
 ################################################################################
 
 
@@ -496,3 +700,39 @@ df %>%
     locations = list(cells_body(),               # styles will apply to the table body
                      cells_column_labels(),      # styles will apply to the table header
                      cells_column_spanners()))   # styles will apply to the table header spanner
+  
+
+################################################################################
+#                      Unused flextable-officer Code
+################################################################################
+
+
+library(officer)    # offers formatting options for Markdown to Word
+                    # comments online that when used a lot for long reports, can slow or crash Markdown exports
+  
+  
+
+# define table formatting defaults for all flextable() tables within an entire document
+    # if used, this should be included in Markdown 'setup' chunk when loading libraries etc
+set_flextable_defaults(border.color = "darkgray",    # defines color for all boarders
+                       border.width = 1.5,           # defines width for all boarders
+                       border.style = "solid")       # defines line type for all boarders
+
+# remove defined formatting (from set_flextable_defaults)
+init_flextable_defaults()
+
+
+# create border rules that are required for customizing any border
+    # officer package need for belwo function
+big_border <- fp_border(color = "darkgray", style = "solid" , width = 1.5)
+
+
+flextable(samp.table) %>%                          # create flextable of specified dataframe
+  
+  hline_top(part = "all",                          # horizontal header lines 
+            border = big_border) %>%               # style defined in 'big_border' vector from earlier fp_border()   
+  
+  add_header_row(                                  # adding a second header row (spanner in gt)
+    values = c("","Assessment Area"),              # titles for header row  
+                             colwidths = c(1,3))   # number of columns it applies to.
+                                                   # HAS TO = total number of columns
