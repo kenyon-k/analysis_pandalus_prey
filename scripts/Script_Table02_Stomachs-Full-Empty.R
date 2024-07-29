@@ -117,7 +117,7 @@ region.total <- read.csv('data/processed/2019_F4_region.total.csv')
 
 ### Creating new dataframe for Table 2
 
-stomach.ratio <- pred %>%               # create new dataframe based on 'pred'                    
+stomach.ratio  <- pred %>%               # create new dataframe based on 'pred'                    
     
   select(Prey_OS_ID,                    # subsets dataframe by selected columns
          pred.name, 
@@ -173,37 +173,13 @@ stomach.ratio <- pred %>%               # create new dataframe based on 'pred'
   pivot_wider(names_from = pred.name,                       # categorical values to pull from rows to columns
               values_from = c(Full, Empty, Total)) %>%      # numerical values to fill in those columns
 
+  
 # Re-Ordering Columns 
   
   relocate(contains('cod'), .after = length.range) %>%     # moves any column with name containing 'cod' to the right of length.range
   relocate(contains('Greenland'), .after = contains('cod')) %>%
-  relocate(contains('Red'), .after = contains('Green')) # %>%
+  relocate(contains('Red'), .after = contains('Green'))  %>%
 
-
-# Add length.range 0-5 row if none exist
-
-  ifelse(length.range != "0-5",   # Prey_OS_ID of 9998 = 'Empty'
-         add_row(length.range = '0-5')) 
-         0)) %>%
- 
-  mutate(Full = ifelse(Prey_OS_ID == 9998,     # create new column 'Full' with values based on logical check
-                       0,                      # value if logical check is TRUE
-                       1)) #%>%                 # value if logical check is FALSE
-  
-  
-t3 <- stomach.ratio   
-
-t4 <- t3 %>%
-  ungroup(length.range) %>%
-  ifelse(length.range != "0-5",  
-         add_row(length.range = '0-5'))
-         )
-  
-  
-  
-  if(length.range != '0-5'){
-    add_row(length.range = '0-5')}
-t4$length.range[645]
 
 # Re-Order Rows from Smallest to Largest Fish
 
@@ -219,17 +195,55 @@ t4$length.range[645]
   
   mutate(length.range = str_replace(length.range, # removing the extra zeros for Table formatting
                                     "^0{1,}",     # select 1+ '0's at the beginning of strings
-                                    ""))          # remove selected '0's
-
+                                    "")) %>%         # remove selected '0's
   
-
-
-flextable(stomach.ratio)
   
+# Replace 0 and NA values with '-' 
+    # I could not select and replace across the entire dataframe within dyplr
+    # I had to use Base R for Step 2
+    # Step 1: replacing 'NA' with 0 in dyplr (replace)
+    # Step 2: replacing '0' with '-' in base R (lapply) and stringr (str_replace_all)
+    
+
+  replace(is.na(.), 0)                                 # if there are NA's, replace with 0
+
+stomach.ratio <- data.frame(lapply(stomach.ratio, function(x){    # honestly - I don't know what above code does but it works
+  str_replace_all(x,                                              # will be related to the code in the above line. But Idk who it actually works
+                  "(?<!\\S)0(?!\\S)",                             # select '0' with nothing before or after
+                  "-")                                            # replace with '-'
+})) 
+
+
 # Re-Naming Columns
 names(stomach.ratio)
 
-# Replace 0 and NA values with '-'
+
+# Add length.range 0-5 row if none exist - DO I NEED THIS??
+
+ifelse(length.range != "0-5",   # Prey_OS_ID of 9998 = 'Empty'
+       add_row(length.range = '0-5')) 
+0)) %>%
+  
+  mutate(Full = ifelse(Prey_OS_ID == 9998,     # create new column 'Full' with values based on logical check
+                       0,                      # value if logical check is TRUE
+                       1)) #%>%                 # value if logical check is FALSE
+
+
+t3 <- stomach.ratio   
+
+t4 <- t3 %>%
+  ungroup(length.range) %>%
+  ifelse(length.range != "0-5",  
+         add_row(length.range = '0-5'))
+)
+
+
+
+if(length.range != '0-5'){
+  add_row(length.range = '0-5')}
+t4$length.range[645]
+
+
 
 
 
