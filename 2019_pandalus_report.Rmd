@@ -448,8 +448,6 @@ Piping external code into Markdown via 'file =' for Table\@ref(tab:sample-locati
 
 
 
-
-
 ## Collection of Stomach Samples
 
 ## Stomach Content Analysis
@@ -821,7 +819,192 @@ Table 2: Table showing total fish with full and empty stomachs for each fish cla
 Data I will need includes length (cm) of caught fish, if stomach was full or empty, for each fish species.
 -->
 
-```{r table-stomachs, echo=FALSE, fig.cap="*Number of full1, empty, and total (full and empty) stomachs collected for Atlantic Cod (*Gadus morhua*), Greenland Halibut (*Reinhardtius hippoglossides*), redfish (*Sebastes sp.*), and skates (*Rajidae*) within each size class2*"}
+Table ported into Markdown
+
+```{r test-captions, file = "scripts/Script_Table02_Stomachs-Full-Empty.R", echo=FALSE}
+
+# before knitting ensure to comment out in source code:
+# loading libraries
+# importing xxxx base dataframes (below loading libraries)
+# importing table dataframe (right before creating the table itself)
+# code that produces console outputs except for the final table
+# e.g. str()
+
+# before knitting update the year on any source code outputs:
+# xxxxxxxxxxxxxxxxxxx there are 2 'write.csv' codes
+
+## Testing if Markdown likes table captions when the script is ported in vs entered directly into the code
+
+```
+
+
+Table written within Markdown
+
+```{r stomachs full-empty, echo=FALSE}
+
+# {file = 'Script_Table02_Stomachs-Full-Empty.R'}
+
+# before knitting ensure to comment out in source code:
+    # loading libraries
+    # importing xxxx base dataframes (below loading libraries)
+    # importing table dataframe (right before creating the table itself)
+    # code that produces console outputs except for the final table
+        # e.g. str()
+
+# before knitting update the year on any source code outputs:
+    # xxxxxxxxxxxxxxxxxxx there are 2 'write.csv' codes
+
+### Creating new dataframe for Table 2
+
+stomach.ratio  <- pred %>%               # create new dataframe based on 'pred'                    
+    
+  select(Prey_OS_ID,                    # subsets dataframe by selected columns
+         pred.name, 
+         length.range, 
+         sampled.stomach) %>%
+
+
+  
+### Assigning Full vs Empty Stomachs
+    # if I add these in, THEN I MUST FILTER STOMACHS FROM PREY DATABASE THAT ONLY HAVE THESE
+    # THIS IS KEY - the pred df has indiscriminately removed duplicates. 
+        # Fine for Empty Stomachs.
+        # NOT fine when there could have been multiple prey/objects in stomachs
+    # other potential 'Empty Stomachs' codes:
+        # 2222 = Plant
+        # unknown????? (if yes, 10746-10750)
+        # other. 9981 (sand), 9982 (stone), 9983 (shells), 9993 (bait), 9995 (other offal), 10757 (mud)
+        
+  
+  mutate(Full = ifelse(Prey_OS_ID == 9998,     # create new column 'Full' with values based on logical check
+                       0,                      # value if logical check is TRUE
+                       1)) %>%                 # value if logical check is FALSE
+ 
+   mutate(Empty = ifelse(Prey_OS_ID == 9998,   # Prey_OS_ID of 9998 = 'Empty'
+                        1,
+                        0))  %>%
+
+
+### Assigning Groups for Table Layout 
+
+# desiring stomach data summed and displayed by:
+    # fish length group (column 1) and 
+    # predator category group (rows) 
+  
+  group_by(length.range, pred.name) %>%        # group by specified categories
+
+
+                                            
+### Sum Stomach Data by Groups
+  
+# sums the specified values by the grouped categories
+    # e.g. total 'full' stomachs by predator length and category
+    # creates new dataframe that contains:
+        # grouped variables (e.g. length.range, pred.name)
+        # new columns containing the summarized values defined in summarise()
+
+  summarise('Full' = sum(Full),                 # 'New Column' = sum('Old Column') 
+            'Empty' = sum(Empty),
+            'Total' = sum(sampled.stomach),
+            .groups = "keep")  %>%              # tells R to keep current group structure
+                                                # gives warning that goes into Markdown document if '.groups' not specified
+
+  
+
+### Final Table Structure Formatting
+
+# merge predator categories with the full, empty, total columns.
+  
+    # columns will now be 'stomach-predator' (e.g. Full-Greenland Halibut)  
+    # rows will be predator length
+  
+  pivot_wider(names_from = pred.name,                       # categorical values to pull from rows to columns
+              values_from = c(Full, Empty, Total)) %>%      # numerical values to fill in those columns
+
+  
+# Re-Ordering Columns 
+  
+  relocate(contains('cod'), .after = length.range) %>%     # moves any column with name containing 'cod' to the right of length.range
+  relocate(contains('Greenland'), .after = contains('cod')) %>%
+  relocate(contains('Red'), .after = contains('Green'))  %>%
+
+
+# Re-Order Rows from Smallest to Largest Fish
+
+    # length.range not naturally sorted because format is 6-10 vs 006-10
+    # so I added 0s, sorted, then removed the extra 0s
+  
+  mutate(length.range = str_pad(length.range,     # code adds 0s to start of length.range string (6 becomes 006)
+                                width=6,          # strings <6 characters will be padded until they =6 characters
+                                pad = "0")) %>%   # padding with 0s
+                                                  # width = 6 bumps all strings to ###- (006-, 016-, 141-)
+  
+  arrange(length.range) %>%                       # sort smallest to largest now that length.range strings equal character length before '-'
+  
+  mutate(length.range = str_replace(length.range, # removing the extra zeros for Table formatting
+                                    "^0{1,}",     # select 1+ '0's at the beginning of strings
+                                    "")) %>%         # remove selected '0's
+  
+  
+# Replace 0 and NA values with '-' 
+    # I could not select and replace across the entire dataframe within dyplr
+    # I had to use Base R for Step 2
+    # Step 1: replacing 'NA' with 0 in dyplr (replace)
+    # Step 2: replacing '0' with '-' in base R (lapply) and stringr (str_replace_all)
+    
+
+  replace(is.na(.), 0)                                 # if there are NA's, replace with 0
+
+stomach.ratio <- data.frame(lapply(stomach.ratio, function(x){    # honestly - I don't know what above code does but it works
+  str_replace_all(x,                                              # will be related to the code in the above line. But Idk who it actually works
+                  "(?<!\\S)0(?!\\S)",                             # select '0' with nothing before or after
+                  "-")                                            # replace with '-'
+})) 
+
+
+################################# Build Table #################################
+
+### Create Table 2
+
+flextable(stomach.ratio) %>%
+  add_header_row(top = TRUE,
+                 values = c("", "Atlantic cod", "Greenland halibut", "Redfishes", "Skates"),
+                 colwidths = c(1, 3, 3, 3, 3)) %>%
+
+ set_header_labels(length.range = "Size Class",        # renames columns
+                   Full_Atlantic.cod = "Full",
+                   Empty_Atlantic.cod = "Empty",
+                   Total_Atlantic.cod = "Total",
+                   Full_Greenland.halibut = "Full",
+                   Empty_Greenland.halibut = "Empty",
+                   Total_Greenland.halibut = "Total",
+                   Full_Redfish = "Full",
+                   Empty_Redfish = "Empty",
+                   Total_Redfish = "Total",
+                   Full_Skate = "Full",
+                   Empty_Skate = "Empty",
+                   Total_Skate = "Total")  %>%
+
+  bg(bg = "lightgray", part = "header") %>%             # defines header colour
+  bold(part = "header")  %>%                             # header text bold
+
+  align(part = "all", align = "center") #  %>%             # centers the entire document
+  
+#  set_caption(caption = "Number of full, empty, and total (full and empty) stomachs collected for Atlantic Cod (Gadus morhua), Greenland Halibut (Reinhardtius hippoglossides), redfishes (Sebastes sp.), and skates (Rajidae) within each size class.")  #%>%
+    # adds caption that R Markdown incorporates
+  
+#   footnote(i = 2,                                                     # second row
+#            j = grep("Full", colnames(stomach.ratio), value = TRUE),   # columns in df containing "Full"
+#            part = "header",                                           # apply symbol to header
+#            ref_symbols = "1",                                         # specify reference symbol
+#            value = as_paragraph("A full stomach is any stomach that was not empty and contained prey items other than only parasites and/or only 
+# mucous.")) %>%                                                        # footnote text
+#   
+#   footnote(i = 2, 
+#            j = grep("Empty", colnames(stomach.ratio), value = TRUE),
+#            part = "header",
+#            ref_symbols = "2",
+#            value = as_paragraph("Total length (cm) was used to measure all predators."))
 
 ```
 

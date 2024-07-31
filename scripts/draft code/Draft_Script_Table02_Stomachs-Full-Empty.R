@@ -16,7 +16,7 @@
         # subsection: tutorials
     # Table Code
         # subsection: tutorials
-    # Unused but Interesting code......
+    # Unused Code - Add Length Range 0-5
 
 
 ################################################################################
@@ -145,18 +145,6 @@
 
 
 
-################################################################################
-#                        Table Formatting - gt package
-################################################################################
-
-
-### Coding Category
-
-    # (highlight details) website
-        # Tutorial ?
-        # What did I learn or use from it?
-
-
 ###########################    Tutorial 1   ###################################
 
 
@@ -277,7 +265,257 @@ s5 <- stomach.ratio %>%
 
 
 ################################################################################
-#                                 Unused Code
+#                        Table Formatting - flextable
 ################################################################################
 
+# Captions and Footnotes in Markdown are frustrating!
+
+# Markdown ONLY liked either when they were PIPED INTO Markdown.
+    # NOT when they were coded within Markdown itself. Knitting execution halted
+
+# Footnotes
+    # Markdown did not like footnote(). I could not solve the errors
+    # footnote() links auto #s from specified table cells to footnotes
+    # I had to use add_footer_lines()
+        # it does not have auto numbering.
+        # I formatted the footnote with as_paragraph() to insert superscript numbers
+        # This means I have to insert superscript numbers into the table.
+        # In this case, that was in the caption. Which used same method.
+        # Errors when format multiple footnotes in one code line with as_paragraph. Fine when as_paragraph not included
+        # This error solved giving each footnote their own add_footer_lines() code
+        
+
+
+### Adding Footnote
+
+    # (overview options) https://ardata-fr.github.io/flextable-book/header-and-footer.html
+        # Section 6.3
+        # ended up using add_footer_lines()
+
+    # (footnote function) https://ardata-fr.github.io/flextable-book/header-and-footer.html
+        # Section 6.4 
+        # footnote()
+        # Markdown HATED this function. Would stop knitting.
+        # I couldn't solve this issue
+
+    # (multiple columns together) https://www.ardata.fr/en/flextable-gallery/2022-06-23-separate-headers/
+        # Applying footnote to multiple columns
+        # also overview of creating table
+        # has spanner lines over just spanner.....
+
+    # (add_footer_lines) https://davidgohel.github.io/flextable/reference/add_footer_lines.html
+        # add_footer_lines()
+        # Markdown likes this method
+        # HOWEVER no internal #ing of footnote and corresponding table section
+        # I figured out a work-around. See below
+
+    # (formatting footnotes) https://ardata-fr.github.io/flextable-book/captions-and-cross-references.html
+        # Section 12.3 'Formatting captions'
+        # enter captions into Markdown {} itself
+        # manual formatting caption and footnotes
+        # used this as workaround to add #s to add_footer_line Markdown hates footnote()
+        # manual numbering only works for template because locations will be consistent
+
+
+### Adjusting Column Width
+
+    # (multiple columns) https://stackoverflow.com/questions/68761680/flextable-r-how-to-keep-columns-width-after-adding-a-header
+        # comments showed defining widths for multiple columns
+
+
+################################################################################
+#                 Figuring Out Footnotes
+################################################################################
+
+footnote(i = 2,                                                     # second row
+         j = grep("Full", colnames(stomach.ratio), value = TRUE),   # columns in df containing "Full"
+         part = "header",                                           # apply symbol to header
+         ref_symbols = "1",                                         # specify reference symbol
+         value = as_paragraph("A full stomach is any stomach that was not empty and contained prey items other than only parasites and/or only ..."))
+
+
+# ?add_footer
+# ?add_footer_row
+
+
+# other option would be add_footer_lines
+
+
+# add_footer_lines("My footnote")
+# adds caption that R Markdown incorporates
+
+# footnote(i = 2,                                                     # second row
+#          j = 3,   # columns in df containing "Full"
+#          part = "body",                                           # apply symbol to header
+#          ref_symbols = "1",                                         # specify reference symbol
+#          value = as_paragraph(
+#          c("A full stomach is any stomach that was not empty and contained prey items other than only parasites and/or only mucous."))) # %>%                                                        # footnote text
+#   
+#   footnote(i = 2, 
+#            j = grep("Empty", colnames(stomach.ratio), value = TRUE),
+#            part = "header",
+#            ref_symbols = "2",
+#            value = as_paragraph("Total length (cm) was used to measure all predators."))
+
+?list 
+
+# below is test code
+add_footer_lines(c(
+  as_paragraph(as_sup("1"),
+               ", A full stomach is any stomach that was not empty and contained prey items other than only parasites and/or only mucous."),
+  as_paragraph(as_sup("2"),
+               " Total length (cm) was used to measure all predators.")
+))
+
+################################################################################
+#                 Unused Code - Add Length Range 0-5
+################################################################################
+
+# The 2018 document adds a line for lengths 0-5 despite us not sampling it
+# I think it gives the reader the impression that we did sample those lengths
+
+# below is the code I was TESTING (didn't work yet) to try and add that length range into the table
+# it would need to go before the df is sorted by length.range
+
+# This is a template, and future data may have fish sampled within a 0-5 category.
+# Therefor my aim was to write an 'if' or 'ifelse' statement. Either:
+    # If there is no 0-5 category, add one. Or
+    # If there is 0-5, do not include it, and if there is not add empty 0-5 category
+
+# of note - Prey_OS_ID 9998 is the code for 'Empty' stomach
+
+
+# Addempted code that needs more work
+
+
+# Successful ifelse earlier within Table 2 formatting 
+    # used as 'template'
+
+mutate(Full = ifelse(Prey_OS_ID == 9998,     # create new column 'Full' with values based on logical check
+                     0,                      # value if logical check is TRUE
+                     1)) #%>%                 # value if logical check is FALSE
+
+
+# attempt A 
+    # R didn't like my ELSE statement. I didn't know how to fix that.
+ifelse(length.range != "0-5",                 # condition statement: length.range does not have "0-5"
+       add_row(length.range = '0-5'))         # condition = TRUE, add a row where length.range = "0-5" 
+0)) %>%                                       # Not sure how to propperly add, condition=FALSE, do nothing
+
+  
+
+
+# second version
+    # thoughts were maybe I needed to ungroup them
+    # maybe if I left the ELSE statement empty it would do nothing
+    # R did not like those ideas
+
+t4 <- stomach.ratio %>%
+  ungroup(length.range) %>%
+  ifelse(length.range != "0-5",  
+         add_row(length.range = '0-5'))
+)
+
+
+# third version
+    # trying an if statement vs ifelse
+    # couldn't get this to work
+if(length.range != '0-5'){
+  add_row(length.range = '0-5')}
+t4$length.range[645]
+
+
+################################################################################
+#                    Final Formatting Options
+################################################################################
+
+
+# Below are the different formating options for this table. 
+
+# Base Code
+
+t1 <- flextable(stomach.ratio) %>%
+  add_header_row(top = TRUE,
+                 values = c("", "Atlantic cod", "Greenland halibut", "Redfishes", "Skates"),
+                 colwidths = c(1, 3, 3, 3, 3)) %>%
+  
+  set_header_labels(length.range = "Size Class",        # renames columns
+                    Full_Atlantic.cod = "Full",
+                    Empty_Atlantic.cod = "Empty",
+                    Total_Atlantic.cod = "Total",
+                    Full_Greenland.halibut = "Full",
+                    Empty_Greenland.halibut = "Empty",
+                    Total_Greenland.halibut = "Total",
+                    Full_Redfish = "Full",
+                    Empty_Redfish = "Empty",
+                    Total_Redfish = "Total",
+                    Full_Skate = "Full",
+                    Empty_Skate = "Empty",
+                    Total_Skate = "Total") %>%
+  
+  bg(bg = "lightgray", part = "header") %>%             # defines header colour
+  bold(part = "header") %>%                             # header text bold
+  
+  align(part = "all", align = "center")  %>%             # centers the entire document
+  
+  width(j=1, width = 18, unit = "mm") %>%               # define column width as narrow as possible
+  width(j=c(2, 5, 8, 11), width = 12, unit = "mm") %>%   
+  width(j=c(3, 6, 9, 12), width = 16, unit = "mm") %>%
+  width(j=c(4, 7, 10, 13), width = 13, unit = "mm") %>%
+  
+  # manual caption formatting to insert footnote numbering
+  set_caption(caption = as_paragraph(                   # allows manual formatting in caption
+    as_i("Number of full"),                             # italics
+    as_i(as_sup("1")),                                  # superscript 1
+    as_i(" empty, and total (full and emtpy) stomachs collected for Atlantic Cod ("), # spacing within "" matters!
+    "Gadus morhua",
+    as_i("), Greenland Halibut ("),
+    "Reinhardtius hippoglossides",
+    as_i("), redfishes ("),
+    "Sebastes ",
+    as_i("sp.), and skates ("),
+    "Rajidae",
+    as_i(") within each size class"),
+    as_i(as_sup("2")),
+    as_i(".")
+  ))  %>%                        
+  
+  # add footnotes compatible to Markdown
+  add_footer_lines(as_paragraph(                     # allows manual formatting in footnote
+    as_sup("1"),                                     # superscript 1
+    " A full stomach is any stomach that was not empty and contained prey items other than only parasites and/or only mucous.")) %>%
+  
+  # add second footnote
+  add_footer_lines(as_paragraph(                     # will auto insert in new line
+    as_sup("2"),                                     
+    " Total length (cm) was used to measure all predators."))
+
+
+######################## Option 01 - Color Total ###############################
+
+
+# adds pale gray colour to the 'Total' columns
+# aiming to create visual distinctions between sp. without vertical lines
+
+t1 %>%
+  bg(j=c(4, 7, 10, 13), bg = "#EFEFEF", part = "body")
+
+
+###################### Option 02 - Color Columns ###############################
+
+
+# adds pale gray colour to the 'Size Classes' and 'Total' columns
+# aiming to create visual distinctions between sp. without vertical lines
+# creates more evenly patterned/spaced coloured columns
+
+t1 %>%
+  bg(j=c(1, 4, 7, 10, 13), bg = "#EFEFEF", part = "body")
+
+
+###################### Option 02 - Vertical Lines ##############################
+
+# adds vertical lines to separate predator species
+
+t1 %>%
+  vline(j=c(1, 4, 7, 10), part = "all")
 

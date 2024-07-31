@@ -736,3 +736,10 @@ flextable(samp.table) %>%                          # create flextable of specifi
     values = c("","Assessment Area"),              # titles for header row  
                              colwidths = c(1,3))   # number of columns it applies to.
                                                    # HAS TO = total number of columns
+
+
+# I am trying to add striped colors to the table body based on odd/even rows
+    # so far flextable hasn't liked any provided equations
+    # below is one attempt
+
+# row_odd <- seq_len(nrow(samp.table)) %% 2
