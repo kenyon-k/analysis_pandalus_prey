@@ -50,7 +50,7 @@
     # Table Formatting - flextable & officer
     # Table Formatting - kable & kableExtras
     # Table Formatting - gt & gtExtra
-    # subsection: tutorials
+        # subsection: tutorials
     # Unused Tables with kable() 
     # Unused Tables for gt()
     # Unused gt() Code
@@ -61,10 +61,7 @@
 ################################################################################
 
 
-# Clean code across documents
-
 # Team formatting approval
-
 
 
 ################################################################################
@@ -263,11 +260,4 @@ flextable(samp.table) %>%
 Zone (EAZ), Western Assessment Zone (WAZ), and Shrimp Fishing Area 4 (SFA 4).") 
       # adds caption that R Markdown incorporates
 
-
-
-# I am trying to add striped colors to the table body based on odd/even rows
-    # so far flextable hasn't liked any provided equations
-    # below is one attempt
-
-# row_odd <- seq_len(nrow(samp.table)) %% 2
 
