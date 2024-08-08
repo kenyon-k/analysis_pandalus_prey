@@ -14,9 +14,12 @@
 # Document 'Sections' Include:
     # Creating figure dataset
         # subsection: tutorials
-    # Table Code
-        # subsection: tutorials
+    # Table Formatting - flextable
+    # Unused Code - Footnotes
     # Unused Code - Add Length Range 0-5
+    # Unused Code - Renaming Table Columns
+    # Final Formatting Options
+        # subsection: options
 
 
 ################################################################################
@@ -40,14 +43,17 @@
 ### Create New Column with Values Based on Other Columns
 
 # I wanted to create 'Full' and 'Empty' stomach columns whose values were calculated 
-    # based on Prey_OS_ID values
+# based on Prey_OS_ID values
+
 
     #(new columns) https://www.youtube.com/watch?v=RFuJ6mgu-Ug
         # adding new columns where values are calculated from other table columns
         # mutate()
 
+
     #(ifelse) https://www.youtube.com/watch?v=ED34ZhpkoPk
         # useful overview of ifelse()
+
 
     #(ifelse) https://www.youtube.com/watch?v=zose3lQAN7o
         # second overview of ifelse()
@@ -60,8 +66,10 @@
         # very clean overview of topic
         # group_by() with summarise()
 
+
     #(summarising multiple groups) https://www.youtube.com/watch?v=W7sjVML_yXQ
         # creating multiple groups then summarizing
+
 
     # (pivot wider by group) https://www.youtube.com/watch?v=YpAdZ4079qs
         # reformat table by columns/groups
@@ -82,9 +90,11 @@
     # (re-order by size) https://dplyr.tidyverse.org/reference/arrange.html#:~:text=arrange%28%29%20orders%20the%20rows%20of%20a%20data%20frame,once%20per%20data%20frame%2C%20not%20once%20per%20group.
         # arrange() default is smallest to  largest.
 
+
     # (add leading zeros) https://www.statology.org/str_pad-in-r/
         # str_pad()
         # used in addition to strigr cheat sheet for regex (regular expressions)
+
 
 
 ### Replace 0 and NA values with '-' 
@@ -107,21 +117,25 @@
         # tutorial 1
         # could not solve error: 'can't convert 'character' to 'double' 
 
+
     # (mutate-across) https://stackoverflow.com/questions/75462299/error-in-na-if-cant-convert-y-character-to-match-type-of-x-double
         # this looked promising
         # produced errors I couldn't solve
         # in my experimentation I didn't keep any tutorial code
 
+
     # (old code style) https://stackoverflow.com/questions/29271549/replace-all-occurrences-of-a-string-in-a-data-frame
-        # tutorial 10
+        # tutorial 2
         # funs() has been replaced
         # could not make the replacement functions work
 
+
     # (select-contains) https://stackoverflow.com/questions/29018292/select-columns-based-on-multiple-strings-with-dplyr-contains
-        # tutorial 20
+        # tutorial 3
         # solved the grouping error
         # couldn't solve the coercing error. 
         # maybe it's a structure issue? Num and Int vs Chr?
+
 
     # (tutorial 4)
         # other code I experimented with but could not solve the errors
@@ -135,14 +149,15 @@
         # stringr cheat sheet
         # includes regular expression cheat sheet
 
+
     # (Only select single digit) https://stackoverflow.com/questions/15099150/regex-find-one-digit-number
         # great discussion on options
         # works but didn't end up using: (?<!\\d)\\d[-]
             # (..) in code checks that nothing is in front of the 1 digit followed by the '-'
 
+
     # (overview) https://www.datacamp.com/tutorial/regex-r-regular-expressions-guide
         # I used for specifying number of 0s I wanted to target 0{1,} = at least 1 in a row
-
 
 
 ###########################    Tutorial 1   ###################################
@@ -168,7 +183,7 @@ s2[is.na(stomach.ratio)] <- "-"
 
 # exact same error
 
-###########################    Tutorial 10   ###################################
+###########################    Tutorial 2   ###################################
 
 
 # From https://stackoverflow.com/questions/29271549/replace-all-occurrences-of-a-string-in-a-data-frame
@@ -187,7 +202,7 @@ s3 <- stomach.ratio %>%
                               "-"))) 
 
 
-###########################    Tutorial 20   ###################################
+###########################    Tutorial 3   ###################################
 
 # From https://stackoverflow.com/questions/29018292/select-columns-based-on-multiple-strings-with-dplyr-contains
 
@@ -233,6 +248,7 @@ stomach.ratio %>%
 
 ###########################    Tutorial 4   ###################################
 
+
 # Sources either not saved or are from my brain experiments
 
 # trying to select and replace across entire dataframe
@@ -268,6 +284,7 @@ s5 <- stomach.ratio %>%
 #                        Table Formatting - flextable
 ################################################################################
 
+
 # Captions and Footnotes in Markdown are frustrating!
 
 # Markdown ONLY liked either when they were PIPED INTO Markdown.
@@ -292,22 +309,26 @@ s5 <- stomach.ratio %>%
         # Section 6.3
         # ended up using add_footer_lines()
 
+
     # (footnote function) https://ardata-fr.github.io/flextable-book/header-and-footer.html
         # Section 6.4 
         # footnote()
         # Markdown HATED this function. Would stop knitting.
         # I couldn't solve this issue
 
+
     # (multiple columns together) https://www.ardata.fr/en/flextable-gallery/2022-06-23-separate-headers/
         # Applying footnote to multiple columns
         # also overview of creating table
         # has spanner lines over just spanner.....
+
 
     # (add_footer_lines) https://davidgohel.github.io/flextable/reference/add_footer_lines.html
         # add_footer_lines()
         # Markdown likes this method
         # HOWEVER no internal #ing of footnote and corresponding table section
         # I figured out a work-around. See below
+
 
     # (formatting footnotes) https://ardata-fr.github.io/flextable-book/captions-and-cross-references.html
         # Section 12.3 'Formatting captions'
@@ -317,6 +338,7 @@ s5 <- stomach.ratio %>%
         # manual numbering only works for template because locations will be consistent
 
 
+
 ### Adjusting Column Width
 
     # (multiple columns) https://stackoverflow.com/questions/68761680/flextable-r-how-to-keep-columns-width-after-adding-a-header
@@ -324,8 +346,17 @@ s5 <- stomach.ratio %>%
 
 
 ################################################################################
-#                 Figuring Out Footnotes
+#                          Unused Code - Footnotes
 ################################################################################
+
+
+# I first tried the footnote() argument.
+# It works in R but not in the Markdown. 
+    # Markdown would stop knitting. I could not solve the errors
+
+# Below is the code that worked in R.
+    # puts the reference symbol on any column that contains the word 'Full'
+    # I had two footnote arguments to create 2 footnotes.
 
 footnote(i = 2,                                                     # second row
          j = grep("Full", colnames(stomach.ratio), value = TRUE),   # columns in df containing "Full"
@@ -333,33 +364,39 @@ footnote(i = 2,                                                     # second row
          ref_symbols = "1",                                         # specify reference symbol
          value = as_paragraph("A full stomach is any stomach that was not empty and contained prey items other than only parasites and/or only ..."))
 
+  footnote(i = 2,
+           j = grep("Empty", colnames(stomach.ratio), value = TRUE),
+           part = "header",
+           ref_symbols = "2",
+           value = as_paragraph("Total length (cm) was used to measure all predators."))
 
-# ?add_footer
-# ?add_footer_row
+  
+# Experiment 1 - trying to fix error
+    # thought maybe it was the 'fancy' column reference.
+    # what if it was just a regular column?
+    # didn't solve the error
+
+footnote(i = 2,                                                     # second row
+         j = 3,   # columns in df containing "Full"
+         part = "body",                                           # apply symbol to header
+         ref_symbols = "1",                                         # specify reference symbol
+         value = as_paragraph(
+         c("A full stomach is any stomach that was not empty and contained prey items other than only parasites and/or only mucous."))) # %>%                                                        # footnote text
 
 
-# other option would be add_footer_lines
+# Other foot note arguments include:
+  # add_footer
+  # add_footer_row
+  # add_footer_lines
 
 
-# add_footer_lines("My footnote")
-# adds caption that R Markdown incorporates
+# Testing out add_footer_lines
+    # captions are compatible with R Markdown
+    # I could not combine 2 references in 'as_paragraph' in one argument
+        # It works if not 'as_paragraph'
+        # I tried 'list(as_paragraph)' and 'c(as_paragraph)' but this didn't work
+    # I ended up creating two arguments for the 2 references
 
-# footnote(i = 2,                                                     # second row
-#          j = 3,   # columns in df containing "Full"
-#          part = "body",                                           # apply symbol to header
-#          ref_symbols = "1",                                         # specify reference symbol
-#          value = as_paragraph(
-#          c("A full stomach is any stomach that was not empty and contained prey items other than only parasites and/or only mucous."))) # %>%                                                        # footnote text
-#   
-#   footnote(i = 2, 
-#            j = grep("Empty", colnames(stomach.ratio), value = TRUE),
-#            part = "header",
-#            ref_symbols = "2",
-#            value = as_paragraph("Total length (cm) was used to measure all predators."))
-
-?list 
-
-# below is test code
 add_footer_lines(c(
   as_paragraph(as_sup("1"),
                ", A full stomach is any stomach that was not empty and contained prey items other than only parasites and/or only mucous."),
@@ -367,9 +404,11 @@ add_footer_lines(c(
                " Total length (cm) was used to measure all predators.")
 ))
 
+
 ################################################################################
 #                 Unused Code - Add Length Range 0-5
 ################################################################################
+
 
 # The 2018 document adds a line for lengths 0-5 despite us not sampling it
 # I think it gives the reader the impression that we did sample those lengths
@@ -423,6 +462,18 @@ t4 <- stomach.ratio %>%
 if(length.range != '0-5'){
   add_row(length.range = '0-5')}
 t4$length.range[645]
+
+
+################################################################################
+#                   Unused Code - Renaming Table Columns
+################################################################################
+
+
+# RESULTS = Full1, Full2, Full3, Full4, 
+# I will still need to rename these, so I did not use this method
+
+stomach.ratio <- stomach.ratio %>%
+   rename(Full = contains("Full"))
 
 
 ################################################################################
@@ -512,10 +563,26 @@ t1 %>%
   bg(j=c(1, 4, 7, 10, 13), bg = "#EFEFEF", part = "body")
 
 
-###################### Option 02 - Vertical Lines ##############################
+###################### Option 03 - Vertical Lines ##############################
+
 
 # adds vertical lines to separate predator species
 
 t1 %>%
-  vline(j=c(1, 4, 7, 10), part = "all")
+  vline(j=c(1, 4, 7, 10), part = "all")               # vertical lines throughout entire table beside specified columns
+
+
+###################### Option 04 - Horizontal Shading ##############################
+
+
+# adds vertical lines to separate predator species
+# adds shaded rows to every second line
+
+t1 %>%
+  vline(j=c(1, 4, 7, 10), part = "all") %>%               # vertical lines throughout entire table beside specified columns
+  
+  bg(i = seq(from = 2, to = nrow(stomach.ratio), by = 2), # select every 2nd row until the max row number 
+     bg = "#EFEFEF",                                      # color
+     part = "body")                                       # table part affected
+
 
