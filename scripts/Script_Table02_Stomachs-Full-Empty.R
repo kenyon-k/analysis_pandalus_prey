@@ -7,7 +7,7 @@
 
 # Author: Krista Kenyon (KAK)
 # Date Created: July 23/2024
-# Date Last Modified: July 23/2024 by KAK
+# Date Last Modified: Aug 1/2024 by KAK
 
 
 # Document Purpose: Creating Table 2 for R Markdown document.
@@ -32,23 +32,31 @@
     # please see the 'Draft_Script_Table02_Stomachs-Full-Empty.R' in the 'Draft Code' folder
 
 # Draft Script notes include sites and tutorials that assisted me with:
-    # .......
-    # .......
-    # .......
+    # Creating figure dataset
+        # subsection: tutorials
+    # Table Formatting - flextable
+    # Unused Code - Footnotes
+    # Unused Code - Add Length Range 0-5
+    # Unused Code - Renaming Table Columns
+    # Final Formatting Options
+        # subsection: options
 
 
 ################################################################################
 #                            Remaining Tasks 
 ################################################################################
 
+# Ask Sheila 'Empty Stomach':
+    # just empty
+    # only sand/debris
+    # codes for parasites?
 
-# Create table dataframe
+# If those codes are added, then I will NEED to select stomachs that fit those parameters from the prey dataframe
+    # currently ONLY selecting empty coded stomachs from the pred dataframe
 
-# Build and format dataframe
-
-# Clean code across documents
-
-# Team formatting approval
+# Team formatting approval:
+    # Do I add a 0-5 row (we didn't sample this fish length category)
+    # select prefered table style - I have saved 4 options
 
 
 ################################################################################
@@ -56,18 +64,21 @@
 ################################################################################
 
 
+
 ### load libraries
 
-library(tidyverse)
-library(dplyr)
-library(flextable)               # Table package that may work in Word
+# library(tidyverse)
+# library(dplyr)
+# library(flextable)               # Table package that may work in Word
 
 
 
 ### import data
 
-pred <- read.csv('data/processed/2019_basePred.csv')
-region.total <- read.csv('data/processed/2019_F4_region.total.csv')
+# pred <- read.csv('data/processed/2019_basePred.csv')
+
+
+# !!!! If I re-define 'empty stomachs' I will need to import and select rows from the prey df
 
 
 ################################################################################
@@ -75,10 +86,16 @@ region.total <- read.csv('data/processed/2019_F4_region.total.csv')
 ################################################################################
 
 
-# This code chunk:
-    # Subsections: .......
-    # Subsections: .......
+# This code chunk subsections:
+    # Creates a stomach ratio dataframe capturing the empty vs full stomachs sampled
+    # Restructures above dataframe into the format required for Table 2
+        # stomach data (empty, full, total stomachs) by fish species and size class
     # Build and format Table 2
+
+
+# stomach.ratio df: one row per stomach sampled. Randomly selected.
+    # If stomach code = empty, it will be the only one available to select
+
 
 # Table 2 Dataframe structure will need:
     # Two categorical variables:
@@ -87,26 +104,37 @@ region.total <- read.csv('data/processed/2019_F4_region.total.csv')
     # One numerical variable:
         # whether stomachs were full or empty
 
+
 # Whether stomachs were full or empty will need to be broken down into three categories:
     # Full (Prey_OS_ID = not 9998)
-    # Empty (Prey_OS_ID = 9998). What about Unknown Material? I'll want to 
+    # Empty (Prey_OS_ID = 9998).  
     # Total
 
 
-# Dataframe transformations:
-    # Step 1 (###) ........
-    # Step 2 (###) .......
-    # Step 3 (###) .......
-
-############### BELOW IS ALL OLD
+# !! I need to ask Sheila if others codes should be added! Paper included if only mud, or full of parasites.
 
 
-# 'samp.detail' dataframe: one row per sample location. Contains all metadata.
-# 'samp.table' dataframe: summed total of all sample locations per depth stratum and assessment area
+# Dataframe transformations - Creating df:
+    # Subsets pred df for desired columns 
+        # prey code, predator name, fish size, number of stomachs sampled
+    # Create new 'full stomach' and 'empty stomach' column based on prey code (Prey_OS_ID).
+    # Group the stomach.ratio df by predator category and fish length category
+    # Sum the stomach data (empty, full, total) by fish size class for each predator category
 
+
+# Dataframe transformations - Formatting for Table:
+    # merge predator categories with stomach data columns.
+        # predator categories become second table headers/spanners
+    # order columns so consistently fish 'size class', 'cod', 'halibut', 'redfish', 'skate'
+        # within fish stomach data is always 'full', 'empty', 'total'
+    # order Rows from smallest to largest fish
+    # replace 0 and NA values with '-' 
+    # saving stomach.ratio df structure
+    # export stomach.ratio df to data/processed/
 
 
 ################### Creating New Dataframe for Table 2 ###########################
+
 
 # below code is all one function that is 'broken up' with annotation notes
 
@@ -127,6 +155,15 @@ stomach.ratio  <- pred %>%               # create new dataframe based on 'pred'
 
   
 ### Assigning Full vs Empty Stomachs
+    # if I add these in, THEN I MUST FILTER STOMACHS FROM PREY DATABASE THAT ONLY HAVE THESE
+    # THIS IS KEY - the pred df has indiscriminately removed duplicates. 
+        # Fine for Empty Stomachs.
+        # NOT fine when there could have been multiple prey/objects in stomachs
+    # other potential 'Empty Stomachs' codes:
+        # 2222 = Plant
+        # unknown????? (if yes, 10746-10750)
+        # other. 9981 (sand), 9982 (stone), 9983 (shells), 9993 (bait), 9995 (other offal), 10757 (mud)
+        
   
   mutate(Full = ifelse(Prey_OS_ID == 9998,     # create new column 'Full' with values based on logical check
                        0,                      # value if logical check is TRUE
@@ -162,6 +199,9 @@ stomach.ratio  <- pred %>%               # create new dataframe based on 'pred'
                                                 # gives warning that goes into Markdown document if '.groups' not specified
 
   
+#############   Formatting Dataframe Structure for Table    ####################
+
+
 
 ### Final Table Structure Formatting
 
@@ -214,48 +254,32 @@ stomach.ratio <- data.frame(lapply(stomach.ratio, function(x){    # honestly - I
 })) 
 
 
-# Re-Naming Columns
-names(stomach.ratio)
-
-
-# Add length.range 0-5 row if none exist - DO I NEED THIS??
-
-ifelse(length.range != "0-5",   # Prey_OS_ID of 9998 = 'Empty'
-       add_row(length.range = '0-5')) 
-0)) %>%
-  
-  mutate(Full = ifelse(Prey_OS_ID == 9998,     # create new column 'Full' with values based on logical check
-                       0,                      # value if logical check is TRUE
-                       1)) #%>%                 # value if logical check is FALSE
-
-
-t3 <- stomach.ratio   
-
-t4 <- t3 %>%
-  ungroup(length.range) %>%
-  ifelse(length.range != "0-5",  
-         add_row(length.range = '0-5'))
-)
-
-
-
-if(length.range != '0-5'){
-  add_row(length.range = '0-5')}
-t4$length.range[645]
-
-
-
-
 
 ### Saving the stomach.ratio dataframe structure
 
-str(stomach.ratio) 
+# str(stomach.ratio) 
+
+# 'data.frame':	18 obs. of  13 variables:
+
+# $ length.range           : chr  "6-10" "11-15" "16-20" "21-25" ...
+# $ Full_Atlantic.cod      : chr  "-" "-" "-" "-" ...
+# $ Empty_Atlantic.cod     : chr  "-" "-" "-" "-" ...
+# $ Total_Atlantic.cod     : chr  "-" "-" "-" "-" ...
+# $ Full_Greenland.halibut : chr  "8" "19" "22" "20" ...
+# $ Empty_Greenland.halibut: chr  "-" "11" "7" "13" ...
+# $ Total_Greenland.halibut: chr  "8" "30" "29" "33" ...
+# $ Full_Redfish           : chr  "1" "5" "9" "12" ...
+# $ Empty_Redfish          : chr  "1" "-" "4" "11" ...
+# $ Total_Redfish          : chr  "2" "5" "13" "23" ...
+# $ Full_Skate             : chr  "-" "14" "29" "31" ...
+# $ Empty_Skate            : chr  "1" "1" "1" "1" ...
+# $ Total_Skate            : chr  "1" "15" "30" "32" ...
 
 
 
-### Exporting Base Prey Dataframe
+### Exporting stomach.ratio Dataframe
 
-write.csv(prey, 
+write.csv(stomach.ratio, 
           file="data/processed/2019_T2_stomach.ratio.csv",
           row.names = FALSE)                # removes auto-generated unique ID row
 
@@ -265,45 +289,78 @@ write.csv(prey,
 
 ### Load Table 2 dataframe
 
-# samp.table <- read.csv('data/processed/2019_T2_stomach.ratio.csv')
+# stomach.ratio <- read.csv('data/processed/2019_T2_stomach.ratio.csv')
+
+# confirm fish order is cod, halibut, redfish, skates. If yes - continue
 
 
 
 ### Create Table 2
 
-flextable(stomach.ratio)
-
-
-
-########### Below is old
-
-
-### Create Table 1 - flextable package
-
-flextable(samp.table) %>%
+flextable(stomach.ratio) %>%
   
-  set_header_labels(depth = "Depth Stratum (m)",        # renames columns
-                    SFA4 = "SFA 4") %>%
-
-  bg(bg = "lightgray", part = "header") %>%             # defines header colour
-  bold(part = "header") %>%                             # header text bold
+  add_header_row(top = TRUE,                           # adding a header (spanner) on top of current header
+                 values = c("", "Atlantic cod", "Greenland halibut", "Redfishes", "Skates"),
+                 colwidths = c(1, 3, 3, 3, 3)) %>%     # number of columns wide each header cell is
   
-  bg(i = c(2,4), bg = "#EFEFEF", part = "body") %>%     # colours row 2 & 4 in table body
+ set_header_labels(length.range = "Size Class",        # renames columns
+                   Full_Atlantic.cod = "Full",
+                   Empty_Atlantic.cod = "Empty",
+                   Total_Atlantic.cod = "Total",
+                   Full_Greenland.halibut = "Full",
+                   Empty_Greenland.halibut = "Empty",
+                   Total_Greenland.halibut = "Total",
+                   Full_Redfish = "Full",
+                   Empty_Redfish = "Empty",
+                   Total_Redfish = "Total",
+                   Full_Skate = "Full",
+                   Empty_Skate = "Empty",
+                   Total_Skate = "Total") %>%
   
-  align(part = "all", align = "center") %>%             # centers the entire document
+  bg(bg = "lightgray", part = "header") %>%               # defines header colour
+  bold(part = "header") %>%                               # header text bold
   
-  width(j = 1, width = 4, unit = "cm") %>%              # set width in column 1
-  width(j = c(2,3,4), width = 3, unit = "cm") %>%       # set width in column 2-4
+  align(part = "all", align = "center")  %>%              # centers text throughout table
   
-  set_caption(caption = "Number of stomach sampling locations within each depth stratum of the Eastern Assessment 
-Zone (EAZ), Western Assessment Zone (WAZ), and Shrimp Fishing Area 4 (SFA 4).") 
-      # adds caption that R Markdown incorporates
+  vline(j=c(1, 4, 7, 10), part = "all") %>%               # adds vertical lines at defined columns across table
+  
+  bg(                                                  # adding shading every second line in table body
+    i = seq(from = 2, to = nrow(stomach.ratio), by = 2),  # select every 2nd row until the max row number 
+    bg = "#EFEFEF",                                       # color
+    part = "body") %>%                                    # part of table to apply formatting
+  
+  width(j=1, width = 18, unit = "mm") %>%                 # define column width as narrow as possible
+  width(j=c(2, 5, 8, 11), width = 12, unit = "mm") %>%   
+  width(j=c(3, 6, 9, 12), width = 16, unit = "mm") %>%
+  width(j=c(4, 7, 10, 13), width = 13, unit = "mm") %>%
+  
+  set_caption(                                         # manual caption formatting to insert footnote numbering
+    caption = as_paragraph(                               # allows manual formatting in caption
+      as_i("Number of full"),                             # italics
+      as_i(as_sup("1")),                                  # superscript 1
+      as_i(" empty, and total (full and emtpy) stomachs collected for Atlantic Cod ("), # spacing within "" matters!
+      "Gadus morhua",
+      as_i("), Greenland Halibut ("),
+      "Reinhardtius hippoglossides",
+      as_i("), redfishes ("),
+      "Sebastes ",
+      as_i("sp.), and skates ("),
+      "Rajidae",
+      as_i(") within each size class"),
+      as_i(as_sup("2")),
+      as_i(".")
+      ))  %>%                        
+  
+  add_footer_lines(                                  # add footnotes compatible to Markdown
+    as_paragraph(                                      # allows manual formatting in footnote
+      as_sup("1"),                                     # superscript 1
+      " A full stomach is any stomach that was not empty and contained prey items other than only parasites and/or only mucous."
+      )) %>%
+  
+  add_footer_lines(                                 # add second footnote in new line
+    as_paragraph(                     
+      as_sup("2"),                                     
+      " Total length (cm) was used to measure all predators."
+      ))
 
-
-
-# I am trying to add striped colors to the table body based on odd/even rows
-    # so far flextable hasn't liked any provided equations
-    # below is one attempt
-
-# row_odd <- seq_len(nrow(samp.table)) %% 2
 
