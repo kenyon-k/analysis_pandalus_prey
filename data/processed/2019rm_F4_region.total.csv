@@ -1,0 +1,13 @@
+"","region","pred.name","stomach.sum"
+"1","EAZ","Atlantic cod",2
+"2","SFA4","Atlantic cod",1
+"3","WAZ","Atlantic cod",0
+"4","EAZ","Greenland halibut",198
+"5","SFA4","Greenland halibut",92
+"6","WAZ","Greenland halibut",43
+"7","EAZ","Redfish",34
+"8","SFA4","Redfish",28
+"9","WAZ","Redfish",3
+"10","EAZ","Skate",120
+"11","SFA4","Skate",49
+"12","WAZ","Skate",74
