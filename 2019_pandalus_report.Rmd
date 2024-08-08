@@ -59,10 +59,10 @@ library(dplyr)
 library(ggrepel)           # Fig 3: ensures labels don't overlap
 library(reshape2)          # Fig 4
 library(viridis)                 # Fig 5 - color blind friendly palette
-library(gt)                      # Table formatting
-library(gtExtras)                # Additional table formatting options
+# library(gt)                      # Table formatting
+# library(gtExtras)                # Additional table formatting options
 library(flextable)        # Table 1 options
-library(kableExtra)       # Table 1 extra Kable options that may only work in HTML
+# library(kableExtra)       # Table 1 extra Kable options that may only work in HTML
 # library(officer)          # helps flextable formatting transfer to Word doc
 
 
@@ -812,28 +812,25 @@ ggplot(pred, aes(reorder(length.range, Length))) +
 
 ## Proportion of Full vs. Empty Stomachs
 
-This section will include Table 2
 <!--
 Table 2: Table showing total fish with full and empty stomachs for each fish class size for each fish species
 
 Data I will need includes length (cm) of caught fish, if stomach was full or empty, for each fish species.
 -->
 
-Table ported into Markdown
+Table\@ref(tab:test-captions) is piped into Markdown
 
 ```{r test-captions, file = "scripts/Script_Table02_Stomachs-Full-Empty.R", echo=FALSE}
 
 # before knitting ensure to comment out in source code:
-# loading libraries
-# importing xxxx base dataframes (below loading libraries)
-# importing table dataframe (right before creating the table itself)
-# code that produces console outputs except for the final table
-# e.g. str()
+    # loading libraries
+    # importing xxxx base dataframes (below loading libraries)
+    # importing table dataframe (right before creating the table itself)
+    # code that produces console outputs except for the final table
+        # e.g. str()
 
 # before knitting update the year on any source code outputs:
-# xxxxxxxxxxxxxxxxxxx there are 2 'write.csv' codes
-
-## Testing if Markdown likes table captions when the script is ported in vs entered directly into the code
+    # xxxxxxxxxxxxxxxxxxx there are 2 'write.csv' codes
 
 ```
 
