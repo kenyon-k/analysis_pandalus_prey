@@ -149,33 +149,82 @@ prey <- read.csv('data/processed/2019_basePrey.csv')
 
 ################### Creating New Dataframe for Figure 6 ########################
 
-##### Below is old code
-
-# below code is all one function that is 'broken up' with annotation notes
-
-# 'stomach.ratio' dataframe will have the stomach data per predator species and predator length
-# stomach data = empty, full, and total stomachs sampled
-
-names(prey)
-
-head(pandalus.percent)
 
 ### Creating new dataframe for Table 2
-
 
 pandalus.percent <- prey %>%             # create new dataframe based on 'pred' 
   
   select(Prey_OS_ID,                     # subsets dataframe by selected columns
          pred.name,
          PreyWt,
-         Prey_Count)
+         Prey_Count) %>%
+ 
+# Step 1: remove rows with 'empty stomachs'. Leave unidentified for now. 
+  
+  filter(                           # selects rows that do not contain:
+    Prey_OS_ID != 9998 |                # empty
+    Prey_OS_ID != 9981 |                # sand
+    Prey_OS_ID != 9982 |                # stone
+    Prey_OS_ID != 9983 |                # shells
+    Prey_OS_ID != 10757 |               # mud
+    Prey_OS_ID != 9987)  %>%               # plant material
 
-# Step 1: remove rows with 'empty stomachs'. Leave unidentified for now.
 
 # Step 2: create new column where OS_ID's are redifined to the 4 prey categories
 
+    # shrimp P. borealis        (OS_ID code = 8111)
+    # shrimp P. montagui        (OS_ID code = 8112)
+    # shrimp Pandalus. sp.      (OS_ID code = 8110)
+
+# test <- pandalus.percent %>%
+  mutate(prey.name = ifelse(Prey_OS_ID == 8111,     # create new column 'Full' with values based on logical check
+                     "borealis",                      # value if logical check is TRUE
+                    ifelse(Prey_OS_ID == 8812,
+                           "montagui",
+                           ifelse(Prey_OS_ID == 8810,
+                                  "Pandalus",
+                                  "other")
+                    )))
+
+head(pandalus.percent)
+
+names(pandalus.percent)
+
+?summarise
+
+
+# new columns containing the summarized values defined in summarise()
+
+test <- pandalus.percent %>%
+  group_by(pred.name, PreyWt) %>%        # group by specified categories
+  summarise('Weight' = sum(PreyWt),                 # 'New Column' = sum('Old Column') 
+          'Count' = sum(Prey_Count),
+          .groups = "keep")             # tells R to keep current group structure
+  # gives warning that goes into Markdown document if '.groups' not specified
+
 # Step 3: create % weight Figure that does percentage per fish category
     # fish category may have to be grouped first to do this
+
+
+########### testing figures
+
+# stacking the count
+ggplot(data = pandalus.percent,
+       aes(fill = prey.name, x = pred.name, y = PreyWt)) +
+  geom_bar(position="stack", stat = "identity")
+
+
+ggplot(data = pandalus.percent,
+       aes(fill = prey.name, x = pred.name, y = PreyWt)) +
+  geom_bar(position="fill", stat = "identity")
+
+ # geom_bar(aes(position = "fill",
+ #          stat="count",
+  #         width = 0.4))
+
+?geom_bar
+           
+           
 
 # Step 4: create # number Figure
     # when feeding data in, filter out unidentified categories
