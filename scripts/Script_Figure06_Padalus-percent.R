@@ -179,31 +179,158 @@ pandalus.percent <- prey %>%             # create new dataframe based on 'pred'
 # test <- pandalus.percent %>%
   mutate(prey.name = ifelse(Prey_OS_ID == 8111,     # create new column 'Full' with values based on logical check
                      "borealis",                      # value if logical check is TRUE
-                    ifelse(Prey_OS_ID == 8812,
+                    ifelse(Prey_OS_ID == 8112,
                            "montagui",
-                           ifelse(Prey_OS_ID == 8810,
+                           ifelse(Prey_OS_ID == 8110,
                                   "Pandalus",
                                   "other")
-                    )))
+                    ))) %>%
+  
+  subset(!is.na(PreyWt))  %>%            # removes NAs from PreyWt column only
+  group_by(pred.name, prey.name) |> summarize(prey.percent = sum(PreyWt), .groups = "keep") %>%  # sum PreyWt by prey.name per pred.name
+  group_by(pred.name) |> mutate(pizza = prey.percent/sum(prey.percent)) %>%   
+  
+  mutate(other.prey = prey.name == "other")
 
-head(pandalus.percent)
+pandalus.percent$other.prey[pandalus.percent$other.prey == FALSE] = "Shrimp"
+pandalus.percent$other.prey[pandalus.percent$other.prey == TRUE] = "other"
+
+
+pandalus.percent$pizza <- pandalus.percent[['pizza']]*100    # format into percentage
+
+
+
+### Saving the pandalus.percent dataframe structure
+
+# str(pandalus.percent) 
+
+
+
+### Exporting pandalus.percent Dataframe
+
+write.csv(pandalus.percent, 
+          file="data/processed/2019_F6_pandalus.percent.csv",
+          row.names = FALSE)                # removes auto-generated unique ID row
+
+
+###################    Building and Formatting Figure 6    ######################
 
 names(pandalus.percent)
 
-?summarise
+### Load Figure 6 dataframe
 
+# pandalus.percent <- read.csv('data/processed/2019_F6_pandalus.percent.csv')
+
+geom_bar(aes(fill = depth),
+         position = "stack",
+         stat="count",
+         width = 0.4)    # changes the width of the bars 
+  
+?geom_col
+?theme
+
+### Build Figure 6a
+
+ggplot(pandalus.percent, 
+       aes(x = other.prey, y = pizza, fill = prey.name)) +
+  
+  theme_minimal() +
+  
+  geom_col(position = "stack",
+           width = 1) +
+          # width = 0.8) +                                      # reduces column width
+  
+  facet_wrap(~ pred.name,
+             ncol = 4,                                         # plots in 4 columns (so all appear in 1 row)
+             strip.position = "bottom") +                      # moves the facet strip to the bottom
+  
+  labs(x = "Predator Species",
+       y = "%W") +
+  
+  scale_fill_manual(values = c("other" = "grey",               # assigns colour to prey sp. categories
+                    "Pandalus" = "#CCEDB1",
+                    "borealis" = "#41B7C4",
+                    "montagui" ="#FF9999")) +
+  
+  coord_cartesian(ylim = c(0, 100)) +
+  scale_y_continuous(breaks = seq(0, 100, by = 25)) +
+  
+  scale_x_discrete(expand = c(1, 1)) +                          # adds padding around the bars
+  
+  
+  theme(axis.text.x = element_blank(),                           # removes x-axis labels
+        axis.title = element_text(size = 8),                     # size of x and y axis titles
+        axis.title.y = element_text(vjust = +3),                 # pulls y-axis title away from chart
+        axis.ticks = element_blank(),                            # removes axis ticks
+
+        legend.title = element_blank(),                          # removes legend title
+        legend.key.size = unit(3, "mm"),                         # adjusts width of legend color symbols
+        legend.key.height = unit(3, "mm"),                       # adjusts height of legend color symbols
+        legend.key.spacing.y = unit(1, "mm"),                    # defines space between legend items
+
+        panel.grid.minor = element_blank(),                      # removes all minor grid-lines
+        panel.grid.major.x = element_blank(),
+        panel.spacing = unit(0, 'point') ,                      # removes space between panels
+        plot.background = element_rect(fill='transparent', color=NA),
+        strip.text = element_text(vjust = 6)
+  )
+        
+  #       strip.text = element_text(vjust = -10)) +       # pulls panel titles to the top left
+  
+
+
+
+
+### Build Figure 6b
+
+
+
+### Combine Fig 6a & 6b to create Figure 6
+
+
+##############      Below is code Dan and I worked on    ######################
+
+
+## Below is code Dan and I worked on 
+
+test = pandalus.percent 
+
+test = subset(test, !is.na(PreyWt))
+test = test |> group_by(pred.name, prey.name) |> summarize(prey.percent = sum(PreyWt))
+test = test |> group_by(pred.name) |> mutate(pizza = prey.percent/sum(prey.percent))
+
+test = test |> mutate(other.prey = prey.name == "other")
+test$other.prey[test$other.prey == TRUE] = "other"
+test$other.prey[test$other.prey == FALSE] = "Shrimp"
+
+# stacking the count
+ggplot(test, aes(x = other.prey, y = pizza, fill = prey.name)) +
+  theme_bw() +
+  geom_col(position = "stack") +
+  facet_wrap(~ pred.name)
+
+
+###################################################################################
+################################################################################
+
+# Below is old code
+
+##################################################################################
+##################################################################################
+
+############ Below is old code
 
 # new columns containing the summarized values defined in summarise()
 
 test <- pandalus.percent %>%
   group_by(pred.name, PreyWt) %>%        # group by specified categories
   summarise('Weight' = sum(PreyWt),                 # 'New Column' = sum('Old Column') 
-          'Count' = sum(Prey_Count),
-          .groups = "keep")             # tells R to keep current group structure
-  # gives warning that goes into Markdown document if '.groups' not specified
+            'Count' = sum(Prey_Count),
+            .groups = "keep")             # tells R to keep current group structure
+# gives warning that goes into Markdown document if '.groups' not specified
 
 # Step 3: create % weight Figure that does percentage per fish category
-    # fish category may have to be grouped first to do this
+# fish category may have to be grouped first to do this
 
 
 ########### testing figures
@@ -213,24 +340,24 @@ ggplot(data = pandalus.percent,
        aes(fill = prey.name, x = pred.name, y = PreyWt)) +
   geom_bar(position="stack", stat = "identity")
 
-
+# percent count
 ggplot(data = pandalus.percent,
        aes(fill = prey.name, x = pred.name, y = PreyWt)) +
   geom_bar(position="fill", stat = "identity")
 
- # geom_bar(aes(position = "fill",
- #          stat="count",
-  #         width = 0.4))
+# geom_bar(aes(position = "fill",
+#          stat="count",
+#         width = 0.4))
 
 ?geom_bar
-           
-           
+
+
 
 # Step 4: create # number Figure
-    # when feeding data in, filter out unidentified categories
+# when feeding data in, filter out unidentified categories
 
 # Step 5: see if these figures can be combined into one multi-panneled figure
-    # concern is that they use slightly different data (i.e. unidentified)
+# concern is that they use slightly different data (i.e. unidentified)
 
 # Step 6: create either 1 figure or the 2 plots that then get merged into one figure
 
@@ -298,9 +425,9 @@ summarise('Full' = sum(Full),                 # 'New Column' = sum('Old Column')
           'Total' = sum(sampled.stomach),
           .groups = "keep")  %>%              # tells R to keep current group structure
   # gives warning that goes into Markdown document if '.groups' not specified
+
   
-  
-  #############   Formatting Dataframe Structure for Table    ####################
+#############   Formatting Dataframe Structure for Table    ####################
 
 
 
@@ -356,112 +483,7 @@ stomach.ratio <- data.frame(lapply(stomach.ratio, function(x){    # honestly - I
 
 
 
-### Saving the stomach.ratio dataframe structure
-
-# str(stomach.ratio) 
-
-# 'data.frame':	18 obs. of  13 variables:
-
-# $ length.range           : chr  "6-10" "11-15" "16-20" "21-25" ...
-# $ Full_Atlantic.cod      : chr  "-" "-" "-" "-" ...
-# $ Empty_Atlantic.cod     : chr  "-" "-" "-" "-" ...
-# $ Total_Atlantic.cod     : chr  "-" "-" "-" "-" ...
-# $ Full_Greenland.halibut : chr  "8" "19" "22" "20" ...
-# $ Empty_Greenland.halibut: chr  "-" "11" "7" "13" ...
-# $ Total_Greenland.halibut: chr  "8" "30" "29" "33" ...
-# $ Full_Redfish           : chr  "1" "5" "9" "12" ...
-# $ Empty_Redfish          : chr  "1" "-" "4" "11" ...
-# $ Total_Redfish          : chr  "2" "5" "13" "23" ...
-# $ Full_Skate             : chr  "-" "14" "29" "31" ...
-# $ Empty_Skate            : chr  "1" "1" "1" "1" ...
-# $ Total_Skate            : chr  "1" "15" "30" "32" ...
 
 
-
-### Exporting stomach.ratio Dataframe
-
-write.csv(stomach.ratio, 
-          file="data/processed/2019_T2_stomach.ratio.csv",
-          row.names = FALSE)                # removes auto-generated unique ID row
-
-
-###################    Building and Formatting Table 2    ######################
-
-
-### Load Table 2 dataframe
-
-# stomach.ratio <- read.csv('data/processed/2019_T2_stomach.ratio.csv')
-
-# confirm fish order is cod, halibut, redfish, skates. If yes - continue
-
-
-
-### Create Table 2
-
-flextable(stomach.ratio) %>%
-  
-  add_header_row(top = TRUE,                           # adding a header (spanner) on top of current header
-                 values = c("", "Atlantic cod", "Greenland halibut", "Redfishes", "Skates"),
-                 colwidths = c(1, 3, 3, 3, 3)) %>%     # number of columns wide each header cell is
-  
-  set_header_labels(length.range = "Size Class",        # renames columns
-                    Full_Atlantic.cod = "Full",
-                    Empty_Atlantic.cod = "Empty",
-                    Total_Atlantic.cod = "Total",
-                    Full_Greenland.halibut = "Full",
-                    Empty_Greenland.halibut = "Empty",
-                    Total_Greenland.halibut = "Total",
-                    Full_Redfish = "Full",
-                    Empty_Redfish = "Empty",
-                    Total_Redfish = "Total",
-                    Full_Skate = "Full",
-                    Empty_Skate = "Empty",
-                    Total_Skate = "Total") %>%
-  
-  bg(bg = "lightgray", part = "header") %>%               # defines header colour
-  bold(part = "header") %>%                               # header text bold
-  
-  align(part = "all", align = "center")  %>%              # centers text throughout table
-  
-  vline(j=c(1, 4, 7, 10), part = "all") %>%               # adds vertical lines at defined columns across table
-  
-  bg(                                                  # adding shading every second line in table body
-    i = seq(from = 2, to = nrow(stomach.ratio), by = 2),  # select every 2nd row until the max row number 
-    bg = "#EFEFEF",                                       # color
-    part = "body") %>%                                    # part of table to apply formatting
-  
-  width(j=1, width = 18, unit = "mm") %>%                 # define column width as narrow as possible
-  width(j=c(2, 5, 8, 11), width = 12, unit = "mm") %>%   
-  width(j=c(3, 6, 9, 12), width = 16, unit = "mm") %>%
-  width(j=c(4, 7, 10, 13), width = 13, unit = "mm") %>%
-  
-  set_caption(                                         # manual caption formatting to insert footnote numbering
-    caption = as_paragraph(                               # allows manual formatting in caption
-      as_i("Number of full"),                             # italics
-      as_i(as_sup("1")),                                  # superscript 1
-      as_i(" empty, and total (full and emtpy) stomachs collected for Atlantic Cod ("), # spacing within "" matters!
-      "Gadus morhua",
-      as_i("), Greenland Halibut ("),
-      "Reinhardtius hippoglossides",
-      as_i("), redfishes ("),
-      "Sebastes ",
-      as_i("sp.), and skates ("),
-      "Rajidae",
-      as_i(") within each size class"),
-      as_i(as_sup("2")),
-      as_i(".")
-    ))  %>%                        
-  
-  add_footer_lines(                                  # add footnotes compatible to Markdown
-    as_paragraph(                                      # allows manual formatting in footnote
-      as_sup("1"),                                     # superscript 1
-      " A full stomach is any stomach that was not empty and contained prey items other than only parasites and/or only mucous."
-    )) %>%
-  
-  add_footer_lines(                                 # add second footnote in new line
-    as_paragraph(                     
-      as_sup("2"),                                     
-      " Total length (cm) was used to measure all predators."
-    ))
 
 
