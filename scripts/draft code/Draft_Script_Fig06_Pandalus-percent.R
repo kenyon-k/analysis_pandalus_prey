@@ -41,7 +41,15 @@
 
 ### Spacing around columns without impacting facet spacing
 
+    # (WINNER!!) https://www.youtube.com/watch?v=UVriK-W1DNg
+        # THIS ONE IS WHAT I CHOSE
+        # adds padding on scales (including discrete) within the graph code
+
+
     # https://stackoverflow.com/questions/36823526/add-different-amount-of-extra-space-on-both-sides-of-discrete-ggplot-x-axis
+        # could work, but requires adding blank rows to create blank columns
+        # besides 'adding data', this also creates errors
+        # it also off-centers the bars from the labels
 
 
 ################################################################################
@@ -58,6 +66,27 @@
     # (axis overview) https://r-charts.com/ggplot2/axis/
         # GREAT overview!
         # anything plot axis related is here!
+
+
+### Order or Variables in Stacked Bars
+
+    # (define order) https://www.statology.org/ggplot-reorder-stacked-bars/#:~:text=You%20can%20use%20the%20following%20basic%20syntax%20to,stacked%20bar%20chart%20ggplot%28df%2C%20aes%28x%3Dx_var%2C%20y%3Dy_var%2C%20fill%3Dfill_var%29%29%20%2B
+        # I inserted the factor() within the ggplot(aes()) itself
+        # ggplot(aes(fill = factor(variable, levels = c(xxx,xxx))))
+
+
+
+### Formatting Legend
+
+    # (italics) https://stackoverflow.com/questions/59554096/ggplot2-italics-in-the-legend
+        # uses Markdown syntax to insert italics
+
+    # (overview) https://www.youtube.com/watch?v=w4X3o6MQjVA
+        # reordering labels
+        # using Markdown syntax
+        # ordering variables in stacked bar charts
+
+    # (overview) https://www.datanovia.com/en/blog/ggplot-legend-title-position-and-labels/
 
 
 ### Transparency in labels
@@ -147,7 +176,8 @@ test <- test %>%
 ## Test figure
   
 ggplot(test, 
-         aes(x = other.prey, y = pizza, fill = prey.name)) +
+         aes(x = factor(other.prey, levels = c('Shrimp', 'other')), 
+             y = pizza, fill = prey.name)) +
   
   theme_minimal() +
   
@@ -157,10 +187,14 @@ ggplot(test,
   facet_wrap(~ pred.name,
              ncol = 4,                                         # plots in 4 columns (so all appear in 1 row)
              strip.position = "bottom")  +                      # moves the facet strip to the bottom
-  scale_x_discrete(limits = c("apple", "other", "Shrimp"), 
-                   breaks = c(NA, "other", "Shrimp"), 
-                   labels = c("", "other", "Shrimp"),
-                   drop = FALSE) +  
+  
+  scale_x_discrete(expand = c(0.5, 0.5))#,
+                   breaks = c("Shrimp", "other"))
+  
+  # scale_x_discrete(limits = c("apple", "other", "Shrimp"), 
+  #                  breaks = c(NA, "other", "Shrimp"), 
+  #                  labels = c("", "other", "Shrimp"),
+  #                  drop = FALSE) +  
 
   labs(x = "Predator Species",
        y = "%W") +

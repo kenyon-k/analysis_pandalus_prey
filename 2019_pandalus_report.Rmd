@@ -64,6 +64,7 @@ library(viridis)                 # Fig 5 - color blind friendly palette
 library(flextable)        # Table 1 options
 # library(kableExtra)       # Table 1 extra Kable options that may only work in HTML
 # library(officer)          # helps flextable formatting transfer to Word doc
+library(ggtext)             # allows for text formatting in ggplots
 
 
 ######## Setting up the Theme
@@ -1044,6 +1045,8 @@ Table 6: Table showing percent weight and percent number of each prey species ta
 Data I will need includes weight and number of prey species within skates stomachs
 -->
 
+
+
 ## Pandalus as Prey
 
 ### Relative Proportion of Pandalid Prey by Predatory Species
@@ -1055,6 +1058,94 @@ Figure 6: 2-paneled bar chart of percent weight and percent number of different 
 
 Data I will need is weight and number of shrimp in each target fish species
 -->
+
+```{r shrimp percent, echo = FALSE, fig.cap="*Relative contribution by (a)  percent weight (%W) and (b) percent number (%N) of *P. borealis*, *P. montagui*, and unidentifiable *Pandalus sp.* within Arctic Cod (*Gadus morhua*), Greenland Halibut (*Reinhardtius hippoglossides*), redfish (*Sebastes sp.*), and skate (*Rajidae*) stomachs in comparison to other taxonomic categories of prey.*"}
+
+### Load Figure 6 dataframe
+
+pandalus.percent <- read.csv('data/processed/2019_F6_pandalus.percent.csv')
+
+
+
+### Build Figure 6a
+
+ggplot(pandalus.percent, 
+       aes(x = factor(other.prey, levels = c('Shrimp', 'other')),   # orders discrete data for figure
+           y = pizza, 
+           fill = factor(prey.name, levels = c('other', 'Pandalus', 'montagui', 'borealis')) # orders variables in bars
+           )) +
+  
+  theme_minimal() +
+  
+  geom_col(position = "stack",
+           width = 1) +
+          # width = 0.8) +                                      # reduces column width
+  
+  facet_wrap(~ pred.name,
+             ncol = 4,                                         # plots in 4 columns (so all appear in 1 row)
+             strip.position = "bottom",#) + #,                        # moves the facet strip to the bottom
+             labeller = as_labeller(c("Atlantic cod" = "Atlantic<br>cod",
+                                      "Greenland halibut" = "Greenland<br>halibut",
+                                      "Redfish" = "Redfish",
+                                      "Skate" = "Skate")
+             ))+                      
+  
+  labs(x = "Predator Species",
+       y = "%W") +
+  
+  scale_fill_manual(values = c("other" = "grey",               # assigns colour to prey sp. categories
+                    "Pandalus" = "#CCEDB1",
+                    "borealis" = "#41B7C4",
+                    "montagui" ="#FF9999"),
+                    breaks = c("borealis",                     # assigns legend order
+                               "montagui",
+                               "Pandalus",
+                                "other"), 
+                     labels = c("*P. borealis*",                  # *xx* insert italics with markdown code/syntax
+                                "*P. montagui*",                  # needs accompanying argument in theme()
+                                "*Pandalus sp.*", 
+                                "other")) +
+
+
+  
+  coord_cartesian(ylim = c(0, 100)) +
+#  scale_y_continuous(breaks = seq(0, 100, by = 25)) +
+  
+  scale_x_discrete(#labels = c("",""),
+    expand = c(1, 1)) +                          # adds padding around the bars
+  
+  scale_y_continuous(expand = c(0,0)) +         # removes padding around y-axis. Places facet_wrap titles directly below bars
+  
+  
+  theme(axis.text.x = element_blank(),                           # removes x-axis labels
+        axis.title = element_text(size = 8),                     # size of x and y axis titles
+        axis.title.y = element_text(vjust = +3),                 # pulls y-axis title away from chart
+        axis.ticks = element_blank(),                            # removes axis ticks
+
+        legend.title = element_blank(),                          # removes legend title
+        legend.key.size = unit(3, "mm"),                         # adjusts width of legend color symbols
+        legend.key.height = unit(3, "mm"),                       # adjusts height of legend color symbols
+        legend.key.spacing.y = unit(1, "mm"),                    # defines space between legend items
+
+        panel.grid.minor = element_blank(),                      # removes all minor grid-lines
+        panel.grid.major.x = element_blank(),
+        panel.spacing = unit(0, 'point') ,                      # removes space between panels
+        
+        legend.text = element_markdown(),                        # allows me to italics in legend via markdown code
+        strip.text.x = element_markdown()
+       # plot.background = element_rect(fill='transparent', color=NA)#,
+
+        
+# didn't need the below theme() arguments to move the axis.
+# The issue was that my Strip Labels were within the y-axis padding.
+# I removed this padding in scale_y_continuous(expand())
+        
+      #  axis.text.x = element_text(vjust = -10),
+       # strip.text = element_text(vjust = 8)
+  )
+
+```
+
 
 ### Relative Proportion of Pandalid Prey by Survey Area and Depth
 
