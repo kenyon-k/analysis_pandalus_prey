@@ -359,7 +359,8 @@ f6a <- ggplot(pandalus.f6a,
            fill = factor(prey.name, levels = c('other', 'Pandalus', 'montagui', 'borealis')) # orders pray.name variables in bars
            )) +
   
-  theme_minimal() +
+  theme_minimal(                                                               # pre-set 'minimal' theme
+    base_size = 16) +                                                          # sets base text (minus titles) to size 16
   
   geom_col(position = "stack",                                                 # creates stacked bar chart
            width = 1) +                                                        # specifies width. Width = 1 forces bars to touch
@@ -416,7 +417,9 @@ f6a <- ggplot(pandalus.f6a,
         panel.spacing = unit(0, 'point') ,                      # removes space between panels
         
         legend.text = element_markdown(),                        # allows me to italics in legend via markdown code
-        strip.text.x = element_markdown()                        # allows me to insert line breaks into facet stip titles (pred names) via markdown code
+        strip.text.x = element_markdown(),                        # allows me to insert line breaks into facet strip titles (pred names) via markdown code
+        plot.margin = margin(t=5, r = 10, b = 5, l = 8,          # adds space around figure
+                             unit = "mm")                        # space included when combining figures in ggarrange()
   )
 
 
@@ -443,7 +446,7 @@ f6a <- ggplot(pandalus.f6a,
 
 
 
-### Build Figure 6a
+### Build Figure 6B
 
 f6b <- ggplot(pandalus.f6b,
               aes(x = factor(other.prey, levels = c('Shrimp', 'other')),               # orders x-axis discrete data for figure
@@ -451,7 +454,8 @@ f6b <- ggplot(pandalus.f6b,
                   fill = factor(prey.name, levels = c('other', 'Pandalus', 'montagui', 'borealis')) # orders pray.name variables in bars
               )) +
   
-  theme_minimal() +
+  theme_minimal(                                                               # pre-set 'minimal' theme
+    base_size = 16) +                                                          # sets base text (minus titles) to size 16
   
   geom_col(position = "stack",                                                 # creates stacked bar chart
            width = 1) +                                                        # specifies width. Width = 1 forces bars to touch
@@ -503,7 +507,9 @@ f6b <- ggplot(pandalus.f6b,
         panel.spacing = unit(0, 'point') ,                      # removes space between panels
         
         legend.text = element_markdown(),                        # allows me to italics in legend via markdown code
-        strip.text.x = element_markdown()                        # allows me to insert line breaks into facet stip titles (pred names) via markdown code
+        strip.text.x = element_markdown(),                        # allows me to insert line breaks into facet strip titles (pred names) via markdown code
+        plot.margin = margin(t=5, r = 10, b = 5, l = 8,          # adds space around figure
+                             unit = "mm")                        # space included when combining figures in ggarrange()
   )
 
 
@@ -511,8 +517,88 @@ f6b <- ggplot(pandalus.f6b,
 
 library(ggpubr)     # give ggarrange function
 
-ggarrange(f6a, f6b, 
-          ncol = 2, labels = "auto")#, vjust = 0.8)
+### Combine Figure 6A and 6B
+
+f6 <- ggarrange(f6a, f6b,                   # combine figure f6a and f6b into one plot
+          ncol = 2,                   # have figures on two columns (nrow = 1 should yield same result)
+          labels = "auto",            # label figures in lowercase a, b
+          common.legend = TRUE,       # both figures share a common legend
+          legend = "bottom",           # place the shared legend on the bottom
+          font.label = list(face = "plain")
+          ) 
+  theme(plot.margin = margin(1,1,1,1, "cm"))
+
+# this version does create an outside border
+f6 +
+  border()
+
+# This also creates an outside border
+f6 +
+  theme(plot.background = element_rect(colour = "black", fill = NA, size = 1))
+
+
+# outside border per panel. Legend below without border
+
+f6ab <- f6a +
+  theme(plot.background = element_rect(colour = "black", fill = NA, size = 1))
+
+f6bb <- f6b +
+  theme(plot.background = element_rect(colour = "black", fill = NA, size = 1))
+
+ggarrange(f6ab, f6bb,                   # combine figure f6a and f6b into one plot
+          ncol = 2,                   # have figures on two columns (nrow = 1 should yield same result)
+          labels = "auto",            # label figures in lowercase a, b
+          common.legend = TRUE,       # both figures share a common legend
+          legend = "bottom",           # place the shared legend on the bottom
+          font.label = list(face = "plain")
+) 
+
+# outside border per panel with legend border
+
+f6abl <- f6ab +
+  theme(legend.background = element_rect(colour = 1))
+
+f6bbl <- f6bb +
+  theme(legend.background = element_rect(colour = 1))
+
+ggarrange(f6abl, f6bbl,                   # combine figure f6a and f6b into one plot
+          ncol = 2,                   # have figures on two columns (nrow = 1 should yield same result)
+          labels = "auto",            # label figures in lowercase a, b
+          common.legend = TRUE,       # both figures share a common legend
+          legend = "bottom",           # place the shared legend on the bottom
+          font.label = list(face = "plain")
+) 
+
+# outside border per panel and outside figure border
+
+ggarrange(f6ab, f6bb,                   # combine figure f6a and f6b into one plot
+          ncol = 2,                   # have figures on two columns (nrow = 1 should yield same result)
+          labels = "auto",            # label figures in lowercase a, b
+          common.legend = TRUE,       # both figures share a common legend
+          legend = "bottom",           # place the shared legend on the bottom
+          font.label = list(face = "plain")
+) +
+  theme(plot.background = element_rect(colour = "black", fill = NA, size = 1))
+
+?plot.margin
+?theme
+
+### Add Boarders around Figure 6 if desired
+
+  annotate_figure(f6,
+    'rect',
+    xmin = 40,
+    xmax = 47,
+    ymin = 210,
+    ymax = 225,
+    col = 'black')
+            
+
+?annotate_figure
+
+# adjust plot.margins in each figure to increase/decrease spacing between figures
+    # there is not a way to do that within ggarrange() itself
+
 
 ### Combine Fig 6a & 6b to create Figure 6
 
@@ -520,17 +606,6 @@ ggarrange(f6a, f6b,
 
 
 
-########################## Steps ##############################################
-
-# Step 4: create # number Figure
-# when feeding data in, filter out unidentified categories
-
-# Step 5: see if these figures can be combined into one multi-panneled figure
-# concern is that they use slightly different data (i.e. unidentified)
-
-# Step 6: create either 1 figure or the 2 plots that then get merged into one figure
-
-# Step 7: format figure
 
 
 
@@ -554,174 +629,5 @@ ggplot(test, aes(x = other.prey, y = pizza, fill = prey.name)) +
   theme_bw() +
   geom_col(position = "stack") +
   facet_wrap(~ pred.name)
-
-
-###################################################################################
-################################################################################
-
-# Below is old code
-
-##################################################################################
-##################################################################################
-
-############ Below is old code
-
-# new columns containing the summarized values defined in summarise()
-
-test <- pandalus.percent %>%
-  group_by(pred.name, PreyWt) %>%        # group by specified categories
-  summarise('Weight' = sum(PreyWt),                 # 'New Column' = sum('Old Column') 
-            'Count' = sum(Prey_Count),
-            .groups = "keep")             # tells R to keep current group structure
-# gives warning that goes into Markdown document if '.groups' not specified
-
-# Step 3: create % weight Figure that does percentage per fish category
-# fish category may have to be grouped first to do this
-
-
-########### testing figures
-
-# stacking the count
-ggplot(data = pandalus.percent,
-       aes(fill = prey.name, x = pred.name, y = PreyWt)) +
-  geom_bar(position="stack", stat = "identity")
-
-# percent count
-ggplot(data = pandalus.percent,
-       aes(fill = prey.name, x = pred.name, y = PreyWt)) +
-  geom_bar(position="fill", stat = "identity")
-
-# geom_bar(aes(position = "fill",
-#          stat="count",
-#         width = 0.4))
-
-?geom_bar
-
-
-
-
-
-
-
-# trying to figure out how I wan my data structured.....
-names(pandalus.percent)
-
-# new column of Prey_OS_ID that fits things to the 4 prey categories
-
-
-##### Below is old code
-
-stomach.ratio  <- pred %>%               # create new dataframe based on 'pred'                    
-  
-  select(Prey_OS_ID,                    # subsets dataframe by selected columns
-         pred.name, 
-         length.range, 
-         sampled.stomach) %>%
-  
-  
-  
-  ### Assigning Full vs Empty Stomachs
-  # if I add these in, THEN I MUST FILTER STOMACHS FROM PREY DATABASE THAT ONLY HAVE THESE
-  # THIS IS KEY - the pred df has indiscriminately removed duplicates. 
-  # Fine for Empty Stomachs.
-  # NOT fine when there could have been multiple prey/objects in stomachs
-  # other potential 'Empty Stomachs' codes:
-  # 2222 = Plant
-  # unknown????? (if yes, 10746-10750)
-# other. 9981 (sand), 9982 (stone), 9983 (shells), 9993 (bait), 9995 (other offal), 10757 (mud)
-
-
-mutate(Full = ifelse(Prey_OS_ID == 9998,     # create new column 'Full' with values based on logical check
-                     0,                      # value if logical check is TRUE
-                     1)) %>%                 # value if logical check is FALSE
-  
-  mutate(Empty = ifelse(Prey_OS_ID == 9998,   # Prey_OS_ID of 9998 = 'Empty'
-                        1,
-                        0))  %>%
-  
-  
-  ### Assigning Groups for Table Layout 
-  
-  # desiring stomach data summed and displayed by:
-  # fish length group (column 1) and 
-  # predator category group (rows) 
-  
-  group_by(length.range, pred.name) %>%        # group by specified categories
-  
-  
-  
-  ### Sum Stomach Data by Groups
-  
-  # sums the specified values by the grouped categories
-  # e.g. total 'full' stomachs by predator length and category
-  # creates new dataframe that contains:
-  # grouped variables (e.g. length.range, pred.name)
-  # new columns containing the summarized values defined in summarise()
-  
-summarise('Full' = sum(Full),                 # 'New Column' = sum('Old Column') 
-          'Empty' = sum(Empty),
-          'Total' = sum(sampled.stomach),
-          .groups = "keep")  %>%              # tells R to keep current group structure
-  # gives warning that goes into Markdown document if '.groups' not specified
-
-  
-#############   Formatting Dataframe Structure for Table    ####################
-
-
-
-### Final Table Structure Formatting
-
-# merge predator categories with the full, empty, total columns.
-
-# columns will now be 'stomach-predator' (e.g. Full-Greenland Halibut)  
-# rows will be predator length
-
-pivot_wider(names_from = pred.name,                       # categorical values to pull from rows to columns
-            values_from = c(Full, Empty, Total)) %>%      # numerical values to fill in those columns
-  
-  
-  # Re-Ordering Columns 
-  
-  relocate(contains('cod'), .after = length.range) %>%     # moves any column with name containing 'cod' to the right of length.range
-  relocate(contains('Greenland'), .after = contains('cod')) %>%
-  relocate(contains('Red'), .after = contains('Green'))  %>%
-  
-  
-  # Re-Order Rows from Smallest to Largest Fish
-  
-  # length.range not naturally sorted because format is 6-10 vs 006-10
-  # so I added 0s, sorted, then removed the extra 0s
-  
-  mutate(length.range = str_pad(length.range,     # code adds 0s to start of length.range string (6 becomes 006)
-                                width=6,          # strings <6 characters will be padded until they =6 characters
-                                pad = "0")) %>%   # padding with 0s
-  # width = 6 bumps all strings to ###- (006-, 016-, 141-)
-  
-  arrange(length.range) %>%                       # sort smallest to largest now that length.range strings equal character length before '-'
-  
-  mutate(length.range = str_replace(length.range, # removing the extra zeros for Table formatting
-                                    "^0{1,}",     # select 1+ '0's at the beginning of strings
-                                    "")) %>%         # remove selected '0's
-  
-  
-  # Replace 0 and NA values with '-' 
-  # I could not select and replace across the entire dataframe within dyplr
-  # I had to use Base R for Step 2
-  # Step 1: replacing 'NA' with 0 in dyplr (replace)
-  # Step 2: replacing '0' with '-' in base R (lapply) and stringr (str_replace_all)
-  
-  
-  replace(is.na(.), 0)                                 # if there are NA's, replace with 0
-
-stomach.ratio <- data.frame(lapply(stomach.ratio, function(x){    # honestly - I don't know what above code does but it works
-  str_replace_all(x,                                              # will be related to the code in the above line. But Idk who it actually works
-                  "(?<!\\S)0(?!\\S)",                             # select '0' with nothing before or after
-                  "-")                                            # replace with '-'
-})) 
-
-
-
-
-
 
 
