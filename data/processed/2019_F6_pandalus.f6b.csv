@@ -1,0 +1,14 @@
+"pred.name","prey.name","other.prey","prey.count.percent"
+"Atlantic cod","Pandalus","Shrimp",57.1428571428571
+"Atlantic cod","borealis","Shrimp",42.8571428571429
+"Greenland halibut","Pandalus","Shrimp",1.15830115830116
+"Greenland halibut","borealis","Shrimp",7.72200772200772
+"Greenland halibut","montagui","Shrimp",12.7413127413127
+"Greenland halibut","other","other",78.3783783783784
+"Redfish","borealis","Shrimp",0.119189511323004
+"Redfish","montagui","Shrimp",0.119189511323004
+"Redfish","other","other",99.761620977354
+"Skate","Pandalus","Shrimp",0.425531914893617
+"Skate","borealis","Shrimp",7.65957446808511
+"Skate","montagui","Shrimp",1.27659574468085
+"Skate","other","other",90.6382978723404
