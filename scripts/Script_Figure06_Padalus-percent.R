@@ -7,7 +7,7 @@
 
 # Author: Krista Kenyon (KAK)
 # Date Created: Aug 8/2024
-# Date Last Modified: Aug 9/2024 by KAK
+# Date Last Modified: Aug 16/2024 by KAK
 
 
 # Document Purpose: Creating Figure 6 for R Markdown document.
@@ -32,9 +32,15 @@
     # please see the 'Draft_Script_Figure 6_Pandalus-percent.R' in the 'Draft Code' folder
 
 # Draft Script notes include sites and tutorials that assisted me with:
-    # .........
-    # .........
-    # .........
+    # Creating figure dataset
+    # Figure Formatting - ggplot2 - facet & stacked
+        # subsection: tutorials
+    # Figure Formatting - ggarrange package
+    # Unused Code - ggplot2
+    # Unused Code - ggarrange
+    # OG Code that Dan Enright Helped Write
+    # Final Formatting Options
+        # subsection: options
 
 
 ################################################################################
@@ -42,164 +48,172 @@
 ################################################################################
 
 
-# update below script for Figure 6
-# create Fig 6 df
-# create Fig 6 itself
 # clean up code
+# Ask Sheila about empty stomach/parasites codes, and prey scientific name
+
+## I'll need to update the code chunk notes with the parasites that Sheila tells me about
+
+## I'll need to ask Sheila how Unknown Sp are entered into the database.
+    # each gets their own value?
+    # how are the unkn sp a, b, c, d, e determined?
+    # if each new unknown gets a unique code, then I'll have to adjust my code
+
+# Parasites to filter out include nematodes:
+    # nematomorpha [hairworm]   (OS_ID code = 2585)
+    # nematoda - nemata [nematode]   (OS_ID code = 2585)
 
 
 ################################################################################
 #                         Load Libraries & Base Data          
 ################################################################################
 
-install.packages('ggtext')  # allows for text formatting in ggplots
+
 
 ### load libraries
 
-library(tidyverse)
-library(dplyr)
-library(ggplot2)
-library(ggtext)
+# library(tidyverse)
+# library(dplyr)
+# library(ggplot2)
+# library(ggtext)     # allows use of Markdown syntax to bold, italics, etc figure text
+# library(ggpubr)     # give ggarrange function
+
 
 
 ### import data
 
-prey <- read.csv('data/processed/2019_basePrey.csv')
+# prey <- read.csv('data/processed/2019_basePrey.csv')
 
 
 ################################################################################
-#                      Code Chunk: Creating Figure 6
+#                      Code Chunk: Creating Figure 6 Dataframes
 ################################################################################
 
 
 # This code chunk subsections:
-    # Creates a ....... dataframe capturing ..............
-    # Restructures above dataframe into the format required for Figure 6
-    # .................
-    # Build and format Figure 6
+    # Creates Figure 6 Base Dataframe
+    # Creates Figure 6A Dataframe
+    # Creates Figure 6B Dataframe
+
+# The Figure 6 Base df contains all the shared data for Fig 6 panel A and panel B.
+# From there the data is filtered for individual panel (Fig 6A and Fig 6B df) 
+
+# This figure details the total % Weight AND % Number of prey categories consumed by each predator category.
+    # Fig 6A: % Weight
+    # Fig 6B: % Number
+
+# Fig 6A includes unidentified materials.
+# Fig 6B removes unidentified materials.
 
 
-# ....... df: one row per prey sampled.
-    # prey will need to be recoded (or filtered) for:
-        # shrimp P. borealis        (OS_ID code = 8111)
-        # shrimp P. montagui        (OS_ID code = 8112)
-        # shrimp Pandalus. sp.      (OS_ID code = 8110)
-        # other (i.e. everything not P. or 'empty' stomachs)
-    # the other will have to filter out:
-        # all shrimp P . species      (OS_ID code = 8110-8112)
-        # empty                       (OS_ID code = 9998)
-        # sand                        (OS_ID code = 9981)
-        # stone                       (OS_ID code = 9982)
-        # shells                      (OS_ID code = 9983)
-        # mud                         (OS_ID code = 10757)
-        # plant material              ((OS_ID code = 9987))
-    # Unidentified material depends on what's being measured
-        # unidentified material       (OS_ID code = 10746-10750)
-        # % W includes unidentified material
-        # % N exclude unidentified material
-    # Parasites to filter out include nematodes:
-        # nematomorpha [hairworm]   (OS_ID code = 2585)
-        # nematoda - nemata [nematode]   (OS_ID code = 2585)
 
 
-# in the "other' species code classificaiton - offal is entrails
-        # mud/dirt/veg/debris (anything that goes into the 'empty' category)
+# Figure 6 combines stacked and dodged bars within one figure.
+    # This is not possible with a simple figure argument
 
-## I'll need to update this with the parasites that Sheila tells me about
+# To create this effect:
+    # Created two separate figures and then joined them together with ggarrange()
+    # Each figure is faceted by predator species (4 facets) and formatted to look like one figure
+    # Each facet is a stacked bar chart with two categories:
+        # shrimp: P. borealis, P. montagui, Pandalus sp.
+        # other: everything else not parasite, debris, or empty stomachs
 
-## I'll need to ask Sheila how Unknown Sp are entered into the database.
-        # each gets their own value?
-        # how are the unkn sp a, b, c, d, e determined?
-        # if each new unknown gets a unique code, then I'll have to adjust my code
+
 
 
 # Figure 6 Dataframe structure will need:
-    # 2 categorical variables:
-        # prey species
-        # predator species
+    # 3 categorical variables:
+        # fill: detailed shrimp categories (borealis, montagui, P. sp., other)
+        # columns: shrimp and other categories
+        # facets: predator categories
     # 2 numerical variable:
-        # percent weight of prey sp. within stomachs
-        # precent number of prey sp. within stomachs
-
-####### Below Needs to be updated
-
-# Whether stomachs were full or empty will need to be broken down into three categories:
-    # Full (Prey_OS_ID = not 9998)
-    # Empty (Prey_OS_ID = 9998).  
-    # Total
+        # Fig 6A y-axis: percent weight of prey sp. within stomachs
+        # Fig 6B y-axis: precent number of prey sp. within stomachs
 
 
-# !! I need to ask Sheila if others codes should be added! Paper included if only mud, or full of parasites.
+# Dataframe transformations for Fig 6 Base df (pandalus.percent):
+    # subset prey df to retain desired columns
+    # remove rows with 'empty stomachs'. Leave unidentified material for now.
+    # create new column where Prey_OS_ID's are redefined to the 4 prey categories (fill)
+    # Create new column to force 'other' prey category into solo column in Figure (x-axis)
+    # Saving the pandalus.percent dataframe structure
+    # Exporting pandalus.percent Dataframe
 
 
-###### Below is updated
-
-# Dataframe transformations - Creating df:
-    #......
-    #......
-    #......
-    #......
-
-
-# Dataframe transformations - Formatting for Table:
-    #......
-    #......
-    #......
-    #......
+# Dataframe transformations for Fig 6A and 6B df:
+    # A|B: make copy of Fig 6 Base Dataframe (pandalus.percent)
+    # B: Remove rows with Unidentified Material (leave in for A)
+    # A|B: removes rows where PreyWt (A) or Prey_Count (B) is NA 
+    # A|B: Sum PreyWt (A) or Prey_Count (B) by Prey Category (prey.name) per Predator Category (pred.name)
+    # A|B: Convert Summed Weight (A) or Prey_Count (B) into Percentage for Figure
+    # A|B: Save Fig 6A (pandalus.f6a) or Fig 6B (pandalus.f6b) dataframe structure
+    # A|B: Export pandalus.f6a or pandalus.f6b dataframes
 
 
 ################### Creating Base Dataframe for Figure 6 ########################
-names(prey)
 
-### Creating base dataframe for Figure 6
 
-pandalus.percent <- prey %>%             # create new dataframe based on 'pred' 
+# Figure 6 Base Dataframe is called pandalus.percent
+    # Each row represents one prey item with corresponding prey categories, weight, count, and predator the sample is from
 
-# Step 1: subset dataframe to desired columns  
+# below code is one pipeline that is 'broken up' with annotation notes
+
+
+
+### Creating Fig 6 Base Dataframe
+
+pandalus.percent <- prey %>%             # manipulate 'prey' df and save to new Fig 6 Base df 
+
+  
+# Step 1: Subset Fig 6 Base df to desired columns  
     
   select(Prey_OS_ID,                     # subsets dataframe by selected columns
         # Scientific.Name,
          pred.name,
          PreyWt,
          Prey_Count) %>%
- 
-# Step 2: remove rows with 'empty stomachs'. Leave unidentified for now. 
+
+   
+# Step 2: remove rows with 'empty stomachs'. Leave unidentified items in for now. 
   
-  filter(                           # selects rows that do not contain:
-    Prey_OS_ID != 9998 |                # empty
+  filter(                           # selects rows that do not (!=) contain:
+    Prey_OS_ID != 9998 |                # empty, or (|)
     Prey_OS_ID != 9981 |                # sand
     Prey_OS_ID != 9982 |                # stone
     Prey_OS_ID != 9983 |                # shells
     Prey_OS_ID != 10757 |               # mud
     Prey_OS_ID != 9987)  %>%            # plant material
-
-
-# Step 3: create new column where OS_ID's are redifined to the 4 prey categories
+  
+  
+# Step 3: create new column where Prey_OS_ID's are redefined to the 4 prey categories (Fig 6 fill)
 
     # shrimp P. borealis        (OS_ID code = 8111)
     # shrimp P. montagui        (OS_ID code = 8112)
     # shrimp Pandalus. sp.      (OS_ID code = 8110)
+    # other (i.e. everything not Pandalus)
 
-  mutate(prey.name = ifelse(Prey_OS_ID == 8111,     # create new column 'Full' with values based on logical check
-                     "borealis",                      # value if logical check is TRUE
-                    ifelse(Prey_OS_ID == 8112,
-                           "montagui",
-                           ifelse(Prey_OS_ID == 8110,
-                                  "Pandalus",
-                                  "other")
+  mutate(prey.name = ifelse(Prey_OS_ID == 8111,         # create new column 'prey.name' with values based on logical check
+                     "borealis",                        # value if logical check is TRUE
+                    ifelse(Prey_OS_ID == 8112,          # if logical check is FALSE, begin second logical test
+                           "montagui",                  # value if second logical test is TRUE
+                           ifelse(Prey_OS_ID == 8110,   # if second logical test is FALSE, being third logical test
+                                  "Pandalus",           # value if third logical test is TRUE
+                                  "other")              # value if third logical test is FALSE
                     ))) %>%
-
+  
 # Step 4: Create new column to force 'other' prey category into solo column in Figure
-  mutate(other.prey = prey.name == "other")
+  
+  mutate(other.prey =                           # creating a new column called 'other.prey'
+           prey.name == "other") %>%            # fill column with TRUE/FALSE on whether corresponding prey.name row is 'other'
 
-pandalus.percent$other.prey[pandalus.percent$other.prey == FALSE] = "Shrimp"
-pandalus.percent$other.prey[pandalus.percent$other.prey == TRUE] = "other"
-
+  mutate(other.prey = ifelse(other.prey == FALSE, # making changes to 'other.prey'
+                                                  # if 'other.prey' values is FALSE
+                             "Shrimp",            # enter 'Shrimp'
+                             "other"))            # otherwise enter 'other'
 
 
 ### Saving the pandalus.percent dataframe structure
 
-str(pandalus.percent) 
+# str(pandalus.percent) 
 
 # 'data.frame':	1236 obs. of  6 variables:
 
@@ -224,44 +238,51 @@ write.csv(pandalus.percent,
 
 ### Load Base Figure 6 dataframe
 
-pandalus.percent <- read.csv('data/processed/2019_F6_pandalus.percent.csv')
+# pandalus.percent <- read.csv('data/processed/2019_F6_pandalus.percent.csv')
 
 
 
 ### Creating Fig 6A Specific Dataframe
 
+pandalus.f6a <- pandalus.percent  %>%     # manipulate 'prandalus.percent' df and save to new Fig 6a df 
+  
+  
+# Step 1: removes rows where PreyWt is NA  
 
-# Step 1: Copy Fig 6 Base Dataframe
-pandalus.f6a <- pandalus.percent
-
-
-# Step 2: removes rows where PreyWt is NA  
-pandalus.f6a <- pandalus.f6a  %>%
-  subset(!is.na(PreyWt))%>%        # removes NAs from PreyWt column only   
+  subset(!is.na(PreyWt)) %>%        # removes rows were PreyWt is NA    
 
   
-# Step 3: Sum Prey Weight by Prey Category (prey.name) per Predator Category (pred.name) 
-  group_by(pred.name, prey.name, other.prey) |> summarize(prey.percent = sum(PreyWt), .groups = "keep") %>%  # sum PreyWt by prey.name per pred.name
-  group_by(pred.name) |> mutate(pizza = prey.percent/sum(prey.percent))
-
-
-# Step 4: Turn Weight into Percentage for Figure
-pandalus.f6a$pizza <- pandalus.f6a[['pizza']]*100    # format into percentage
+# Step 2: Sum Prey Weight by Prey Category (prey.name) per Predator Category (pred.name) 
   
-
+  group_by(pred.name, prey.name, other.prey) %>%                  # group by the categories we will want to retain after summarize()
+  summarize(prey.percent = sum(PreyWt), .groups = "keep") %>%     # create new column (prey.percent) that sums PreyWt by prey.name per pred.name
+ 
   
+# Step 3: Turn Weight into Percentage for Figure 
+  group_by(pred.name) %>%                                       # group by the categories I that will feed into the below mutate     
+  mutate(prey.percent = (prey.percent/sum(prey.percent))*100)   # change 'prey.percent' column. OG values formatted into percentage per pred.name
+
+
+
 ### Saving the Figure 6a dataframe structure
 
 # str(pandalus.f6a) 
 
-# 'data.frame':	1236 obs. of  6 variables:
-#   
-# $ Prey_OS_ID: int  6967 9998 6967 6967 6967 6967 8020 8020 4950 8530 ...
-# $ pred.name : chr  "Greenland halibut" "Greenland halibut" "Greenland halibut" "Greenland halibut" ...
-# $ PreyWt    : num  0.3 NA 0.286 0.091 0.079 ...
-# $ Prey_Count: int  NA NA NA NA NA NA NA NA NA NA ...
-# $ prey.name : chr  "other" "other" "other" "other" ...
-# $ other.prey: chr  "other" "other" "other" "other" ...
+# gropd_df [14 × 4] (S3: grouped_df/tbl_df/tbl/data.frame)
+
+# $ pred.name   : chr [1:14] "Atlantic cod" "Atlantic cod" "Atlantic cod" "Greenland halibut" ...
+# $ prey.name   : chr [1:14] "Pandalus" "borealis" "other" "Pandalus" ...
+# $ other.prey  : chr [1:14] "Shrimp" "Shrimp" "other" "Shrimp" ...
+# $ prey.percent: num [1:14] 29.73 64.52 5.75 2.07 10.99 ...
+# - attr(*, "groups")= tibble [4 × 2] (S3: tbl_df/tbl/data.frame)
+# ..$ pred.name: chr [1:4] "Atlantic cod" "Greenland halibut" "Redfish" "Skate"
+# ..$ .rows    : list<int> [1:4] 
+# .. ..$ : int [1:3] 1 2 3
+# .. ..$ : int [1:4] 4 5 6 7
+# .. ..$ : int [1:3] 8 9 10
+# .. ..$ : int [1:4] 11 12 13 14
+# .. ..@ ptype: int(0) 
+# ..- attr(*, ".drop")= logi TRUE
 
 
 
@@ -277,59 +298,58 @@ write.csv(pandalus.f6a,
 
 ### Load Base Figure 6 dataframe
 
-pandalus.percent <- read.csv('data/processed/2019_F6_pandalus.percent.csv')
+# pandalus.percent <- read.csv('data/processed/2019_F6_pandalus.percent.csv')
 
 
 
 ### Creating Fig 6B Specific Dataframe
-names(pandalus.f6b)
-
-# Step 1: Copy Fig 6 Base Dataframe
-pandalus.f6b <- pandalus.percent
 
 
-# Step 2: Remove rows with Unidentified Material
-pandalus.f6b <- pandalus.f6b  %>%
+pandalus.f6b <- pandalus.percent %>%   # manipulate 'prandalus.percent' df and save to new Fig 6b df 
+
+
+# Step 1: Remove rows with Unidentified Material
   filter(                           # selects rows that do not contain:
-    Prey_OS_ID != 10746 |                  # unknown sp. A
+    Prey_OS_ID != 10746 |                # unknown sp. A
     Prey_OS_ID != 10747 |                # unknown sp. B
     Prey_OS_ID != 10748 |                # unknown sp. C
     Prey_OS_ID != 10749 |                # unknown sp. D
     Prey_OS_ID != 10750)  %>%            # unknown sp. E
 
   
-# Step 3: removes rows where Prey_Count is NA  
-  subset(!is.na(Prey_Count)) %>%        # removes NAs from PreyWt column only   
+# Step 2: removes rows where Prey_Count is NA  
+  subset(!is.na(Prey_Count)) %>%        # removes rows where Prey_Count is NA
+
   
+# Step 3: Sum Prey Count by Prey Category (prey.name) per Predator Category (pred.name) 
+  group_by(pred.name, prey.name, other.prey) %>%                         # group by the categories we will want to retain after summarize()
+  summarize(prey.count.percent = sum(Prey_Count), .groups = "keep") %>%  # create new column (prey.count.percent) that sums Prey_Count by prey.name per pred.name
 
-# Step 4: Sum Prey Count by Prey Category (prey.name) per Predator Category (pred.name) 
-group_by(pred.name, prey.name, other.prey) |> summarize(prey.count.percent = sum(Prey_Count), .groups = "keep") %>%  # sum PreyWt by prey.name per pred.name
-  group_by(pred.name) |> mutate(apple = prey.count.percent/sum(prey.count.percent))
-
-# Step 5: Turn Count into Percentage for Figure
-pandalus.f6b$apple <- pandalus.f6b[['apple']]*100    # format into percentage
+  
+  # Step 4: Turn Weight into Percentage for Figure 
+  group_by(pred.name) %>%                                               # group by the categories I that will feed into the below mutate 
+  mutate(prey.count.percent = (prey.count.percent/sum(prey.count.percent))*100) # change 'prey.count.percent' column. OG values formatted into percentage per pred.name
 
 
 
 ### Saving the Figure 6b dataframe structure
 
- str(pandalus.f6b) 
+# str(pandalus.f6b) 
 
- # gropd_df [13 × 5] (S3: grouped_df/tbl_df/tbl/data.frame)
- # $ pred.name         : chr [1:13] "Atlantic cod" "Atlantic cod" "Greenland halibut" "Greenland halibut" ...
- # $ prey.name         : chr [1:13] "Pandalus" "borealis" "Pandalus" "borealis" ...
- # $ other.prey        : chr [1:13] "Shrimp" "Shrimp" "Shrimp" "Shrimp" ...
- # $ prey.count.percent: int [1:13] 4 3 3 20 33 203 1 1 837 1 ...
- # $ apple             : num [1:13] 57.14 42.86 1.16 7.72 12.74 ...
- # - attr(*, "groups")= tibble [4 × 2] (S3: tbl_df/tbl/data.frame)
- # ..$ pred.name: chr [1:4] "Atlantic cod" "Greenland halibut" "Redfish" "Skate"
- # ..$ .rows    : list<int> [1:4] 
- # .. ..$ : int [1:2] 1 2
- # .. ..$ : int [1:4] 3 4 5 6
- # .. ..$ : int [1:3] 7 8 9
- # .. ..$ : int [1:4] 10 11 12 13
- # .. ..@ ptype: int(0) 
- # ..- attr(*, ".drop")= logi TRUE
+# gropd_df [13 × 4] (S3: grouped_df/tbl_df/tbl/data.frame)
+# $ pred.name         : chr [1:13] "Atlantic cod" "Atlantic cod" "Greenland halibut" "Greenland halibut" ...
+# $ prey.name         : chr [1:13] "Pandalus" "borealis" "Pandalus" "borealis" ...
+# $ other.prey        : chr [1:13] "Shrimp" "Shrimp" "Shrimp" "Shrimp" ...
+# $ prey.count.percent: num [1:13] 57.14 42.86 1.16 7.72 12.74 ...
+# - attr(*, "groups")= tibble [4 × 2] (S3: tbl_df/tbl/data.frame)
+# ..$ pred.name: chr [1:4] "Atlantic cod" "Greenland halibut" "Redfish" "Skate"
+# ..$ .rows    : list<int> [1:4] 
+# .. ..$ : int [1:2] 1 2
+# .. ..$ : int [1:4] 3 4 5 6
+# .. ..$ : int [1:3] 7 8 9
+# .. ..$ : int [1:4] 10 11 12 13
+# .. ..@ ptype: int(0) 
+# ..- attr(*, ".drop")= logi TRUE
 
 
 
@@ -340,9 +360,16 @@ write.csv(pandalus.f6b,
           row.names = FALSE)                # removes auto-generated unique ID row
   
   
+################################################################################
+#                   Code Chunk: Building & Formatting Figure 6
+################################################################################
 
 
-###################    Building and Formatting Figure 6    ######################
+# Below code builds Fig 6a, Fig 6b, then combines them into Figure 6
+
+# Alternate formtting options for Figure 6 are saved in:
+    # 'scripts/draft code/Draft_Script_Figure 6_Pandalus-percent.R'
+
 
 
 ### Load Figure 6 dataframe
@@ -355,10 +382,11 @@ write.csv(pandalus.f6b,
 
 f6a <- ggplot(pandalus.f6a,
        aes(x = factor(other.prey, levels = c('Shrimp', 'other')),               # orders x-axis discrete data for figure
-           y = pizza, 
-           fill = factor(prey.name, levels = c('other', 'Pandalus', 'montagui', 'borealis')) # orders pray.name variables in bars
-           )) +
-  
+           y = prey.percent, 
+           fill = factor(prey.name, levels = c('other',                        # orders pray.name variables in bars
+                                               'Pandalus', 
+                                               'montagui', 
+                                               'borealis')) )) + 
   theme_minimal(                                                               # pre-set 'minimal' theme
     base_size = 16) +                                                          # sets base text (minus titles) to size 16
   
@@ -371,10 +399,9 @@ f6a <- ggplot(pandalus.f6a,
              labeller = as_labeller(c("Atlantic cod" = "Atlantic<br>cod",             # renames to inserts  line breaks <br> into labels
                                       "Greenland halibut" = "Greenland<br>halibut",   # needs accompanying argument in theme() 
                                       "Redfish" = "Redfish",                          # uses Markdown syntax to insert line breaks
-                                      "Skate" = "Skate")
-             ))+                      
+                                      "Skate" = "Skate"))) +                      
   
-  labs(x = "Predator Species",                                    # renames x and y axis
+  labs(x = "Predator Species",                                   # renames x and y axis
        y = "%W") +
   
   scale_fill_manual(values = c("other" = "grey",                 # assigns colour to prey sp. categories
@@ -390,17 +417,9 @@ f6a <- ggplot(pandalus.f6a,
                                 "*Pandalus sp.*", 
                                 "other")) +
 
-
-  
   coord_cartesian(ylim = c(0, 100)) +                           # sets y-axis between 0-100
-      # scale_y_continuous() did not like the scale_fill_manual(breaks =) 
-      # scale_y_continuous() was not forcing a tick at 100. I'm not sure why
-      # I OG retained the code to ensure the y-axis breaks were at 0, 25, 50, 75, 100
-      # removed scale_y_continuous() because of errors/non-compatability with scale_fill_manual(breaks)
-  
   scale_x_discrete(expand = c(1, 1)) +                          # adds padding around the bars
   scale_y_continuous(expand = c(0,0)) +                         # removes padding around y-axis. Places facet_wrap titles directly below bars
-  
   
   theme(axis.text.x = element_blank(),                           # removes x-axis labels
         axis.title = element_text(size = 8),                     # size of x and y axis titles
@@ -414,27 +433,12 @@ f6a <- ggplot(pandalus.f6a,
 
         panel.grid.minor = element_blank(),                      # removes all minor grid-lines
         panel.grid.major.x = element_blank(),
-        panel.spacing = unit(0, 'point') ,                      # removes space between panels
+        panel.spacing = unit(0, 'point') ,                       # removes space between panels
         
         legend.text = element_markdown(),                        # allows me to italics in legend via markdown code
-        strip.text.x = element_markdown(),                        # allows me to insert line breaks into facet strip titles (pred names) via markdown code
+        strip.text.x = element_markdown(),                       # allows me to insert line breaks into facet strip titles (pred names) via markdown code
         plot.margin = margin(t=5, r = 10, b = 5, l = 8,          # adds space around figure
-                             unit = "mm")                        # space included when combining figures in ggarrange()
-  )
-
-
-        
-# didn't need the below theme() arguments to move the axis.
-# The issue was that my Strip Labels were within the y-axis padding.
-# I removed this padding in scale_y_continuous(expand())
-        
-      #  axis.text.x = element_text(vjust = -10),
-       # strip.text = element_text(vjust = 8)
-        
-  #       strip.text = element_text(vjust = -10)) +       # pulls panel titles to the top left
-  
-# plot.background = element_rect(fill='transparent', color=NA)#,
-#  scale_y_continuous(breaks = seq(0, 100, by = 25)) +
+                             unit = "mm"))                        # space included when combining figures in ggarrange()
 
 
 ####################   Build Figure 6b  #######################################
@@ -450,9 +454,11 @@ f6a <- ggplot(pandalus.f6a,
 
 f6b <- ggplot(pandalus.f6b,
               aes(x = factor(other.prey, levels = c('Shrimp', 'other')),               # orders x-axis discrete data for figure
-                  y = apple, 
-                  fill = factor(prey.name, levels = c('other', 'Pandalus', 'montagui', 'borealis')) # orders pray.name variables in bars
-              )) +
+                  y = prey.count.percent, 
+                  fill = factor(prey.name, levels = c('other',                  # orders pray.name variables in bars
+                                                      'Pandalus', 
+                                                      'montagui', 
+                                                      'borealis')) )) +
   
   theme_minimal(                                                               # pre-set 'minimal' theme
     base_size = 16) +                                                          # sets base text (minus titles) to size 16
@@ -466,8 +472,7 @@ f6b <- ggplot(pandalus.f6b,
              labeller = as_labeller(c("Atlantic cod" = "Atlantic<br>cod",             # renames to inserts  line breaks <br> into labels
                                       "Greenland halibut" = "Greenland<br>halibut",   # needs accompanying argument in theme() 
                                       "Redfish" = "Redfish",                          # uses Markdown syntax to insert line breaks
-                                      "Skate" = "Skate")
-             ))+                      
+                                      "Skate" = "Skate")))+                      
   
   labs(x = "Predator Species",                                    # renames x and y axis
        y = "%N") +
@@ -485,12 +490,9 @@ f6b <- ggplot(pandalus.f6b,
                                "*Pandalus sp.*", 
                                "other")) +
   
-  
-  
   coord_cartesian(ylim = c(0, 100)) +                           # sets y-axis between 0-100
   scale_x_discrete(expand = c(1, 1)) +                          # adds padding around the bars
   scale_y_continuous(expand = c(0,0)) +                         # removes padding around y-axis. Places facet_wrap titles directly below bars
-  
   
   theme(axis.text.x = element_blank(),                           # removes x-axis labels
         axis.title = element_text(size = 8),                     # size of x and y axis titles
@@ -509,125 +511,21 @@ f6b <- ggplot(pandalus.f6b,
         legend.text = element_markdown(),                        # allows me to italics in legend via markdown code
         strip.text.x = element_markdown(),                        # allows me to insert line breaks into facet strip titles (pred names) via markdown code
         plot.margin = margin(t=5, r = 10, b = 5, l = 8,          # adds space around figure
-                             unit = "mm")                        # space included when combining figures in ggarrange()
-  )
+                             unit = "mm"))                        # space included when combining figures in ggarrange()
 
 
 ####################   Combine to Create Figure 6 ##################################
 
-library(ggpubr)     # give ggarrange function
 
 ### Combine Figure 6A and 6B
 
-f6 <- ggarrange(f6a, f6b,                   # combine figure f6a and f6b into one plot
-          ncol = 2,                   # have figures on two columns (nrow = 1 should yield same result)
-          labels = "auto",            # label figures in lowercase a, b
-          common.legend = TRUE,       # both figures share a common legend
-          legend = "bottom",           # place the shared legend on the bottom
-          font.label = list(face = "plain")
-          ) 
+f6 <- ggarrange(f6a, f6b,                               # combine figure f6a and f6b into one plot
+          ncol = 2,                                     # have figures on two columns (nrow = 1 should yield same result)
+          labels = "auto",                              # label figures in lowercase a, b
+          common.legend = TRUE,                         # both figures share a common legend
+          legend = "bottom",                            # place the shared legend on the bottom
+          font.label = list(face = "plain")) +
+  
   theme(plot.margin = margin(1,1,1,1, "cm"))
-
-# this version does create an outside border
-f6 +
-  border()
-
-# This also creates an outside border
-f6 +
-  theme(plot.background = element_rect(colour = "black", fill = NA, size = 1))
-
-
-# outside border per panel. Legend below without border
-
-f6ab <- f6a +
-  theme(plot.background = element_rect(colour = "black", fill = NA, size = 1))
-
-f6bb <- f6b +
-  theme(plot.background = element_rect(colour = "black", fill = NA, size = 1))
-
-ggarrange(f6ab, f6bb,                   # combine figure f6a and f6b into one plot
-          ncol = 2,                   # have figures on two columns (nrow = 1 should yield same result)
-          labels = "auto",            # label figures in lowercase a, b
-          common.legend = TRUE,       # both figures share a common legend
-          legend = "bottom",           # place the shared legend on the bottom
-          font.label = list(face = "plain")
-) 
-
-# outside border per panel with legend border
-
-f6abl <- f6ab +
-  theme(legend.background = element_rect(colour = 1))
-
-f6bbl <- f6bb +
-  theme(legend.background = element_rect(colour = 1))
-
-ggarrange(f6abl, f6bbl,                   # combine figure f6a and f6b into one plot
-          ncol = 2,                   # have figures on two columns (nrow = 1 should yield same result)
-          labels = "auto",            # label figures in lowercase a, b
-          common.legend = TRUE,       # both figures share a common legend
-          legend = "bottom",           # place the shared legend on the bottom
-          font.label = list(face = "plain")
-) 
-
-# outside border per panel and outside figure border
-
-ggarrange(f6ab, f6bb,                   # combine figure f6a and f6b into one plot
-          ncol = 2,                   # have figures on two columns (nrow = 1 should yield same result)
-          labels = "auto",            # label figures in lowercase a, b
-          common.legend = TRUE,       # both figures share a common legend
-          legend = "bottom",           # place the shared legend on the bottom
-          font.label = list(face = "plain")
-) +
-  theme(plot.background = element_rect(colour = "black", fill = NA, size = 1))
-
-?plot.margin
-?theme
-
-### Add Boarders around Figure 6 if desired
-
-  annotate_figure(f6,
-    'rect',
-    xmin = 40,
-    xmax = 47,
-    ymin = 210,
-    ymax = 225,
-    col = 'black')
-            
-
-?annotate_figure
-
-# adjust plot.margins in each figure to increase/decrease spacing between figures
-    # there is not a way to do that within ggarrange() itself
-
-
-### Combine Fig 6a & 6b to create Figure 6
-
-?ggarrange
-
-
-
-
-
-
-##############      Below is code Dan and I worked on    ######################
-
-
-## Below is code Dan and I worked on 
-
-test = pandalus.percent 
-
-test = subset(test, !is.na(PreyWt))
-test = test |> group_by(pred.name, prey.name) |> summarize(prey.percent = sum(PreyWt))
-test = test |> group_by(pred.name) |> mutate(pizza = prey.percent/sum(prey.percent))
-
-test = test |> mutate(other.prey = prey.name == "other")
-test$other.prey[test$other.prey == TRUE] = "other"
-test$other.prey[test$other.prey == FALSE] = "Shrimp"
-
-# stacking the count
-ggplot(test, aes(x = other.prey, y = pizza, fill = prey.name)) +
-  theme_bw() +
-  geom_col(position = "stack") +
-  facet_wrap(~ pred.name)
-
-
+  
+f6
