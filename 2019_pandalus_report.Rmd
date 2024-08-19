@@ -1145,6 +1145,70 @@ Figure 8: 2-paneled bar chart of percent weight and percent number different shr
 Data I will need is weight and number of shrimp species in Atlantic cod stomachs. 
 -->
 
+```{r cod-shrimp-percent, echo = FALSE, file = "scripts/Script_Figure08_Padalus-percent-Cod.R", fig.height = 6, fig.width = 12, fig.cap="*Relative contribution of *P. borealis*, *P. montagui*, and unidentifiable *Pandalus sp.* by (a) weight (%W) and (b) number (%N) found within  Arctic Cod (*Gadus morhua*) stomachs in comparison to other taxonomic categories of prey*"}
+
+# before knitting ensure to comment out in source code:
+    # loading libraries
+    # importing xxxx base dataframes (below loading libraries)
+    # importing table dataframe (right before creating the table itself)
+    # code that produces console outputs except for the final table
+        # e.g. str()
+
+# before knitting update the year on any source code outputs:
+    # xxxxxxxxxxxxxxxxxxx there are 2 'write.csv' codes
+
+```
+
+Below are formatting options for Fig 8:
+
+```{r f8-option-B, echo = FALSE, fig.height = 6, fig.width = 12, fig.cap="*Fig 8 Option B*"}
+
+# This creates an outside border
+
+f8 +
+  theme(plot.background = element_rect(colour = "black", 
+                                       fill = NA,
+                                       linewidth = 1))
+```
+
+
+```{r f8-option-C, echo = FALSE, fig.height = 6, fig.width = 12, fig.cap="*Fig 8 Option C*"}
+
+# outside border per panel. Legend below without border
+
+f8ab <- f8a +
+  theme(plot.background = element_rect(colour = "black", fill = NA, linewidth = 1))
+
+f8bb <- f8b +
+  theme(plot.background = element_rect(colour = "black", fill = NA, linewidth = 1))
+
+ggarrange(f8ab, f8bb,                   # combine figure f6a and f6b into one plot
+          ncol = 2,                   # have figures on two columns (nrow = 1 should yield same result)
+          labels = "auto",            # label figures in lowercase a, b
+          common.legend = TRUE,       # both figures share a common legend
+          legend = "bottom",           # place the shared legend on the bottom
+          font.label = list(face = "plain")) 
+
+```
+
+
+```{r f8-option-D, echo = FALSE, fig.height = 6, fig.width = 12, fig.cap="*Fig 8 Option D*"}
+
+# outside border per panel and outside figure border
+
+ggarrange(f8ab, f8bb,                   # combine figure f6a and f6b into one plot
+          ncol = 2,                   # have figures on two columns (nrow = 1 should yield same result)
+          labels = "auto",            # label figures in lowercase a, b
+          common.legend = TRUE,       # both figures share a common legend
+          legend = "bottom",           # place the shared legend on the bottom
+          font.label = list(face = "plain")) +
+  
+  theme(plot.background = element_rect(colour = "black", fill = NA, linewidth = 1))
+
+```
+
+
+
 ### Relative Proportion of Pandalid Prey by Size Class for Greenland Halibut (*Reinhardtius hippoglossides*)
 
 This section will include Figure 9
