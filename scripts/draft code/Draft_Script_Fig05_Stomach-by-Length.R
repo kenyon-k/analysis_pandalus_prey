@@ -14,9 +14,10 @@
 # Document 'Sections' Include:
     # Creating figure dataset
         # subsection: tutorials
-    # GGPLOT2 Code for Paneled Bar Charts
+    # GGPLOT2 Code for Stacked Faceted Bar Charts
         # subsection: tutorials
     # Unused but Interesting ggplot2 arguments
+    # Creating a Base Theme for Plots
 
 
 ################################################################################
@@ -51,6 +52,7 @@
     # Tutorial 2
     # goes through dataframe structure and code to create faceted barplots with stacked bars
     # Channel: Statistics Globe
+
 
 # (R Graph Gallery - Overview) https://r-graph-gallery.com/218-basic-barplots-with-ggplot2.html#width
     # AMANZING OVERVIEW OF ALL THE DIFFERENT GRAPHS
