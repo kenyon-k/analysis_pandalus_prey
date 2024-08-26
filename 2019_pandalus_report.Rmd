@@ -416,6 +416,12 @@ This section will include Figure 1
 Figure 1: jpeg of different fishing zones
 -->
 
+```{r study-area-map, echo=FALSE, fig.cap="*Location of the Northern and Striped Shrimp Fishing Areas (SFAs) 0-6, with the Western Assessment Zone (WAZ corresponding roughly to SFA 3) and Eastern ASsessment Zone (EAZ corresponding roughly to SFA 2) highlighted in green and blue, respectively. The 2019 NSRF-DFO survey areas are highlighted in blue, green, and orange.*"}
+
+# If we don't include ArcGIS to R code here, then we will want to write code to import an image here. Otherwise the Figure caption/reference will not appear
+
+```
+
 
 # Methods
 
@@ -423,6 +429,13 @@ This section will include Figure 2
 <!--
 Figure 2: jpeg of the different stomach sampling locations. Looks like made in ArcGIS
 -->
+```{r sample-map, echo=FALSE, fig.cap="*Stomach sampling locations in the Western ASsessment Zone (green), Eastern ASsessment Zone (blue), and Shrimp Fishing Area 4 (orange) including the 200 and 500 m isobaths.*"}
+
+# If we don't include ArcGIS to R code here, then we will want to write code to import an image here. Otherwise the Figure caption/reference will not appear}
+
+```
+
+
 
 This section will include Table 1.
 <!--
@@ -1145,7 +1158,7 @@ Figure 8: 2-paneled bar chart of percent weight and percent number different shr
 Data I will need is weight and number of shrimp species in Atlantic cod stomachs. 
 -->
 
-```{r cod-shrimp-percent, echo = FALSE, file = "scripts/Script_Figure08_Padalus-percent-Cod.R", fig.height = 6, fig.width = 12, fig.cap="*Relative contribution of *P. borealis*, *P. montagui*, and unidentifiable *Pandalus sp.* by (a) weight (%W) and (b) number (%N) found within  Arctic Cod (*Gadus morhua*) stomachs in comparison to other taxonomic categories of prey*"}
+```{r cod-shrimp-percent, echo = FALSE, file = "scripts/Script_Figure08_Padalus-percent-Cod.R", fig.height = 4, fig.width = 7,  fig.cap="*Relative contribution of *P. borealis*, *P. montagui*, and unidentifiable *Pandalus sp.* by (a) weight (%W) and (b) number (%N) found within  Arctic Cod (*Gadus morhua*) stomachs in comparison to other taxonomic categories of prey*"}
 
 # before knitting ensure to comment out in source code:
     # loading libraries
@@ -1157,11 +1170,13 @@ Data I will need is weight and number of shrimp species in Atlantic cod stomachs
 # before knitting update the year on any source code outputs:
     # xxxxxxxxxxxxxxxxxxx there are 2 'write.csv' codes
 
+# fig.height = 5, fig.width = 8,
+
 ```
 
 Below are formatting options for Fig 8:
 
-```{r f8-option-B, echo = FALSE, fig.height = 6, fig.width = 12, fig.cap="*Fig 8 Option B*"}
+```{r f8-option-B, echo = FALSE, fig.height = 4, fig.width = 7, fig.cap="*Fig 8 Option B*"}
 
 # This creates an outside border
 
@@ -1172,7 +1187,7 @@ f8 +
 ```
 
 
-```{r f8-option-C, echo = FALSE, fig.height = 6, fig.width = 12, fig.cap="*Fig 8 Option C*"}
+```{r f8-option-C, echo = FALSE, fig.height = 4, fig.width = 7, fig.cap="*Fig 8 Option C*"}
 
 # outside border per panel. Legend below without border
 
@@ -1192,7 +1207,7 @@ ggarrange(f8ab, f8bb,                   # combine figure f6a and f6b into one pl
 ```
 
 
-```{r f8-option-D, echo = FALSE, fig.height = 6, fig.width = 12, fig.cap="*Fig 8 Option D*"}
+```{r f8-option-D, echo = FALSE, fig.height = 4, fig.width = 7, fig.cap="*Fig 8 Option D*"}
 
 # outside border per panel and outside figure border
 
