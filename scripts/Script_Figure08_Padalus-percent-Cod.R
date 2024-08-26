@@ -7,7 +7,7 @@
 
 # Author: Krista Kenyon (KAK)
 # Date Created: Aug 19/2024
-# Date Last Modified: Aug 16/2024 by KAK
+# Date Last Modified: Aug 20/2024 by KAK
 
 
 # Document Purpose: Creating Figure 8 for R Markdown document.
@@ -234,7 +234,9 @@ f8a <- ggplot(t, aes(x = length.range, y = shrimp.weight.p,
                                                'Pandalus', 
                                                'montagui', 
                                                'borealis')) )) +
-  geom_col(position = "stack")  +                                               # creates stacked bar chart
+  geom_col(position = "stack",                                                # creates stacked bar chart
+           width = 0.7) +                                           # reduces width of columns
+  
   theme_minimal()       +                                                         # pre-set 'minimal' theme 
   
   labs(x = "Predator Length (cm)",                                   # renames x and y axis
@@ -254,7 +256,8 @@ f8a <- ggplot(t, aes(x = length.range, y = shrimp.weight.p,
                                "other")) +
   
   scale_y_continuous(expand = c(0,0)) +                         # removes padding around y-axis. Places facet_wrap titles directly below bars
-  
+  scale_x_discrete(expand = c(0.3, 0.3)) +                          # adds padding around the bars
+    
   theme(axis.title = element_text(size = 8),                     # size of x and y axis titles
         axis.title.y = element_text(vjust = +3),                 # pulls y-axis title away from chart
         axis.ticks = element_blank(),                            # removes axis ticks
@@ -277,7 +280,7 @@ f8a <- ggplot(t, aes(x = length.range, y = shrimp.weight.p,
 
 ### Load Figure 8b dataframe
 
-fish.p.count <- read.csv('data/processed/2019_F8-11_fish.p.count.csv')
+# fish.p.count <- read.csv('data/processed/2019_F8-11_fish.p.count.csv')
 
 
 
@@ -302,7 +305,9 @@ f8b <- ggplot(apple, aes(x = length.range, y = shrimp.count.p,
                                                   'Pandalus', 
                                                   'montagui', 
                                                   'borealis')) )) +
-  geom_col(position = "stack")  +                                               # creates stacked bar chart
+  geom_col(position = "stack",                                                # creates stacked bar chart
+           width = 0.7) +                                           # reduces width of columns
+  
   theme_minimal()       +                                                         # pre-set 'minimal' theme 
   
   labs(x = "Predator Length (cm)",                                   # renames x and y axis
@@ -322,7 +327,8 @@ f8b <- ggplot(apple, aes(x = length.range, y = shrimp.count.p,
                                "other")) +
   
   scale_y_continuous(expand = c(0,0)) +                         # removes padding around y-axis. Places facet_wrap titles directly below bars
-  
+  scale_x_discrete(expand = c(0.3, 0.3)) +                          # adds padding around the bars
+   
   theme(axis.title = element_text(size = 8),                     # size of x and y axis titles
         axis.title.y = element_text(vjust = +3),                 # pulls y-axis title away from chart
         axis.ticks = element_blank(),                            # removes axis ticks
@@ -357,3 +363,35 @@ f8 <- ggarrange(f8a, f8b,                               # combine figure f6a and
 
 f8
 
+
+
+################################################################################
+####################### Testing Figure Formatting ##############################
+################################################################################
+# 
+# 
+# apple
+# 
+# 
+# ggplot(apple,
+#        aes(x = length.range, y = shrimp.count.p, fill = pred.name)) +
+#   theme_bw() +
+#   geom_col() +
+#   facet_wrap(~ prey.name) +
+#   theme(legend.position = "bottom",
+#         legend.background = element_rect(fill="NA", color = 1),
+#         plot.background = element_rect(colour = "black", fill = NA, linewidth = 1))
+# 
+# 
+# ggplot(apple, aes(x = length.range, y = shrimp.count.p, 
+#                   fill = factor(prey.name, levels = c('other',                        # orders pray.name variables in bars
+#                                                       'Pandalus', 
+#                                                       'montagui', 
+#                                                       'borealis')) )) +
+#   geom_col(position = "stack",                                                # creates stacked bar chart
+#            width = 0.7) +                                           # reduces width of columns
+#   
+#   theme_minimal()       +                                                         # pre-set 'minimal' theme 
+#   
+#   labs(x = "Predator Length (cm)",                                   # renames x and y axis
+#        y = "%N") +
