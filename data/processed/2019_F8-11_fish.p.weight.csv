@@ -1,0 +1,77 @@
+"length.range","prey.name","pred.name","shrimp.weight","shrimp.weight.p"
+"006-10","other","Greenland halibut",1.496,100
+"006-10","other","Redfish",0.085,100
+"011-15","other","Greenland halibut",4.142,100
+"011-15","other","Redfish",0.302,100
+"011-15","other","Skate",9.795,100
+"016-20","montagui","Greenland halibut",1.545,6.42839310976117
+"016-20","other","Greenland halibut",22.489,93.5716068902388
+"016-20","other","Redfish",7.087,100
+"016-20","other","Skate",56.554,100
+"021-25","Pandalus","Skate",9.161,7.1136822487964
+"021-25","borealis","Skate",23.785,18.4694828389501
+"021-25","montagui","Greenland halibut",6.07,17.2350151906641
+"021-25","montagui","Skate",3.38,2.62463115390589
+"021-25","other","Greenland halibut",29.149,82.7649848093359
+"021-25","other","Redfish",24.094,100
+"021-25","other","Skate",92.454,71.7922037583476
+"026-30","borealis","Skate",8.518,10.6969735024488
+"026-30","montagui","Greenland halibut",7.847,6.28599809345285
+"026-30","montagui","Redfish",2.461,22.9763794230231
+"026-30","montagui","Skate",5.373,6.74745698857215
+"026-30","other","Greenland halibut",116.986,93.7140019065472
+"026-30","other","Redfish",8.25,77.0236205769769
+"026-30","other","Skate",65.739,82.555569508979
+"031-35","Pandalus","Skate",14.29,13.6660099841249
+"031-35","borealis","Atlantic cod",5.77,70.2630297126157
+"031-35","borealis","Redfish",8.3,62.111801242236
+"031-35","borealis","Skate",12.383,11.8422814299103
+"031-35","montagui","Greenland halibut",9.35,5.8532981926768
+"031-35","other","Atlantic cod",2.442,29.7369702873843
+"031-35","other","Greenland halibut",150.389,94.1467018073232
+"031-35","other","Redfish",5.063,37.888198757764
+"031-35","other","Skate",77.893,74.4917085859648
+"036-40","Pandalus","Skate",25.86,6.75009005340558
+"036-40","borealis","Greenland halibut",23.704,16.8812670920693
+"036-40","borealis","Skate",59.44,15.5152881970003
+"036-40","montagui","Greenland halibut",19.391,13.8096798085688
+"036-40","montagui","Skate",5.873,1.53299608985503
+"036-40","other","Greenland halibut",97.321,69.3090530993619
+"036-40","other","Skate",291.933,76.2016256597391
+"041-45","Pandalus","Greenland halibut",13.624,6.31691202040107
+"041-45","Pandalus","Skate",14.133,2.4573873762656
+"041-45","borealis","Greenland halibut",67.936,31.4992465515243
+"041-45","borealis","Skate",48.867,8.49679112120364
+"041-45","montagui","Greenland halibut",10.134,4.6987365248638
+"041-45","montagui","Skate",7.446,1.29467957289136
+"041-45","other","Greenland halibut",123.981,57.4851049032108
+"041-45","other","Skate",504.677,87.7511419296394
+"046-50","Pandalus","Atlantic cod",12.619,36.8545560747664
+"046-50","borealis","Atlantic cod",21.621,63.1454439252336
+"046-50","borealis","Greenland halibut",32.554,18.1379540895922
+"046-50","borealis","Skate",23.45,4.57761944268215
+"046-50","montagui","Skate",4.761,0.929383631838368
+"046-50","other","Greenland halibut",146.926,81.8620459104078
+"046-50","other","Skate",484.064,94.4929969254795
+"051-55","Pandalus","Greenland halibut",13.825,7.77480345071927
+"051-55","borealis","Greenland halibut",21.2,11.9223025790415
+"051-55","borealis","Skate",3.38,3.15811111318745
+"051-55","montagui","Greenland halibut",10.382,5.83855402715136
+"051-55","other","Greenland halibut",132.411,74.4643399430879
+"051-55","other","Skate",103.646,96.8418888868126
+"056-60","borealis","Greenland halibut",19.2,8.29728479997926
+"056-60","montagui","Greenland halibut",58.6,25.3240046499367
+"056-60","other","Greenland halibut",153.601,66.3787105500841
+"056-60","other","Skate",9.5,100
+"061-65","Pandalus","Greenland halibut",4.597,8.16083791940352
+"061-65","montagui","Greenland halibut",19.518,34.6493875377241
+"061-65","other","Greenland halibut",32.215,57.1897745428724
+"066-70","montagui","Greenland halibut",14.259,26.3509018332348
+"066-70","other","Greenland halibut",39.853,73.6490981667652
+"071-75","borealis","Greenland halibut",5.473,9.38636207724497
+"071-75","montagui","Greenland halibut",23.357,40.057968031831
+"071-75","other","Greenland halibut",29.478,50.5556698909241
+"076-80","montagui","Greenland halibut",7.853,9.22352333188476
+"076-80","other","Greenland halibut",77.288,90.7764766681153
+"141-145","other","Skate",74.582,100
+"171-175","other","Skate",23.745,100
