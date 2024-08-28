@@ -6,8 +6,8 @@
 
 
 # Author: Krista Kenyon (KAK)
-# Date Created: Aug 22/2024
-# Date Last Modified: Aug 22/2024 by KAK
+# Date Created: Aug 27/2024
+# Date Last Modified: Aug 27/2024 by KAK
 
 
 # Document Purpose: Creating Table 3 for R Markdown document.
@@ -41,8 +41,7 @@
 #                            Remaining Tasks 
 ################################################################################
 
-# Worms database QA/QC
-# prepping taxon data
+
 # creating table database
 # creating table
 # clean code
@@ -64,11 +63,7 @@ library(flextable)               # Table package that may work in Word
 
 ### import data
 
-# !!!! This is first %W and %N so I may need to transfer that dataframe creation into this doc.
-
-# prey <- read.csv('data/processed/2019_basePrey.csv')    # base prey dataframe
-
-# ..... <- read.csv('........csv')                        # prey taxon dataframe
+prey <- read.csv('data/processed/2019_basePrey.csv')    # base prey dataframe
 
 
 ################################################################################
@@ -107,165 +102,173 @@ library(flextable)               # Table package that may work in Word
     # .............
 
 
-################### Creating New Dataframe for Table 5 ###########################
+################### Creating New Dataframe for Table 3 ###########################
+
+##### Below code is from Figure 6
 
 
-############################### Below code is old !!!!!!!!!!!!!!
+### Creating Base Percentages Dataframe
 
-# below code is all one function that is 'broken up' with annotation notes
-
-# 'stomach.ratio' dataframe will have the stomach data per predator species and predator length
-    # stomach data = empty, full, and total stomachs sampled
-
-
-
-### Creating new dataframe for Table 2
-
-stomach.ratio  <- pred %>%               # create new dataframe based on 'pred'                    
-    
-  select(Prey_OS_ID,                    # subsets dataframe by selected columns
-         pred.name, 
-         length.range, 
-         sampled.stomach) %>%
-
-
+apple <- prey %>%                        # manipulate 'prey' df and save to new Table 2 Base df 
   
-### Assigning Full vs Empty Stomachs
-    # if I add these in, THEN I MUST FILTER STOMACHS FROM PREY DATABASE THAT ONLY HAVE THESE
-    # THIS IS KEY - the pred df has indiscriminately removed duplicates. 
-        # Fine for Empty Stomachs.
-        # NOT fine when there could have been multiple prey/objects in stomachs
-    # other potential 'Empty Stomachs' codes:
-        # 2222 = Plant
-        # unknown????? (if yes, 10746-10750)
-        # other. 9981 (sand), 9982 (stone), 9983 (shells), 9993 (bait), 9995 (other offal), 10757 (mud)
-        
+# Step 1: Subset Fig 6 Base df to desired columns  
   
-  mutate(Full = ifelse(Prey_OS_ID == 9998,     # create new column 'Full' with values based on logical check
-                       0,                      # value if logical check is TRUE
-                       1)) %>%                 # value if logical check is FALSE
- 
-   mutate(Empty = ifelse(Prey_OS_ID == 9998,   # Prey_OS_ID of 9998 = 'Empty'
-                        1,
-                        0))  %>%
-
-
-### Assigning Groups for Table Layout 
-
-# desiring stomach data summed and displayed by:
-    # fish length group (column 1) and 
-    # predator category group (rows) 
-  
-  group_by(length.range, pred.name) %>%        # group by specified categories
-
-
-                                            
-### Sum Stomach Data by Groups
-  
-# sums the specified values by the grouped categories
-    # e.g. total 'full' stomachs by predator length and category
-    # creates new dataframe that contains:
-        # grouped variables (e.g. length.range, pred.name)
-        # new columns containing the summarized values defined in summarise()
-
-  summarise('Full' = sum(Full),                 # 'New Column' = sum('Old Column') 
-            'Empty' = sum(Empty),
-            'Total' = sum(sampled.stomach),
-            .groups = "keep")  %>%              # tells R to keep current group structure
-                                                # gives warning that goes into Markdown document if '.groups' not specified
-
-  
-#############   Formatting Dataframe Structure for Table    ####################
-
-
-
-### Final Table Structure Formatting
-
-# merge predator categories with the full, empty, total columns.
-  
-    # columns will now be 'stomach-predator' (e.g. Full-Greenland Halibut)  
-    # rows will be predator length
-  
-  pivot_wider(names_from = pred.name,                       # categorical values to pull from rows to columns
-              values_from = c(Full, Empty, Total)) %>%      # numerical values to fill in those columns
-
-  
-# Re-Ordering Columns 
-  
-  relocate(contains('cod'), .after = length.range) %>%     # moves any column with name containing 'cod' to the right of length.range
-  relocate(contains('Greenland'), .after = contains('cod')) %>%
-  relocate(contains('Red'), .after = contains('Green'))  %>%
-
-
-# Re-Order Rows from Smallest to Largest Fish
-
-    # length.range not naturally sorted because format is 6-10 vs 006-10
-    # so I added 0s, sorted, then removed the extra 0s
-  
-  mutate(length.range = str_pad(length.range,     # code adds 0s to start of length.range string (6 becomes 006)
-                                width=6,          # strings <6 characters will be padded until they =6 characters
-                                pad = "0")) %>%   # padding with 0s
-                                                  # width = 6 bumps all strings to ###- (006-, 016-, 141-)
-  
-  arrange(length.range) %>%                       # sort smallest to largest now that length.range strings equal character length before '-'
-  
-  mutate(length.range = str_replace(length.range, # removing the extra zeros for Table formatting
-                                    "^0{1,}",     # select 1+ '0's at the beginning of strings
-                                    "")) %>%         # remove selected '0's
+  select(Prey_OS_ID,                     
+         Prey_Detail_Code,               # needed to determine which stomachs full of parasites
+         ScientificName_W,
+         CommonName_DB,
+         Phylum,
+         Order,
+         FishKey,
+         PreyWt,
+         Prey_Count,
+         pred.name,                      # to split out data by predator
+         length.range)  %>%               # including this for Figs 8-11 which use this base df 
   
   
-# Replace 0 and NA values with '-' 
-    # I could not select and replace across the entire dataframe within dyplr
-    # I had to use Base R for Step 2
-    # Step 1: replacing 'NA' with 0 in dyplr (replace)
-    # Step 2: replacing '0' with '-' in base R (lapply) and stringr (str_replace_all)
-    
+# Step 2: remove rows with 'empty stomachs'. Leave unidentified items in for now.
+      # by using %in% -> if there are every 'NA's, they will be retained
+  
+  filter(!Prey_OS_ID %in%             # selects rows that do not (!) contain the following 'in' them
+           c('9998',                    # empty
+             '9981',                    # sand
+             '9982',                    # stone
+             '9983',                    # shells
+             '9987',                    # plant material
+             '10757')) %>%              # mud
 
-  replace(is.na(.), 0)                                 # if there are NA's, replace with 0
+  
+# Step 3: remove rows with 'parasitic' stomach contents
+  filter(!Prey_Detail_Code %in%     # selects rows that do not (!) contain the following 'in' them
+           c('40'))  %>%                  # parasites
 
-stomach.ratio <- data.frame(lapply(stomach.ratio, function(x){    # honestly - I don't know what above code does but it works
-  str_replace_all(x,                                              # will be related to the code in the above line. But Idk who it actually works
-                  "(?<!\\S)0(?!\\S)",                             # select '0' with nothing before or after
-                  "-")                                            # replace with '-'
-})) 
+  
+# Step 4: create new column where Prey_OS_ID's are redefined to the 4 prey categories (Fig 6 fill)
 
+    # shrimp P. borealis        (OS_ID code = 8111)
+    # shrimp P. montagui        (OS_ID code = 8112)
+    # shrimp Pandalus. sp.      (OS_ID code = 8110)
+    # other (i.e. everything not Pandalus)
 
-
-### Saving the stomach.ratio dataframe structure
-
-# str(stomach.ratio) 
-
-# 'data.frame':	18 obs. of  13 variables:
-
-# $ length.range           : chr  "6-10" "11-15" "16-20" "21-25" ...
-# $ Full_Atlantic.cod      : chr  "-" "-" "-" "-" ...
-# $ Empty_Atlantic.cod     : chr  "-" "-" "-" "-" ...
-# $ Total_Atlantic.cod     : chr  "-" "-" "-" "-" ...
-# $ Full_Greenland.halibut : chr  "8" "19" "22" "20" ...
-# $ Empty_Greenland.halibut: chr  "-" "11" "7" "13" ...
-# $ Total_Greenland.halibut: chr  "8" "30" "29" "33" ...
-# $ Full_Redfish           : chr  "1" "5" "9" "12" ...
-# $ Empty_Redfish          : chr  "1" "-" "4" "11" ...
-# $ Total_Redfish          : chr  "2" "5" "13" "23" ...
-# $ Full_Skate             : chr  "-" "14" "29" "31" ...
-# $ Empty_Skate            : chr  "1" "1" "1" "1" ...
-# $ Total_Skate            : chr  "1" "15" "30" "32" ...
-
-
-
-### Exporting stomach.ratio Dataframe
-
-write.csv(stomach.ratio, 
-          file="data/processed/2019_T2_stomach.ratio.csv",
-          row.names = FALSE)                # removes auto-generated unique ID row
+  mutate(prey.name = ifelse(Prey_OS_ID == 8111,         # create new column 'prey.name' with values based on logical check
+                          "borealis",                        # value if logical check is TRUE
+                          ifelse(Prey_OS_ID == 8112,          # if logical check is FALSE, begin second logical test
+                                 "montagui",                  # value if second logical test is TRUE
+                                 ifelse(Prey_OS_ID == 8110,   # if second logical test is FALSE, being third logical test
+                                        "Pandalus",           # value if third logical test is TRUE
+                                        "other")              # value if third logical test is FALSE
+                          ))) %>%
+  
+# Step 5: Create new column to force 'other' prey category into solo column in Figure
+  
+  mutate(other.prey =                           # creating a new column called 'other.prey'
+           prey.name == "other") %>%            # fill column with TRUE/FALSE on whether corresponding prey.name row is 'other'
+  
+  mutate(other.prey = ifelse(other.prey == FALSE, # making changes to 'other.prey'
+                                                  # if 'other.prey' values is FALSE
+                             "Shrimp",            # enter 'Shrimp'
+                             "other")) %>%            # otherwise enter 'other'      
 
 
-###################    Building and Formatting Table 2    ######################
+# Step 6: Format scientific names for table
+    # if ScientificName_W has one word, it not identified to species level. That word is the level it was identified to.
+    # We want all of those instances to be 'Unidentifiable xxxxx'
+  
+  mutate(ScientificName_W = ifelse(str_detect(ScientificName_W, pattern = '\\s') == TRUE,  # If there are are spaces ('\\s') in ScientificName_W string
+                        ScientificName_W,                                                  # leave as is (should be 2 words)
+                        gsub("^", paste0("Unidentifiable", " "), ScientificName_W)         # if not - paste 'Unidentifiable' in front of the current string
+                        )) %>%
+  
+  mutate(ScientificName_W = ifelse(str_detect(ScientificName_W, pattern = 'Unidentifiable') == TRUE,  # If ScientificName_W contains 'Unidentifiable'
+                            str_to_title(ScientificName_W),                                           # Have the first letter of each word be upper case
+                            str_to_sentence(ScientificName_W)                                         # if not - only have the first letter of the first word be uppercase
+                            ))
 
 
-### Load Table 2 dataframe
+### Creating Table 3A Specific Dataframe
 
-# stomach.ratio <- read.csv('data/processed/2019_T2_stomach.ratio.csv')
+colSums(is.na(apple))
+colSums(is.na(prey))
+
+apple %>%
+  replace(is.na())
+
+
+#####
+names(apple)
+
+table(apple$pred.name, useNA = 'always')
+
+t3a <- apple  %>%     # manipulate 'apple' df and save to new Table 3a df 
+  
+  # Step 1: converts NAs within PreyWt to 0s   
+  
+  mutate(PreyWt = ifelse(is.na(PreyWt),          # if PreyWt is NA
+                         0,                      # replace it with a 0
+                         PreyWt))  %>%              # otherwise retain original value
+  
+  filter(pred.name == "Atlantic cod") %>%
+
+  # Step 2: Sum Prey Weight by scientific name (ScientificName_W)
+  
+  group_by(ScientificName_W, Order, Phylum) %>%               # group by the categories we will want to retain after summarize(). First in list is what summarize() works from
+  summarize(taxa.weight = sum(PreyWt), .groups = "keep") %>%     # create new column (taxa.weight) that sums PreyWt by scientific name
+  
+  # Step 3: Turn Weight into Percentage for Table
+  ungroup() %>%                                       # group by the categories I that will feed into the below mutate     
+  mutate(taxa.weight = (taxa.weight/sum(taxa.weight))*100)   # change 'prey.percent' column. OG values formatted into percentage per pred.name
+  
+
+
+##################################
+
+# I'll still need to do % N and then merge together somehow
+
+# But first I want to work on the table a bit
+
+
+
+
+################################# Build the Table ##############################
+
+
+
+### Load Table 3 dataframe
+
+pine
+
+cone
+
+cone <- t3a %>%
+  mutate(Phylum = str_to_upper(Phylum))
+  group_by(Phylum, Order, ScientificName_W)
+
+  
+cone.grouped <- as_grouped_data(cone, groups = c("Phylum", "Order"))   # group layers I'll want
+
+# testing out table formatting
+as_flextable(cone.grouped,
+             hide_grouplabel = TRUE) %>%              # removes labels for group
+  
+  set_header_labels(ScientificName_W = "Prey/Taxon",
+                    taxa.weight = "Percent by Weight (%W)") %>% 
+  bold(bold = TRUE, part = "header") %>%              # header text bold
+  
+  bold(i = ~ !is.na(Phylum)) %>%                      # phylum text is bold
+  bold(i = ~ !is.na(Order)) %>%                       # Order text is bold
+  
+  width(j = 1, width = 45, unit = "mm") %>%
+  width(j = 2, width = 30, unit = "mm") # %>%
+  
+  
+  
+#  align(i = ~ !is.na(Order), align = "center")      # code from website that is interesting
+
+
+
+############# Below is old code
+
+ stomach.ratio <- read.csv('data/processed/2019_T2_stomach.ratio.csv')
 
 # confirm fish order is cod, halibut, redfish, skates. If yes - continue
 
