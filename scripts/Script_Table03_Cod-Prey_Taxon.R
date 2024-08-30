@@ -58,6 +58,7 @@
 library(tidyverse)
 library(dplyr)
 library(flextable)               # Table package that may work in Word
+library(officer)                 # extra Flextable formatting options
 
 
 
@@ -187,17 +188,7 @@ apple <- prey %>%                        # manipulate 'prey' df and save to new 
 
 ### Creating Table 3A Specific Dataframe
 
-colSums(is.na(apple))
-colSums(is.na(prey))
 
-apple %>%
-  replace(is.na())
-
-
-#####
-names(apple)
-
-table(apple$pred.name, useNA = 'always')
 
 t3a <- apple  %>%     # manipulate 'apple' df and save to new Table 3a df 
   
@@ -233,40 +224,85 @@ t3a <- apple  %>%     # manipulate 'apple' df and save to new Table 3a df
 
 
 
-### Load Table 3 dataframe
+# additional library needed for some table formating
 
-pine
+install.packages('ftExtra')
+library(ftExtra)
 
-cone
-
+# final formatting that may be incorporated into the above code
 cone <- t3a %>%
-  mutate(Phylum = str_to_upper(Phylum))
-  group_by(Phylum, Order, ScientificName_W)
+  mutate(Phylum = str_to_upper(Phylum)) %>%           # all caps text
+  mutate(across('taxa.weight', round, 1)) %>%             # rounds to 1 decimal
+  group_by(Phylum, Order)
 
+
+# replacing NAs in Order with 'none'
+cone$Order <- cone$Order %>%
+  replace_na('none')
+
+# adding another Phylum to test table structure
+new_row <- data.frame(ScientificName_W= "Test test", Order= "Xxxxx", Phylum= "TEST", taxa.weight = 30)
+
+test <- rbind(cone, new_row)
+
+
+
+# re-grouping data (not sure if needed, but used for some test I did)
   
-cone.grouped <- as_grouped_data(cone, groups = c("Phylum", "Order"))   # group layers I'll want
+cone.grouped <- as_grouped_data(test, groups = c("Phylum", "Order"))   # group layers I'll want
 
-# testing out table formatting
+ 
+# flextable time
+
 as_flextable(cone.grouped,
-             hide_grouplabel = TRUE) %>%              # removes labels for group
+             hide_grouplabel = TRUE) %>%              # removes labels flextables adds onto each group (keeps group name as is within dataset)
   
   set_header_labels(ScientificName_W = "Prey/Taxon",
                     taxa.weight = "Percent by Weight (%W)") %>% 
+  
+  bg(bg = "lightgray", part = "header") %>%               # defines header colour
   bold(bold = TRUE, part = "header") %>%              # header text bold
   
-  bold(i = ~ !is.na(Phylum)) %>%                      # phylum text is bold
-  bold(i = ~ !is.na(Order)) %>%                       # Order text is bold
+  bold(i = ~ !is.na(Phylum), j = 1) %>%                      # phylum text is bold
+ # bold(i = ~ !is.na(Order), j = 1) %>%                       # Order text is bold
+  style(i = ~ str_detect(ScientificName_W,                 # making only scientific names italic by:
+                         pattern = 'Unidentifiable',       # string to search for is 'Unidentifiable'
+                         negate = TRUE),                   # select any row that DOES NOT contain 'Unidentifiable'
+        j = 1,
+        pr_t = fp_text_default(italic=TRUE)) %>%                          # make them italic
   
-  width(j = 1, width = 45, unit = "mm") %>%
+  style(i = ~ !is.na(ScientificName_W),                       # Scientific Names in 1st column
+        j = 1,                                                # first column only
+        pr_p = fp_par(text.align = "left", padding.left = 15)) %>%    # add padding to left of selected text
+  
+  
+  border(i = ~!is.na(Phylum),                                 # horizontal border per Phylum
+         border.top = fp_border(color = "black"),             # placing the border on top of the row
+         part = "body") %>%                                   # within the body of the table
+  
+  # hline_top(i = 4, border = fp_border(color = "black"), part = "body") %>%
+  # border_inner_h(part = "body") %>%
+  # 
+  # hline(i = ~!is.na(Phylum),
+  #       border.top = fp_border(color = "black"),
+  #       part = "body") %>%               # adds horizontal lines below Phylum rows
+  
+  width(j = 1, width = 55, unit = "mm") %>%
   width(j = 2, width = 30, unit = "mm") # %>%
   
-  
+  set_caption(                                         # manual caption formatting to insert footnote numbering
+    caption = as_paragraph(                               # allows manual formatting in caption
+      as_i("Relative contribution, expressed as percent by weight (%W) and percent by number (%N), of different prey taxa found in the stomachs of Atlantic Cod ("),
+      "Gadus morhua",             # regular text
+      as_i(").")                  # italics
+    )) # %>%                       
+
   
 #  align(i = ~ !is.na(Order), align = "center")      # code from website that is interesting
 
 
 
-############# Below is old code
+############# Below is Table 2 old code
 
  stomach.ratio <- read.csv('data/processed/2019_T2_stomach.ratio.csv')
 
