@@ -219,14 +219,15 @@ t3a <- apple  %>%     # manipulate 'apple' df and save to new Table 3a df
 
 
 
-
-################################# Build the Table ##############################
+###############################################################################
+####                      Build the Table                  ####################
+###############################################################################
 
 
 
 # additional library needed for some table formating
 
-install.packages('ftExtra')
+#install.packages('ftExtra')
 library(ftExtra)
 
 # final formatting that may be incorporated into the above code
@@ -243,28 +244,105 @@ cone$Order <- cone$Order %>%
 # adding another Phylum to test table structure
 new_row <- data.frame(ScientificName_W= "Test test", Order= "Xxxxx", Phylum= "TEST", taxa.weight = 30)
 
-test <- rbind(cone, new_row)
+test <- rbind(cone, new_row) %>%
+  
+
+flower <- test %>%
+  arrange(Phylum, Order, by_group = TRUE)
 
 
 
 # re-grouping data (not sure if needed, but used for some test I did)
-  
+
+g.group <-   as_grouped_data(test, groups = c("Phylum"))               # testing data structure for why 2 groups repeats
 cone.grouped <- as_grouped_data(test, groups = c("Phylum", "Order"))   # group layers I'll want
 
+cone.grouped <- cone.grouped %>%
+  arrange(Phylum, Order, by_group = TRUE)
+
+ftest <- cone.grouped %>%
+  mutate(Order = c("Decapoda", "", "", "", "", "", "", "", "", "XXXX", "", "")) %>%
+ # mutate(Order = c("", "Decapoda", "", "", "", "", "", "", "", "", "Xxxx", "")) %>%
+  mutate(Phylum = c("ANTHROPODA", "", "", "", "", "", "", "", "", "TEST", "", ""))
+#test.order <- data.frame(Order = c("", "Decapoda", "", "", "", "", "", "", "", "", "Xxxx", ""))
+
+#ftest <- cbind(cone.grouped, test.order)
+
+ftest <- ftest %>%
+  group_by(Phylum, Order) #%>%
+
+# gtest <- ftest[rowSums(is.na(ftest)) != ncol(ftest),]
+gtest <- ftest[-c(2, 4,5,7,8,11),]  
+
+gtest <- gtest %>%
+  mutate(ScientificName_W = str_replace(ScientificName_W, pattern = "NA", replacement = ""))
+
+# htest <- gtest[!is.na(gtest)]  
+?mutate
+
+############ Create from scratch a test df from as_flextable to see if it works
+egg <-  data.frame(
+  Phylum = c("ANTHROPODA", "", "", "TEST", ""),
+  Order = c("Decapoda", "", "", "XXXX", ""),
+  ScientificName_W = c("Name 1", "Name 2", "Name 3", "", "Name 4"),
+  taxa.weight = c("1.5", "2.5", "5.8", "", "10.5")
+)
+
+egg <- egg %>%
+  group_by(Phylum, Order)
+
+
+############ Create from scratch a dataframe with no blanks
+toast <-  data.frame(
+  Phylum = c("ANTHROPODA", "ANTHROPODA", "ANTHROPODA", "TEST"),
+  Order = c("Decapoda", "Decapoda", "Decapoda", "XXXX"),
+  ScientificName_W = c("Name 1", "Name 2", "Name 3", "Name 4"),
+  taxa.weight = c("1.5", "2.5", "5.8", "10.5")
+)
+
+toast <- toast %>%
+  group_by(Phylum, Order)
+
+
+############ Create from scratch a dataframe with no blanks but multiple orders
+burnt.toast <-  data.frame(
+  Phylum = c("ANTHROPODA", "ANTHROPODA", "ANTHROPODA", "TEST"),
+  Order = c("Decapoda", "Decapoda", "None", "Test"),
+  ScientificName_W = c("Name 1", "Name 2", "Name 3", "Name 4"),
+  taxa.weight = c("1.5", "2.5", "5.8", "10.5")
+)
+
+burnt.toast <- burnt.toast %>%
+  group_by(Phylum, Order)
+
+install.packages('hablar')
+library(hablar)
+?find_duplicates
  
 # flextable time
 
-as_flextable(cone.grouped,
+pred <- pred[!duplicated(pred$FishKey),]
+
+?duplicated
+
+as_flextable(burnt.toast,
              hide_grouplabel = TRUE) %>%              # removes labels flextables adds onto each group (keeps group name as is within dataset)
   
   set_header_labels(ScientificName_W = "Prey/Taxon",
                     taxa.weight = "Percent by Weight (%W)") %>% 
   
+ # delete_rows(i = 5, part = 'body') %>%             # this works but I would prefer a formula
+  
+ # delete_rows(i = ~ !duplicated(Phylum), part = "body") %>%
+ #  delete_rows(i = ~ filter(duplicated(Phylum, fromLast = TRUE)), part = "body") %>%
+ # delete_rows(i = ~ select(unique(Phylum)), part = "body") %>%
+ # delete_rows(i = ~ filter(distinct(Phylum, .keep_all = TRUE), part = "body")) %>%
+  
   bg(bg = "lightgray", part = "header") %>%               # defines header colour
   bold(bold = TRUE, part = "header") %>%              # header text bold
   
   bold(i = ~ !is.na(Phylum), j = 1) %>%                      # phylum text is bold
- # bold(i = ~ !is.na(Order), j = 1) %>%                       # Order text is bold
+  bold(i = ~ !is.na(Order), j = 1) %>%                       # Order text is bold
   style(i = ~ str_detect(ScientificName_W,                 # making only scientific names italic by:
                          pattern = 'Unidentifiable',       # string to search for is 'Unidentifiable'
                          negate = TRUE),                   # select any row that DOES NOT contain 'Unidentifiable'
@@ -297,85 +375,7 @@ as_flextable(cone.grouped,
       as_i(").")                  # italics
     )) # %>%                       
 
+  ?duplicated
   
 #  align(i = ~ !is.na(Order), align = "center")      # code from website that is interesting
-
-
-
-############# Below is Table 2 old code
-
- stomach.ratio <- read.csv('data/processed/2019_T2_stomach.ratio.csv')
-
-# confirm fish order is cod, halibut, redfish, skates. If yes - continue
-
-
-
-### Create Table 2
-
-flextable(stomach.ratio) %>%
-  
-  add_header_row(top = TRUE,                           # adding a header (spanner) on top of current header
-                 values = c("", "Atlantic cod", "Greenland halibut", "Redfishes", "Skates"),
-                 colwidths = c(1, 3, 3, 3, 3)) %>%     # number of columns wide each header cell is
-  
- set_header_labels(length.range = "Size Class",        # renames columns
-                   Full_Atlantic.cod = "Full",
-                   Empty_Atlantic.cod = "Empty",
-                   Total_Atlantic.cod = "Total",
-                   Full_Greenland.halibut = "Full",
-                   Empty_Greenland.halibut = "Empty",
-                   Total_Greenland.halibut = "Total",
-                   Full_Redfish = "Full",
-                   Empty_Redfish = "Empty",
-                   Total_Redfish = "Total",
-                   Full_Skate = "Full",
-                   Empty_Skate = "Empty",
-                   Total_Skate = "Total") %>%
-  
-  bg(bg = "lightgray", part = "header") %>%               # defines header colour
-  bold(part = "header") %>%                               # header text bold
-  
-  align(part = "all", align = "center")  %>%              # centers text throughout table
-  
-  vline(j=c(1, 4, 7, 10), part = "all") %>%               # adds vertical lines at defined columns across table
-  
-  bg(                                                  # adding shading every second line in table body
-    i = seq(from = 2, to = nrow(stomach.ratio), by = 2),  # select every 2nd row until the max row number 
-    bg = "#EFEFEF",                                       # color
-    part = "body") %>%                                    # part of table to apply formatting
-  
-  width(j=1, width = 18, unit = "mm") %>%                 # define column width as narrow as possible
-  width(j=c(2, 5, 8, 11), width = 12, unit = "mm") %>%   
-  width(j=c(3, 6, 9, 12), width = 16, unit = "mm") %>%
-  width(j=c(4, 7, 10, 13), width = 13, unit = "mm") %>%
-  
-  set_caption(                                         # manual caption formatting to insert footnote numbering
-    caption = as_paragraph(                               # allows manual formatting in caption
-      as_i("Number of full"),                             # italics
-      as_i(as_sup("1")),                                  # superscript 1
-      as_i(" empty, and total (full and emtpy) stomachs collected for Atlantic Cod ("), # spacing within "" matters!
-      "Gadus morhua",
-      as_i("), Greenland Halibut ("),
-      "Reinhardtius hippoglossides",
-      as_i("), redfishes ("),
-      "Sebastes ",
-      as_i("sp.), and skates ("),
-      "Rajidae",
-      as_i(") within each size class"),
-      as_i(as_sup("2")),
-      as_i(".")
-      ))  %>%                        
-  
-  add_footer_lines(                                  # add footnotes compatible to Markdown
-    as_paragraph(                                      # allows manual formatting in footnote
-      as_sup("1"),                                     # superscript 1
-      " A full stomach is any stomach that was not empty and contained prey items other than only parasites and/or only mucous."
-      )) %>%
-  
-  add_footer_lines(                                 # add second footnote in new line
-    as_paragraph(                     
-      as_sup("2"),                                     
-      " Total length (cm) was used to measure all predators."
-      ))
-
 
