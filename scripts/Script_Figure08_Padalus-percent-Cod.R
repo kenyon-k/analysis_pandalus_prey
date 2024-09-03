@@ -1,13 +1,13 @@
 ################################################################################
 ################################################################################
-#                   Figure 6 Pandalus Percent - DRAFT
+#                   Figure 8 Pandalus Percent - DRAFT
 ################################################################################
 ################################################################################
 
 
 # Author: Krista Kenyon (KAK)
 # Date Created: Aug 19/2024
-# Date Last Modified: Aug 20/2024 by KAK
+# Date Last Modified: Sep 3/2024 by DTE
 
 
 # Document Purpose: Creating Figure 8 for R Markdown document.
@@ -131,16 +131,16 @@ write.csv(fish.pandalus,
 
 fish.p.weight <- fish.pandalus %>%   # manipulate 'fish.pandalus' df and save to Fig 8A df
   
-# Step 3: removes rows where PreyWt is NA  
-  
-  subset(!is.na(PreyWt))  %>%        # removes rows were PreyWt is NA    
+# Step 3: turn NAs into 0
+  mutate(PreyWt_noNA = replace_na(PreyWt, replace = 0)) |> 
+  #subset(!is.na(PreyWt))  %>%        # removes rows where PreyWt is NA    
   
   
 # Step 4: Sum Prey Weight by Prey Category (prey.name) per Predator length (length.range) 
   
   group_by(length.range, prey.name, pred.name) %>%                  # group by the categories we will want to retain after summarize()
-  summarize(shrimp.weight = sum(PreyWt), .groups = "keep") %>%     # create new column (prey.percent) that sums PreyWt by prey.name per pred.name
-  
+#  summarize(shrimp.weight = sum(PreyWt), .groups = "keep") %>%     # create new column (prey.percent) that sums PreyWt by prey.name per pred.name
+  summarize(shrimp.weight = sum(PreyWt_noNA), .groups = "keep") %>%      # set up to replace NAs with 0
   
  # Step 5: Turn Weight into Percentage for Figure 
   group_by(length.range, pred.name) %>%                                       # group by the categories I that will feed into the below mutate     
@@ -168,13 +168,14 @@ fish.p.count <- fish.pandalus %>%   # manipulate 'fish.pandalus' df and save to 
   
   # Step 3: removes rows where PreyWt is NA  
   
-  subset(!is.na(Prey_Count))  %>%        # removes rows were PreyWt is NA    
-  
+  #subset(!is.na(Prey_Count))  %>%        # removes rows were PreyWt is NA    
+  # Step 3: turn NAs into 0
+  mutate(Prey_Count_noNA = replace_na(Prey_Count, replace = 0)) |> 
   
   # Step 4: Sum Prey Weight by Prey Category (prey.name) per Predator length (length.range) 
   
   group_by(length.range, prey.name, pred.name) %>%                  # group by the categories we will want to retain after summarize()
-  summarize(shrimp.count = sum(Prey_Count), .groups = "keep") %>%     # create new column (prey.percent) that sums PreyWt by prey.name per pred.name
+  summarize(shrimp.count = sum(Prey_Count_noNA), .groups = "keep") %>%     # create new column (prey.percent) that sums PreyWt by prey.name per pred.name
   
   
   # Step 5: Turn Weight into Percentage for Figure 
@@ -296,7 +297,7 @@ apple <- fish.p.count %>%
                                     "^0{1,}",     # select 1+ '0's at the beginning of strings
                                     "")) %>%         # remove selected '0's
   # filter by Atlantic cod
-  filter(pred.name == "Atlantic cod")          # selects rows that contain Greenland halibut
+  filter(pred.name == "Atlantic cod")          # selects rows that contain target predator
 
 
 
