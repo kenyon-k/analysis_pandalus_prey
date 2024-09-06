@@ -166,9 +166,12 @@ write.csv(fish.p.weight,
 
 fish.p.count <- fish.pandalus %>%   # manipulate 'fish.pandalus' df and save to Fig 8A df
   
-  # Step 3: removes rows where PreyWt is NA  
+  # Step 1: Remove rows with Unidentified Material
+  filter(                           # selects rows that do not contain:
+    prey.name != "Unidentified material",   #OS_ID 9980
+    prey.name != "Unknown")  %>%            # unknown sp. of any type
   
-  #subset(!is.na(Prey_Count))  %>%        # removes rows were PreyWt is NA    
+  #subset(!is.na(Prey_Count))  %>%        # removes rows were Prey_Count is NA    
   # Step 3: turn NAs into 0
   mutate(Prey_Count_noNA = replace_na(Prey_Count, replace = 0)) |> 
   
@@ -216,7 +219,7 @@ write.csv(fish.p.count,
 
 ### Build Figure 8a
 
-t <- fish.p.weight %>%
+fish_weight_fig <- fish.p.weight %>%
   
   # sort by length.range
   arrange(length.range) %>%                       # sort smallest to largest now that length.range strings equal character length before '-'
@@ -228,13 +231,17 @@ t <- fish.p.weight %>%
   # filter by Atlantic cod
   filter(pred.name == "Atlantic cod")          # selects rows that contain Greenland halibut
 
+fish_weight_fig$length.range = factor(fish_weight_fig$length.range, levels = c("6-10", "11-15", "16-20", "21-25", "26-30", "31-35", "36-40", "41-45", "46-50", 
+                                                                 "51-55", "56-60", "61-65", "66-70", "71-75", "76-80", "81-85"))
+
+fish_weight_fig$prey.name[fish_weight_fig$prey.name == "Unknown" | fish_weight_fig$prey.name == "Unidentified material"] = "other"
 
 
-f8a <- ggplot(t, aes(x = length.range, y = shrimp.weight.p, 
-           fill = factor(prey.name, levels = c('other',                        # orders pray.name variables in bars
-                                               'Pandalus', 
-                                               'montagui', 
-                                               'borealis')) )) +
+f8a <- ggplot(fish_weight_fig, aes(x = length.range, y = shrimp.weight.p, 
+                                   fill = factor(prey.name, levels = c('other',                        # orders pray.name variables in bars
+                                                                       'Pandalus', 
+                                                                       'montagui', 
+                                                                       'borealis')) )) +
   geom_col(position = "stack",                                                # creates stacked bar chart
            width = 0.7) +                                           # reduces width of columns
   
@@ -258,10 +265,12 @@ f8a <- ggplot(t, aes(x = length.range, y = shrimp.weight.p,
   
   scale_y_continuous(expand = c(0,0)) +                         # removes padding around y-axis. Places facet_wrap titles directly below bars
   scale_x_discrete(expand = c(0.3, 0.3)) +                          # adds padding around the bars
-    
+  
   theme(axis.title = element_text(size = 8),                     # size of x and y axis titles
         axis.title.y = element_text(vjust = +3),                 # pulls y-axis title away from chart
         axis.ticks = element_blank(),                            # removes axis ticks
+        axis.title.x = element_text(vjust = -2),
+        axis.text.x = element_text(angle = 45, vjust =0.8, hjust = 1),
         
         legend.title = element_blank(),                          # removes legend title
         legend.key.size = unit(3, "mm"),                         # adjusts width of legend color symbols
@@ -272,7 +281,7 @@ f8a <- ggplot(t, aes(x = length.range, y = shrimp.weight.p,
         panel.grid.major.x = element_blank(),
         
         legend.text = element_markdown(),                        # allows me to italics in legend via markdown code
-       plot.margin = margin(t=5, r = 10, b = 5, l = 8,          # adds space around figure
+        plot.margin = margin(t=5, r = 10, b = 5, l = 8,          # adds space around figure
                              unit = "mm"))                        # space included when combining figures in ggarrange()
 
 
@@ -285,9 +294,9 @@ f8a <- ggplot(t, aes(x = length.range, y = shrimp.weight.p,
 
 
 
-### Build Figure 8a
+### Build Figure 8b
 
-apple <- fish.p.count %>%
+fish_count_fig <- fish.p.count %>%
   
   # sort by length.range
   arrange(length.range) %>%                       # sort smallest to largest now that length.range strings equal character length before '-'
@@ -301,11 +310,11 @@ apple <- fish.p.count %>%
 
 
 
-f8b <- ggplot(apple, aes(x = length.range, y = shrimp.count.p, 
-              fill = factor(prey.name, levels = c('other',                        # orders pray.name variables in bars
-                                                  'Pandalus', 
-                                                  'montagui', 
-                                                  'borealis')) )) +
+f8b <- ggplot(fish_count_fig, aes(x = length.range, y = shrimp.count.p, 
+                                  fill = factor(prey.name, levels = c('other',                        # orders pray.name variables in bars
+                                                                      'Pandalus', 
+                                                                      'montagui', 
+                                                                      'borealis')) )) +
   geom_col(position = "stack",                                                # creates stacked bar chart
            width = 0.7) +                                           # reduces width of columns
   
@@ -329,10 +338,12 @@ f8b <- ggplot(apple, aes(x = length.range, y = shrimp.count.p,
   
   scale_y_continuous(expand = c(0,0)) +                         # removes padding around y-axis. Places facet_wrap titles directly below bars
   scale_x_discrete(expand = c(0.3, 0.3)) +                          # adds padding around the bars
-   
+  
   theme(axis.title = element_text(size = 8),                     # size of x and y axis titles
         axis.title.y = element_text(vjust = +3),                 # pulls y-axis title away from chart
         axis.ticks = element_blank(),                            # removes axis ticks
+        axis.title.x = element_text(vjust = -1),
+        axis.text.x = element_text(angle = 45, vjust =1, hjust = 1),
         
         legend.title = element_blank(),                          # removes legend title
         legend.key.size = unit(3, "mm"),                         # adjusts width of legend color symbols
@@ -343,8 +354,8 @@ f8b <- ggplot(apple, aes(x = length.range, y = shrimp.count.p,
         panel.grid.major.x = element_blank(),
         
         legend.text = element_markdown(),                        # allows me to italics in legend via markdown code
-         plot.margin = margin(t=5, r = 10, b = 5, l = 8,          # adds space around figure
-                               unit = "mm"))                        # space included when combining figures in ggarrange()
+        plot.margin = margin(t=5, r = 10, b = 5, l = 8,          # adds space around figure
+                             unit = "mm"))                        # space included when combining figures in ggarrange()
 
 
 ####################   Combine to Create Figure 8 ##################################
