@@ -275,7 +275,7 @@ pandalus.f6a <- pandalus.percent  %>%     # manipulate 'prandalus.percent' df an
   mutate(prey.percent = (prey.percent/sum(prey.percent))*100)   # change 'prey.percent' column. OG values formatted into percentage per pred.name
 
 
-
+pandalus.f6a$prey.name[pandalus.f6a$prey.name == "Unknown" | pandalus.f6a$prey.name == "Unidentified material"] = "other"
 ### Saving the Figure 6a dataframe structure
 
 # str(pandalus.f6a) 
@@ -322,12 +322,8 @@ pandalus.f6b <- pandalus.percent %>%   # manipulate 'prandalus.percent' df and s
 
 # Step 1: Remove rows with Unidentified Material
   filter(                           # selects rows that do not contain:
-    Prey_OS_ID != 10746 |                # unknown sp. A
-    Prey_OS_ID != 10747 |                # unknown sp. B
-    Prey_OS_ID != 10748 |                # unknown sp. C
-    Prey_OS_ID != 10749 |                # unknown sp. D
-    Prey_OS_ID != 10750)  %>%            # unknown sp. E
-
+    prey.name != "Unidentified material",   #OS_ID 9980
+    prey.name != "Unknown")  %>%            # unknown sp. of any type
   
 # Step 2: removes rows where Prey_Count is NA  
   subset(!is.na(Prey_Count)) %>%        # removes rows where Prey_Count is NA
