@@ -38,11 +38,18 @@
         # does not exclude 'NA's
         # filters by condition vs logical true-false arguments
 
+    # (replace_na) https://www.statology.org/dplyr-filter-keep-na/
+        # Check if I want to keep it
+
+
+
 
 ### Testing out regular expressions/regex for stringr()
 
     # str_view() shows you what your code highlights
         # I don't know where I found this. But it was useful
+
+
 
 ### Converting NA to 0
 
@@ -67,6 +74,25 @@
     # (italic body text) https://ardata-fr.github.io/flextable-book/define-visual-properties.html
         # flextable book
         # details all of flextable
+
+
+### Remove Add-On Group Row Label
+
+    # (hide_grouplabel) https://stackoverflow.com/questions/71661066/is-there-a-function-in-flextable-to-group-a-few-rows-in-a-table-together-under-a
+
+
+### Duplicates Group Header Rows
+
+    # (use and index) https://stackoverflow.com/questions/50839185/identify-duplicates-in-a-list-ignoring-na-values-in-r#:~:text=I%20would%20like%20to%20identify%20whether%20there%20are%20duplicates%20in# UPDATE WORDING
+        # I ended up using this method to remove duplicate group header rows
+        # Before table formatting I created a pipeline that used this techniques to identify which rows to remove
+
+
+### Delete flextable rows
+
+    # (help page) https://davidgohel.github.io/flextable/reference/delete_rows.html
+
+
 
 
 ###########################    Tutorial ?   ###################################
@@ -98,6 +124,43 @@ flextable(dat)  %>%
           text.align = "center", padding = 1))
 
 ?fp_par
+
+
+##################      Testing when to separate preds out       ###############
+
+names(apple)
+
+test <- apple  %>%     # manipulate 'apple' df and save to new Table 3a df 
+  
+  # Step 1: converts NAs within PreyWt to 0s   
+  
+  mutate(PreyWt = ifelse(is.na(PreyWt),          # if PreyWt is NA
+                         0,                      # replace it with a 0
+                         PreyWt))   %>%              # otherwise retain original value
+
+  
+  # Step X: split out by species
+  
+ # filter(pred.name == "Atlantic cod") %>%
+  
+  
+  # Step 2: Sum Prey Weight by scientific name (ScientificName_W)
+  
+  group_by(ScientificName_W, Order, Phylum, pred.name)# %>%               # group by the categories we will want to retain after summarize(). First in list is what summarize() works from
+#  summarize(taxa.weight = sum(PreyWt ~ pred.name), .groups = "keep") # %>%     # create new column (taxa.weight) that sums PreyWt by scientific name
+
+tb  <- aggregate(test$PreyWt, by = list(test$pred.name, test$ScientificName_W), FUN = sum)
+  colnames(tb) <- c('pred.name', 'ScientificName_W', 'taxa.weight')
+  
+  tb <- tb %>%
+    arrange(pred.name, ScientificName_W, by_group = TRUE) %>%
+  
+  # Step 3: Turn Weight into Percentage for Table
+  ungroup() %>%                                       # group by the categories I that will feed into the below mutate     
+  mutate(taxa.percent = (taxa.weight/sum(taxa.weight))*100)   # change 'prey.percent' column. OG values formatted into percentage per pred.name
+
+
+
 
 
 ###########################    Tutorial ?   ###################################
@@ -542,6 +605,16 @@ mutate(prey.name = ifelse(Prey_OS_ID == 8111,         # create new column 'prey.
                                  ifelse(Prey_OS_ID == 8110,   # if second logical test is FALSE, being third logical test
                                         "Pandalus",           # value if third logical test is TRUE
                                         "other") 
+
+
+##### filter without replacing NA
+
+df <- data.frame(team=c('A', NA, 'A', 'B', NA, 'C', 'C', 'C'),
+                 points=c(18, 13, 19, 14, 24, 21, 20, 28),
+                 assists=c(5, 7, 17, 9, 12, 9, 5, 12))
+
+df %>% filter((team != 'A') %>% replace_na(TRUE))
+                                
 #################### Code SAving for Quick Clean to send to Dan #############
   
   ### Creating Table 3A Specific Dataframe
