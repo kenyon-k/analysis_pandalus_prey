@@ -1,6 +1,6 @@
 ################################################################################
 ################################################################################
-#                   Figure 8 Pandalus Percent - DRAFT
+#                   Figure 9 Pandalus Percent - DRAFT
 ################################################################################
 ################################################################################
 
@@ -11,30 +11,30 @@
 
 
 # Document Purpose: Creating Figure 8 for R Markdown document.
-    # Working in code is simpler and faster here than in the R Markdown document
-    # R Markdown places code results below chunks, which can mean a lot of scrolling
+# Working in code is simpler and faster here than in the R Markdown document
+# R Markdown places code results below chunks, which can mean a lot of scrolling
 
 
 # R Markdown code pipes this code directly into the document.
-    # !! Before knitting ensure to comment out all codes that produce console outputs except the table
-    # e.g. str()
+# !! Before knitting ensure to comment out all codes that produce console outputs except the table
+# e.g. str()
 
 
 # Document Sections:
-    # Remaining Tasks
-    # Load Libraries & Base Data
-    # Code Chunk: Creating Figure 8
-        # Subsection: Creating New Dataframe for Figure 8
-        # Subsection: Building and Formatting Figure 8
+# Remaining Tasks
+# Load Libraries & Base Data
+# Code Chunk: Creating Figure 8
+# Subsection: Creating New Dataframe for Figure 8
+# Subsection: Building and Formatting Figure 8
 
 
 # To see tutorials, key webpages, and key videos I used to create and format Figure 6:
-    # please see the 'Draft_Script_Figure06_Pandalus-percent-Halibut.R' in the 'Draft Code' folder
+# please see the 'Draft_Script_Figure06_Pandalus-percent-Halibut.R' in the 'Draft Code' folder
 
 # Draft Script notes include sites and tutorials that assisted me with:
-    # ......
-    # ......
-    # ......
+# ......
+# ......
+# ......
 
 
 ################################################################################
@@ -75,51 +75,51 @@
 
 
 # This code chunk subsections:
-    # Creates Figure 8 Dataframe
-    # .....
+# Creates Figure 8 Dataframe
+# .....
 
 # The Figure 8 df contains/details .....
 
 
 # Figure 8 Dataframe structure will need:
-    # 3 categorical variables:
-        # fill: detailed shrimp categories (borealis, montagui, P. sp., other)
-        # columns: predator length
-        # will need predator included to use 1 df in multiple figures
-    # 2 numerical variable:
-        # Fig 8A y-axis: percent weight of prey sp. within stomachs
-        # Fig 8B y-axis: precent number of prey sp. within stomachs
+# 3 categorical variables:
+# fill: detailed shrimp categories (borealis, montagui, P. sp., other)
+# columns: predator length
+# will need predator included to use 1 df in multiple figures
+# 2 numerical variable:
+# Fig 8A y-axis: percent weight of prey sp. within stomachs
+# Fig 8B y-axis: precent number of prey sp. within stomachs
 
 
 # Dataframe transformations for Fig 8 df ( df name ):
-    # .......
-    # ......
-    # ......
+# .......
+# ......
+# ......
 
 
 ################### Creating Figure 8 Dataframe ########################
 
 
 # Figure 8 Base Dataframe is called ........
-    # Each row represents ...... with corresponding 
+# Each row represents ...... with corresponding 
 
 # below code is one pipeline that is 'broken up' with annotation notes
 
- 
+
 
 ### Creating Fig 8 Base Dataframe
 
 
 fish.pandalus <- pandalus.percent %>%     # manipulate 'pandalus.prey' df and save to new Fig 8 Base df
-
-# Step 1: remove other.prey column (may be unnecessary - but want to not be confused)    
+  
+  # Step 1: remove other.prey column (may be unnecessary - but want to not be confused)    
   
   select(-other.prey)    %>%              # column used for Fig 6. Not needed for Fig 8. 
   
-# Step 2: make pred.name data same length (useful for ordering)
+  # Step 2: make pred.name data same length (useful for ordering)
   mutate(length.range = str_pad(length.range,          # code adds 0s to start of length.range string (6 becomes 006)
-                                  width=6,             # strings <6 characters will be padded until they =6 characters
-                                  pad = "0")) # %>%   # padding with 0s
+                                width=6,             # strings <6 characters will be padded until they =6 characters
+                                pad = "0")) # %>%   # padding with 0s
 
 # .......
 
@@ -131,21 +131,21 @@ write.csv(fish.pandalus,
 
 fish.p.weight <- fish.pandalus %>%   # manipulate 'fish.pandalus' df and save to Fig 8A df
   
-# Step 3: turn NAs into 0
+  # Step 3: turn NAs into 0
   mutate(PreyWt_noNA = replace_na(PreyWt, replace = 0)) |> 
   #subset(!is.na(PreyWt))  %>%        # removes rows where PreyWt is NA    
   
   
-# Step 4: Sum Prey Weight by Prey Category (prey.name) per Predator length (length.range) 
+  # Step 4: Sum Prey Weight by Prey Category (prey.name) per Predator length (length.range) 
   
   group_by(length.range, prey.name, pred.name) %>%                  # group by the categories we will want to retain after summarize()
-#  summarize(shrimp.weight = sum(PreyWt), .groups = "keep") %>%     # create new column (prey.percent) that sums PreyWt by prey.name per pred.name
+  #  summarize(shrimp.weight = sum(PreyWt), .groups = "keep") %>%     # create new column (prey.percent) that sums PreyWt by prey.name per pred.name
   summarize(shrimp.weight = sum(PreyWt_noNA), .groups = "keep") %>%      # set up to replace NAs with 0
   
- # Step 5: Turn Weight into Percentage for Figure 
+  # Step 5: Turn Weight into Percentage for Figure 
   group_by(length.range, pred.name) %>%                                       # group by the categories I that will feed into the below mutate     
   mutate(shrimp.weight.p = (shrimp.weight/sum(shrimp.weight))*100)        # change 'prey.percent' column. OG values formatted into percentage per pred.name
-  
+
 
 ### Saving the fish.p.weight dataframe structure
 
@@ -205,7 +205,7 @@ write.csv(fish.p.count,
 # Below code builds Fig 8a, Fig 8b, then combines them into Figure 8
 
 # Alternate formtting options for Figure 6 are saved in:
-    # ...............
+# ...............
 
 
 
@@ -225,16 +225,16 @@ t <- fish.p.weight %>%
   mutate(length.range = str_replace(length.range, # removing the extra zeros for Table formatting
                                     "^0{1,}",     # select 1+ '0's at the beginning of strings
                                     "")) %>%         # remove selected '0's
-  # filter by Atlantic cod
-  filter(pred.name == "Atlantic cod")          # selects rows that contain Greenland halibut
+  # filter by Greenland halibut
+  filter(pred.name == "Greenland halibut")          # selects rows that contain Greenland halibut
 
 
 
 f8a <- ggplot(t, aes(x = length.range, y = shrimp.weight.p, 
-           fill = factor(prey.name, levels = c('other',                        # orders pray.name variables in bars
-                                               'Pandalus', 
-                                               'montagui', 
-                                               'borealis')) )) +
+                     fill = factor(prey.name, levels = c('other',                        # orders pray.name variables in bars
+                                                         'Pandalus', 
+                                                         'montagui', 
+                                                         'borealis')) )) +
   geom_col(position = "stack",                                                # creates stacked bar chart
            width = 0.7) +                                           # reduces width of columns
   
@@ -258,7 +258,7 @@ f8a <- ggplot(t, aes(x = length.range, y = shrimp.weight.p,
   
   scale_y_continuous(expand = c(0,0)) +                         # removes padding around y-axis. Places facet_wrap titles directly below bars
   scale_x_discrete(expand = c(0.3, 0.3)) +                          # adds padding around the bars
-    
+  
   theme(axis.title = element_text(size = 8),                     # size of x and y axis titles
         axis.title.y = element_text(vjust = +3),                 # pulls y-axis title away from chart
         axis.ticks = element_blank(),                            # removes axis ticks
@@ -272,7 +272,7 @@ f8a <- ggplot(t, aes(x = length.range, y = shrimp.weight.p,
         panel.grid.major.x = element_blank(),
         
         legend.text = element_markdown(),                        # allows me to italics in legend via markdown code
-       plot.margin = margin(t=5, r = 10, b = 5, l = 8,          # adds space around figure
+        plot.margin = margin(t=5, r = 10, b = 5, l = 8,          # adds space around figure
                              unit = "mm"))                        # space included when combining figures in ggarrange()
 
 
@@ -296,16 +296,16 @@ apple <- fish.p.count %>%
   mutate(length.range = str_replace(length.range, # removing the extra zeros for Table formatting
                                     "^0{1,}",     # select 1+ '0's at the beginning of strings
                                     "")) %>%         # remove selected '0's
-  # filter by Atlantic cod
-  filter(pred.name == "Atlantic cod")          # selects rows that contain target predator
+  # filter by Greenland halibut
+  filter(pred.name == "Greenland halibut")          # selects rows that contain target predator
 
 
 
 f8b <- ggplot(apple, aes(x = length.range, y = shrimp.count.p, 
-              fill = factor(prey.name, levels = c('other',                        # orders pray.name variables in bars
-                                                  'Pandalus', 
-                                                  'montagui', 
-                                                  'borealis')) )) +
+                         fill = factor(prey.name, levels = c('other',                        # orders pray.name variables in bars
+                                                             'Pandalus', 
+                                                             'montagui', 
+                                                             'borealis')) )) +
   geom_col(position = "stack",                                                # creates stacked bar chart
            width = 0.7) +                                           # reduces width of columns
   
@@ -329,7 +329,7 @@ f8b <- ggplot(apple, aes(x = length.range, y = shrimp.count.p,
   
   scale_y_continuous(expand = c(0,0)) +                         # removes padding around y-axis. Places facet_wrap titles directly below bars
   scale_x_discrete(expand = c(0.3, 0.3)) +                          # adds padding around the bars
-   
+  
   theme(axis.title = element_text(size = 8),                     # size of x and y axis titles
         axis.title.y = element_text(vjust = +3),                 # pulls y-axis title away from chart
         axis.ticks = element_blank(),                            # removes axis ticks
@@ -343,8 +343,8 @@ f8b <- ggplot(apple, aes(x = length.range, y = shrimp.count.p,
         panel.grid.major.x = element_blank(),
         
         legend.text = element_markdown(),                        # allows me to italics in legend via markdown code
-         plot.margin = margin(t=5, r = 10, b = 5, l = 8,          # adds space around figure
-                               unit = "mm"))                        # space included when combining figures in ggarrange()
+        plot.margin = margin(t=5, r = 10, b = 5, l = 8,          # adds space around figure
+                             unit = "mm"))                        # space included when combining figures in ggarrange()
 
 
 ####################   Combine to Create Figure 8 ##################################

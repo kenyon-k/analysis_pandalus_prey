@@ -7,7 +7,7 @@
 
 # Author: Krista Kenyon (KAK)
 # Date Created: Aug 8/2024
-# Date Last Modified: Aug 16/2024 by KAK
+# Date Last Modified: Sep 3/2024 by DTE
 
 
 # Document Purpose: Creating Figure 6 for R Markdown document.
@@ -165,9 +165,11 @@ pandalus.percent <- prey %>%             # manipulate 'prey' df and save to new 
 
   
 # Step 1: Subset Fig 6 Base df to desired columns  
-    
+  
   select(Prey_OS_ID,                     # subsets dataframe by selected columns
         # Scientific.Name,
+        Prey_Detail_Code,
+         CommonName_DB,
          pred.name,
          PreyWt,
          Prey_Count,
@@ -182,8 +184,11 @@ pandalus.percent <- prey %>%             # manipulate 'prey' df and save to new 
     Prey_OS_ID != 9982 |                # stone
     Prey_OS_ID != 9983 |                # shells
     Prey_OS_ID != 10757 |               # mud
-    Prey_OS_ID != 9987)  %>%            # plant material
+    Prey_OS_ID != 9987) %>%              # plant material
   
+  # Step 3: remove rows with 'parasitic' stomach contents
+  filter(!Prey_Detail_Code %in%     # selects rows that do not (!) contain the following 'in' them
+           c('40'))  %>%                  # parasites
   
 # Step 3: create new column where Prey_OS_ID's are redefined to the 4 prey categories (Fig 6 fill)
 
@@ -198,13 +203,18 @@ pandalus.percent <- prey %>%             # manipulate 'prey' df and save to new 
                            "montagui",                  # value if second logical test is TRUE
                            ifelse(Prey_OS_ID == 8110,   # if second logical test is FALSE, being third logical test
                                   "Pandalus",           # value if third logical test is TRUE
-                                  "other")              # value if third logical test is FALSE
-                    ))) %>%
+                                  ifelse(Prey_OS_ID == 9980,
+                                         "Unidentified material",
+                                         ifelse(grepl("unknown", CommonName_DB),  #check for unknown values, can incorporate anything with "unknown" in common name
+                                         #ifelse(Prey_OS_ID == 10746 | Prey_OS_ID == 10747 | Prey_OS_ID == 10748 | Prey_OS_ID == 10749 | Prey_OS_ID == 10750,
+                                  "Unknown",            # value if fourth logical test is TRUE
+                                  "other")              # value if fourth logical test is FALSE
+                    ))))) %>%
   
 # Step 4: Create new column to force 'other' prey category into solo column in Figure
   
   mutate(other.prey =                           # creating a new column called 'other.prey'
-           prey.name == "other") %>%            # fill column with TRUE/FALSE on whether corresponding prey.name row is 'other'
+           prey.name == "other" | prey.name == "Unknown" | prey.name == "Unidentified material") %>%            # fill column with TRUE/FALSE on whether corresponding prey.name row is 'other'
 
   mutate(other.prey = ifelse(other.prey == FALSE, # making changes to 'other.prey'
                                                   # if 'other.prey' values is FALSE
