@@ -183,7 +183,10 @@ apple <- prey %>%                        # manipulate 'prey' df and save to new 
   mutate(ScientificName_W = ifelse(str_detect(ScientificName_W, pattern = 'Unidentifiable') == TRUE,  # If ScientificName_W contains 'Unidentifiable'
                             str_to_title(ScientificName_W),                                           # Have the first letter of each word be upper case
                             str_to_sentence(ScientificName_W)                                         # if not - only have the first letter of the first word be uppercase
-                            ))
+                            )) %>%
+  mutate(ScientificName_W = ifelse(ScientificName_W == "Unidentified material",
+                                   "UNIDENTIFIABLE MATERIAL",
+                                   ScientificName_W))
 
 
 ### Creating Table 3A Specific Dataframe
@@ -198,12 +201,17 @@ t3a <- apple  %>%     # manipulate 'apple' df and save to new Table 3a df
                          0,                      # replace it with a 0
                          PreyWt))  %>%              # otherwise retain original value
   
-  filter(pred.name == "Atlantic cod") %>%
+  # Step X: split out by species
+  
+ # filter(pred.name == "Atlantic cod") %>%
+  filter(pred.name == "Greenland halibut") %>%
 
+  
   # Step 2: Sum Prey Weight by scientific name (ScientificName_W)
   
   group_by(ScientificName_W, Order, Phylum) %>%               # group by the categories we will want to retain after summarize(). First in list is what summarize() works from
   summarize(taxa.weight = sum(PreyWt), .groups = "keep") %>%     # create new column (taxa.weight) that sums PreyWt by scientific name
+  
   
   # Step 3: Turn Weight into Percentage for Table
   ungroup() %>%                                       # group by the categories I that will feed into the below mutate     
@@ -225,138 +233,257 @@ t3a <- apple  %>%     # manipulate 'apple' df and save to new Table 3a df
 
 
 
-# additional library needed for some table formating
-
-#install.packages('ftExtra')
-library(ftExtra)
-
 # final formatting that may be incorporated into the above code
 cone <- t3a %>%
   mutate(Phylum = str_to_upper(Phylum)) %>%           # all caps text
-  mutate(across('taxa.weight', round, 1)) %>%             # rounds to 1 decimal
+  mutate(taxa.weight = round(taxa.weight, digits = 1)) %>%
+  # mutate(Phylum = ifelse(ScientificName_W == "Unidentified material",
+  #                        "UNDENTIFIABLE MATERIAL",
+  #                        Phylum)) %>%
+ # mutate(across(c('taxa.weight'), round, 1)) %>%             # rounds to 1 decimal
   group_by(Phylum, Order)
 
+cone <- cone %>%
+  mutate(taxa.weight = ifelse(taxa.weight < 0.1,
+                              0.001,
+                              taxa.weight)) %>%
+  mutate(taxa.weight = str_replace(taxa.weight, pattern = "0.001", replacement = "< 0.1"))
+
+
+## first step would be sorting the columns alphebetically
 
 # replacing NAs in Order with 'none'
 cone$Order <- cone$Order %>%
-  replace_na('none')
+  replace_na('A')
 
-# adding another Phylum to test table structure
-new_row <- data.frame(ScientificName_W= "Test test", Order= "Xxxxx", Phylum= "TEST", taxa.weight = 30)
 
-test <- rbind(cone, new_row) %>%
+cone <- cone %>%
+  mutate(anchor = ifelse(str_detect(ScientificName_W, "Unidentifiable"),
+                         1,
+                         0)) %>%
+  arrange(Phylum, Order, anchor, ScientificName_W, by_group = TRUE) %>%
+  select(-anchor)
+
+
+# assigning which rows that I will want to delete within the table
+acorn <- as_grouped_data(cone, groups = c("Phylum", "Order")) # this data structure matches what flextable will produce naturally
+
+nut <- acorn %>%
+  mutate(dups = duplicated(Phylum, incomparables = NA)) %>%
+  mutate(index = row_number()) %>%
+  filter(dups == TRUE) %>%
+  .$index
+
+# this works to select appropriate rows, but does not work if there is only ONE Phylum.
+# Will need to adjust for that
+chip <- acorn %>%
+  mutate(dups = duplicated(Phylum, incomparables = NA)) %>%          
+  mutate(index = (row_number())) %>%               # will be able to remove in the future. Was handy to ensure correct rows are being removed
+  slice(-c(nut))  %>%                              # removes rows that are duplicate Phylums
+  filter((Order != 'A') %>% replace_na(TRUE)) %>%  # removes rows that have 'blank' Orders
+  mutate(index.final = (row_number()-1))  %>%       # adds row numbers now that data structure matches final table structure. -1 will force the row to be the one above the phylum
+# enter a code that replaces index.final = 0 with the last row number (look at fish.length separation for ideas)
+  mutate(index.final = ifelse(index.final == 0,         # if index.final == 0
+                              max(index.final+1),               # replace it with the highest value in index (should be the last row number)
+                              index.final)) %>%            # otherwise keep values as they are
+  # then if there is only one Phylum, the line will be placed at the bottom which is fine.
+  # And the bottom row should never be a Phylum, so it should add a duplicate value which may or may not mess with things
   
-
-flower <- test %>%
-  arrange(Phylum, Order, by_group = TRUE)
-
-
-
-# re-grouping data (not sure if needed, but used for some test I did)
-
-g.group <-   as_grouped_data(test, groups = c("Phylum"))               # testing data structure for why 2 groups repeats
-cone.grouped <- as_grouped_data(test, groups = c("Phylum", "Order"))   # group layers I'll want
-
-cone.grouped <- cone.grouped %>%
-  arrange(Phylum, Order, by_group = TRUE)
-
-ftest <- cone.grouped %>%
-  mutate(Order = c("Decapoda", "", "", "", "", "", "", "", "", "XXXX", "", "")) %>%
- # mutate(Order = c("", "Decapoda", "", "", "", "", "", "", "", "", "Xxxx", "")) %>%
-  mutate(Phylum = c("ANTHROPODA", "", "", "", "", "", "", "", "", "TEST", "", ""))
-#test.order <- data.frame(Order = c("", "Decapoda", "", "", "", "", "", "", "", "", "Xxxx", ""))
-
-#ftest <- cbind(cone.grouped, test.order)
-
-ftest <- ftest %>%
-  group_by(Phylum, Order) #%>%
-
-# gtest <- ftest[rowSums(is.na(ftest)) != ncol(ftest),]
-gtest <- ftest[-c(2, 4,5,7,8,11),]  
-
-gtest <- gtest %>%
-  mutate(ScientificName_W = str_replace(ScientificName_W, pattern = "NA", replacement = ""))
-
-# htest <- gtest[!is.na(gtest)]  
-?mutate
-
-############ Create from scratch a test df from as_flextable to see if it works
-egg <-  data.frame(
-  Phylum = c("ANTHROPODA", "", "", "TEST", ""),
-  Order = c("Decapoda", "", "", "XXXX", ""),
-  ScientificName_W = c("Name 1", "Name 2", "Name 3", "", "Name 4"),
-  taxa.weight = c("1.5", "2.5", "5.8", "", "10.5")
-)
-
-egg <- egg %>%
-  group_by(Phylum, Order)
+  # switch below code so that it removes rows where Phylum = NAs
+  
+  #### Placement of below is where I think the problem is!!!!!!!
+    filter((Phylum != 'A')) %>%                     # remove rows where Phylum = NAs             
+  .$index.final                                    # gives final values
 
 
-############ Create from scratch a dataframe with no blanks
-toast <-  data.frame(
-  Phylum = c("ANTHROPODA", "ANTHROPODA", "ANTHROPODA", "TEST"),
-  Order = c("Decapoda", "Decapoda", "Decapoda", "XXXX"),
-  ScientificName_W = c("Name 1", "Name 2", "Name 3", "Name 4"),
-  taxa.weight = c("1.5", "2.5", "5.8", "10.5")
-)
+    
 
-toast <- toast %>%
-  group_by(Phylum, Order)
+################ flextable time
 
 
-############ Create from scratch a dataframe with no blanks but multiple orders
-burnt.toast <-  data.frame(
-  Phylum = c("ANTHROPODA", "ANTHROPODA", "ANTHROPODA", "TEST"),
-  Order = c("Decapoda", "Decapoda", "None", "Test"),
-  ScientificName_W = c("Name 1", "Name 2", "Name 3", "Name 4"),
-  taxa.weight = c("1.5", "2.5", "5.8", "10.5")
-)
-
-burnt.toast <- burnt.toast %>%
-  group_by(Phylum, Order)
-
-install.packages('hablar')
-library(hablar)
-?find_duplicates
- 
-# flextable time
-
-pred <- pred[!duplicated(pred$FishKey),]
-
-?duplicated
-
-as_flextable(burnt.toast,
+as_flextable(acorn,
              hide_grouplabel = TRUE) %>%              # removes labels flextables adds onto each group (keeps group name as is within dataset)
   
   set_header_labels(ScientificName_W = "Prey/Taxon",
-                    taxa.weight = "Percent by Weight (%W)") %>% 
-  
- # delete_rows(i = 5, part = 'body') %>%             # this works but I would prefer a formula
-  
- # delete_rows(i = ~ !duplicated(Phylum), part = "body") %>%
- #  delete_rows(i = ~ filter(duplicated(Phylum, fromLast = TRUE)), part = "body") %>%
- # delete_rows(i = ~ select(unique(Phylum)), part = "body") %>%
- # delete_rows(i = ~ filter(distinct(Phylum, .keep_all = TRUE), part = "body")) %>%
-  
+                     taxa.weight = "Percent by Weight (%W)")  %>% 
+
+  delete_rows(i = nut, part = 'body')  %>%
+  delete_rows(i = ~ str_detect(Order, pattern = 'A')) %>%
+
+
+
   bg(bg = "lightgray", part = "header") %>%               # defines header colour
   bold(bold = TRUE, part = "header") %>%              # header text bold
-  
+
   bold(i = ~ !is.na(Phylum), j = 1) %>%                      # phylum text is bold
   bold(i = ~ !is.na(Order), j = 1) %>%                       # Order text is bold
   style(i = ~ str_detect(ScientificName_W,                 # making only scientific names italic by:
                          pattern = 'Unidentifiable',       # string to search for is 'Unidentifiable'
                          negate = TRUE),                   # select any row that DOES NOT contain 'Unidentifiable'
         j = 1,
-        pr_t = fp_text_default(italic=TRUE)) %>%                          # make them italic
+        pr_t = fp_text_default(italic=TRUE))  %>%                          # make them italic
   
-  style(i = ~ !is.na(ScientificName_W),                       # Scientific Names in 1st column
-        j = 1,                                                # first column only
+  style(i = ~ str_detect(ScientificName_W,
+                         pattern = "UNIDENTIFIABLE MATERIAL",
+                         negate = TRUE),
+        j = 1,
         pr_p = fp_par(text.align = "left", padding.left = 15)) %>%    # add padding to left of selected text
+
+  # style(i = ~ !is.na(ScientificName_W),                       # Scientific Names in 1st column
+  #       j = 1,                                                # first column only
+  #       pr_p = fp_par(text.align = "left", padding.left = 15)) %>%    # add padding to left of selected text
+
+  align(j = 2, align = "center", part = "body")   %>%
+
+ # hline(i = chip, part = "body") # %>%                       # inserts border line above Phylum
+  hline_bottom(border = fp_border(color = "dimgray", width = 1.5), part = "body") %>%
+
+
+ # border(i = ~!is.na(Phylum),                                 # horizontal border per Phylum
+ #         border.top = fp_border(color = "black"),             # placing the border on top of the row
+ #         part = "body") %>%                                   # within the body of the table
+
+  width(j = 1, width = 55, unit = "mm") %>%
+  width(j = 2, width = 30, unit = "mm") %>%
+
+  set_caption(                                         # manual caption formatting to insert footnote numbering
+    caption = as_paragraph(                               # allows manual formatting in caption
+      as_i("Relative contribution, expressed as percent by weight (%W) and percent by number (%N), of different prey taxa found in the stomachs of Atlantic Cod ("),
+      "Gadus morhua",             # regular text
+      as_i(").")                  # italics
+    ))
+
   
   
-  border(i = ~!is.na(Phylum),                                 # horizontal border per Phylum
-         border.top = fp_border(color = "black"),             # placing the border on top of the row
-         part = "body") %>%                                   # within the body of the table
+########################### Code I used Trying to Figure out Formatting
+
+
+
+# pred <- pred[!duplicated(pred$FishKey),]
+# 
+# 
+# anyDuplicated(burnt.toast$taxa.weight)
+# 
+# 
+# burnt.toast %>%
+#   filter(!duplicated(Phylum, fromLast = FALSE))
+# 
+# 
+# duplicated(burnt.toast$Phylum)
+# 
+# burnt.toast[duplicated(burnt.toast$Phylum),]
+
+
+  # adding another Phylum to test table structure
+  # new_row <- data.frame(ScientificName_W= "Test test", Order= "Xxxxx", Phylum= "TEST", taxa.weight = 30)
+  # 
+  # test <- rbind(cone, new_row) %>%
+  #   
+  # 
+  # flower <- test %>%
+  #   arrange(Phylum, Order, by_group = TRUE)
+  
+  
+  
+  # re-grouping data (not sure if needed, but used for some test I did)
+  
+  # g.group <-   as_grouped_data(test, groups = c("Phylum"))               # testing data structure for why 2 groups repeats
+  # cone.grouped <- as_grouped_data(test, groups = c("Phylum", "Order"))   # group layers I'll want
+  # 
+  # cone.grouped <- cone.grouped %>%
+  #   arrange(Phylum, Order, by_group = TRUE)
+  # 
+  # ftest <- cone.grouped %>%
+  #   mutate(Order = c("Decapoda", "", "", "", "", "", "", "", "", "XXXX", "", "")) %>%
+  #  # mutate(Order = c("", "Decapoda", "", "", "", "", "", "", "", "", "Xxxx", "")) %>%
+  #   mutate(Phylum = c("ANTHROPODA", "", "", "", "", "", "", "", "", "TEST", "", ""))
+  # #test.order <- data.frame(Order = c("", "Decapoda", "", "", "", "", "", "", "", "", "Xxxx", ""))
+  
+  #ftest <- cbind(cone.grouped, test.order)
+  
+  # ftest <- ftest %>%
+  #   group_by(Phylum, Order) #%>%
+  # 
+  # # gtest <- ftest[rowSums(is.na(ftest)) != ncol(ftest),]
+  # gtest <- ftest[-c(2, 4,5,7,8,11),]  
+  # 
+  # gtest <- gtest %>%
+  #   mutate(ScientificName_W = str_replace(ScientificName_W, pattern = "NA", replacement = ""))
+  
+  # htest <- gtest[!is.na(gtest)]  
+  # ?mutate
+  
+  ############ Create from scratch a test df from as_flextable to see if it works
+  # egg <-  data.frame(
+  #   Phylum = c("ANTHROPODA", "", "", "TEST", ""),
+  #   Order = c("Decapoda", "", "", "XXXX", ""),
+  #   ScientificName_W = c("Name 1", "Name 2", "Name 3", "", "Name 4"),
+  #   taxa.weight = c("1.5", "2.5", "5.8", "", "10.5")
+  # )
+  # 
+  # egg <- egg %>%
+  #   group_by(Phylum, Order)
+  
+  
+  ############ Create from scratch a dataframe with no blanks
+  # toast <-  data.frame(
+  #   Phylum = c("ANTHROPODA", "ANTHROPODA", "ANTHROPODA", "TEST"),
+  #   Order = c("Decapoda", "Decapoda", "Decapoda", "XXXX"),
+  #   ScientificName_W = c("Name 1", "Name 2", "Name 3", "Name 4"),
+  #   taxa.weight = c("1.5", "2.5", "5.8", "10.5")
+  # )
+  # 
+  # toast <- toast %>%
+  #   group_by(Phylum, Order)
+  
+  
+  
+  
+  
+  ############ Create from scratch a dataframe with no blanks but multiple orders
+  # burnt.toast <-  data.frame(
+  #   Phylum = c("ARTHROPODA", "ARTHROPODA", "ARTHROPODA", "TEST", "TEST"),
+  #   Order = c("Decapoda", "Decapoda", "None", "Testing", "Pass"),
+  #   ScientificName_W = c("Name 1", "Name 2", "Name 3", "Name 4", "Name 5"),
+  #   taxa.weight = c("1.5", "2.5", "5.8", "10.5", "11")
+  # )
+  # 
+  # jam.toast <- as_grouped_data(burnt.toast, groups = c("Phylum", "Order"))
+  # 
+  # !duplicated(jam.toast$Phylum)
+  # 
+  # burnt.toast %>%
+  #   rowwise() %>%
+  #   mutate(dups = anyDuplicated(na.omit(c(Phylum, Order, ScientificName_W, taxa.weight))))  %>%
+  #   ungroup %>%
+  #   mutate(index = row_number()) %>%
+  #   filter(dups > 0) %>%
+  #   .$index
+  
+  
+  
+  
+  # burnt.toast <- burnt.toast %>%
+  #   group_by(Phylum, Order)
+  # 
+  # install.packages('hablar')
+  # library(hablar)
+  # ?find_duplicates
+  
+  
+  as_flextable(...)
+  
+  # delete_rows(i = 5, part = 'body') %>%             # this works but I would prefer a formula
+  
+  # delete_rows(i = ~ select(unique(Phylum)), part = "body") %>%
+  
+  # delete_rows(i = ~ !duplicated(Phylum, by = Phylum, fromLast = TRUE), part = "body") %>%
+  #delete_rows(i = ~ duplicated(Phylum), by = Phylum, part = "body") %>%
+  # delete_rows(i = ~ burnt.toast[duplicated(burnt.toast$Phylum),], part = "body") %>%
+  # delete_rows(i = ~ duplicated(Phylum) == TRUE, part = "body") %>%
+  # delete_rows(i funct ~ select(unique(Phylum)), part = "body") %>%
+  # delete_rows(i = ~ filter(distinct(Phylum, .keep_all = TRUE), part = "body")) %>%
+  
   
   # hline_top(i = 4, border = fp_border(color = "black"), part = "body") %>%
   # border_inner_h(part = "body") %>%
@@ -365,17 +492,4 @@ as_flextable(burnt.toast,
   #       border.top = fp_border(color = "black"),
   #       part = "body") %>%               # adds horizontal lines below Phylum rows
   
-  width(j = 1, width = 55, unit = "mm") %>%
-  width(j = 2, width = 30, unit = "mm") # %>%
-  
-  set_caption(                                         # manual caption formatting to insert footnote numbering
-    caption = as_paragraph(                               # allows manual formatting in caption
-      as_i("Relative contribution, expressed as percent by weight (%W) and percent by number (%N), of different prey taxa found in the stomachs of Atlantic Cod ("),
-      "Gadus morhua",             # regular text
-      as_i(").")                  # italics
-    )) # %>%                       
-
-  ?duplicated
-  
-#  align(i = ~ !is.na(Order), align = "center")      # code from website that is interesting
-
+  #  align(i = ~ !is.na(Order), align = "center")      # code from website that is interesting

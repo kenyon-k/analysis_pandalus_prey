@@ -38,11 +38,18 @@
         # does not exclude 'NA's
         # filters by condition vs logical true-false arguments
 
+    # (replace_na) https://www.statology.org/dplyr-filter-keep-na/
+        # Check if I want to keep it
+
+
+
 
 ### Testing out regular expressions/regex for stringr()
 
     # str_view() shows you what your code highlights
         # I don't know where I found this. But it was useful
+
+
 
 ### Converting NA to 0
 
@@ -62,6 +69,31 @@
         # data setup for grouped table
         # flextable() for grouped table
 
+### Formatting Text
+
+    # (italic body text) https://ardata-fr.github.io/flextable-book/define-visual-properties.html
+        # flextable book
+        # details all of flextable
+
+
+### Remove Add-On Group Row Label
+
+    # (hide_grouplabel) https://stackoverflow.com/questions/71661066/is-there-a-function-in-flextable-to-group-a-few-rows-in-a-table-together-under-a
+
+
+### Duplicates Group Header Rows
+
+    # (use and index) https://stackoverflow.com/questions/50839185/identify-duplicates-in-a-list-ignoring-na-values-in-r#:~:text=I%20would%20like%20to%20identify%20whether%20there%20are%20duplicates%20in# UPDATE WORDING
+        # I ended up using this method to remove duplicate group header rows
+        # Before table formatting I created a pipeline that used this techniques to identify which rows to remove
+
+
+### Delete flextable rows
+
+    # (help page) https://davidgohel.github.io/flextable/reference/delete_rows.html
+
+
+
 
 ###########################    Tutorial ?   ###################################
 
@@ -69,6 +101,539 @@
 # From ............... channel website
 
 # brief description
+
+
+dat <- data.frame(
+  wool = c("A", "B"),
+  L = c(44.56, 28.22), 
+  M = c(24, 28.77), 
+  H = c(24.56, 18.78)
+)
+
+
+
+flextable(dat)  %>% 
+  style(i = 1, 
+        pr_t = fp_text_default(
+          italic = TRUE, 
+          color = "red")) %>% 
+  style(i = 2, j = 3:4, 
+        pr_t = fp_text_default(
+          shading.color = "yellow"),
+        pr_p = fp_par(
+          text.align = "center", padding = 1))
+
+?fp_par
+
+
+##################      Testing when to separate preds out       ###############
+
+names(apple)
+
+test <- apple  %>%     # manipulate 'apple' df and save to new Table 3a df 
+  
+  # Step 1: converts NAs within PreyWt to 0s   
+  
+  mutate(PreyWt = ifelse(is.na(PreyWt),          # if PreyWt is NA
+                         0,                      # replace it with a 0
+                         PreyWt))   %>%              # otherwise retain original value
+
+  
+  # Step X: split out by species
+  
+ # filter(pred.name == "Atlantic cod") %>%
+  
+  
+  # Step 2: Sum Prey Weight by scientific name (ScientificName_W)
+  
+  group_by(ScientificName_W, Order, Phylum, pred.name)# %>%               # group by the categories we will want to retain after summarize(). First in list is what summarize() works from
+#  summarize(taxa.weight = sum(PreyWt ~ pred.name), .groups = "keep") # %>%     # create new column (taxa.weight) that sums PreyWt by scientific name
+
+tb  <- aggregate(test$PreyWt, by = list(test$pred.name, test$ScientificName_W), FUN = sum)
+  colnames(tb) <- c('pred.name', 'ScientificName_W', 'taxa.weight')
+  
+  tb <- tb %>%
+    arrange(pred.name, ScientificName_W, by_group = TRUE) %>%
+  
+  # Step 3: Turn Weight into Percentage for Table
+  ungroup() %>%                                       # group by the categories I that will feed into the below mutate     
+  mutate(taxa.percent = (taxa.weight/sum(taxa.weight))*100)   # change 'prey.percent' column. OG values formatted into percentage per pred.name
+
+
+
+
+
+###########################    Tutorial ?   ###################################
+
+df <- structure(list(
+  type = c("glop glop", "glop glop" , "glop glop", "pas glop pas glop", "pas glop pas glop"), 
+  what = c("Group", "Age", "Residence", "Smoker", "Europe"), 
+  `1` = c(63, 25, 25, 15, 15), 
+  `2` = c(23, 53, 53, 74, 11),
+  `3` = c(85, 22, 43, 13, 15)
+), 
+row.names = c(NA, -5L), 
+class = c("data.frame"))
+
+dfg <- as_grouped_data(df, groups = "type") # %>% 
+  as_flextable() %>% 
+  add_footer_lines("Observed event") %>%
+  set_header_labels(what = "") %>%      # removing the header for column what
+  color(part = "footer", color = "#800000") %>%
+  bold( bold = TRUE, part="header") %>% 
+  align(i = ~ !is.na(type), align = "center") %>% 
+  bold(i = ~ !is.na(type))
+  
+  
+  
+##### trying with copilot
+  
+  gf <- data.frame(
+    Group1 = rep(c("A", "B"), each = 5),
+    Group2 = rep(c("X", "Y"), times = 5),
+    Value = rnorm(10)
+  ) 
+  
+  gf <- gf %>% group_by(Group1, Group2) # %>%
+    summarise(Value = mean(Value))
+
+  grouped_gf <- as_grouped_data(gf, groups = c("Group1", "Group2"))  
+  
+flextable(gf) %>%
+  merge_v(j = c("Group2")) # %>%
+  align(j = c("Group1", "Group2"), align = "left", part = "all")
+  
+as_flextable(grouped_gf) %>%
+  merge_v(j = c("Group1", "Group2"))
+  set_header_labels(Value = "Random Value") %>%
+  theme_vanilla()
+
+
+#### copilot attempt 2
+
+flextable(gf) %>%
+  merge_h_range(j1 = "Group1", j2 = "Group2") %>%
+  set_header_labels(Value = "Random Value") %>%
+  theme_vanilla()
+  
+
+#####
+flextable(gf) %>%
+  merge_v(j=c("Group1", "Group2")) %>%
+  align(j = c("Group1", "Group2"), align = "center", part = "all")
+
+#### more copilot
+
+df <- data.frame(
+  Group1 = rep(c("A", "B"), each = 5),
+  Group2 = rep(c("X", "Y"), times = 5),
+  Character = sample(letters, 10),
+  Numeric = rnorm(10)
+)
+
+df <- df %>% group_by(Group1, Group2)
+
+df_with_labels <- df %>%
+  mutate(Group1 = ifelse(duplicated(Group1), "", Group1),
+         Group2 = ifelse(duplicated(Group2), "", Group2))
+
+flextable(df_with_labels) %>%
+  merge_v(j = c("Group1", "Group2"))
+
+
+library(gt)
+
+df %>%
+  group_by(Group1, Group2) %>%
+  gt() %>%
+  row_group_order(groups = c("Group1", "Group2"))
+
+?groupname_col  
+
+?tab_row_group
+ 
+
+
+gtcars |>
+  dplyr::select(model, year, hp, trq) |>
+  dplyr::slice(1:8) |>
+  gt(rowname_col = "model") |>
+  tab_row_group(
+    label = "numbered",
+    rows = matches("^[0-9]")
+  )  |>
+  row_group_order(groups = c(NA, "numbered"))
+
+
+
+###### Copilot with GT
+
+df <- data.frame(
+  Group1 = rep(c("A", "B"), each = 5),
+  Group2 = rep(c("X", "Y"), times = 5),
+  CharacterVar = sample(letters, 10),
+  NumericVar = rnorm(10)
+)
+  
+df_grouped <- df %>%
+  group_by(Group1, Group2) %>%
+  summarise(
+    CharacterVar = paste(CharacterVar, collapse = ", "),
+    NumericVar = mean(NumericVar)
+  )
+
+df_grouped %>%  # so far this is the best structure....
+  gt() %>%
+  tab_header(
+    title = "Grouped Table Example",
+    subtitle = "With Character and Numeric Variables"
+  ) #  %>%
+  row_group_order(
+    groups = c("Group1", "Group2")
+  ) #%>%
+  row_group(
+    group = "Group1",
+    rows = Group1
+  ) %>%
+  row_group(
+    group = "Group2",
+    rows = Group2
+  )
+
+## Attempt 2
+
+df_grouped %>%
+  gt() %>%
+  tab_header(
+    title = "Grouped Table Example",
+    subtitle = "With Character and Numeric Variables"
+  ) %>%
+  tab_row_group(
+    label = "Group1",
+    rows = Group1 == "A"
+  ) %>%
+  tab_row_group(
+    label = "Group2",
+    rows = Group2 == "X"
+  )
+
+##
+
+df_grouped %>%
+  gt() %>%
+  tab_header(
+    title = "Grouped Table Example",
+    subtitle = "With Character and Numeric Variables"
+  ) %>%
+  cols_merge(
+    columns = vars(Group2, CharacterVar),
+    pattern = "{1}: {2}"
+  ) %>%
+  cols_label(
+    Group2 = "Group2 and CharacterVar"
+  )
+
+## More attempts
+
+
+d <- data.frame(
+  Group1 = rep(c("ANNELIDA", "ARTHROPODA", "FISHES"), each = 3),
+  Group2 = c("Polychaeta", "Crustacea", "Malacostraca", "Decapoda", "Amphipoda", "Themisto sp.", "Gadidae", "Benthosema glaciale", "Unidentified Fishes"),
+  CharacterVar = c("-", "-", "-", "0.1", "-", "<0.1", "17.1", "4.2", "2.8"),
+  NumericVar = c("-", "-", "-", "-", "-", "-", "19.4", "0.8", "1.4")
+)
+
+d %>%
+  gt() %>%
+  tab_header(
+    title = "Relative Contribution of Different Prey Taxa",
+    subtitle = "Expressed as Percent by Weight (%W) and Percent by Number (%N)"
+  ) %>%
+  tab_row_group(
+    label = "ANNELIDA",
+    rows = Group1 == "ANNELIDA"
+  ) %>%
+  tab_row_group(
+    label = "ARTHROPODA",
+    rows = Group1 == "ARTHROPODA"
+  ) %>%
+  tab_row_group(
+    label = "FISHES",
+    rows = Group1 == "FISHES"
+  ) %>%
+  cols_label(
+    Group2 = "Prey/Taxon",
+    CharacterVar = "Percent by Weight (%W)",
+    NumericVar = "Percent by Number (%N)"
+  ) %>%
+  fmt_missing(
+    columns = everything(),
+    missing_text = "-"
+  )
+
+# attempts continue
+
+d <- d %>%
+  mutate(DisplayGroup = ifelse(duplicated(Group1), Group2, Group1))
+
+d %>%
+  gt() %>%
+  tab_header(
+    title = "Relative Contribution of Different Prey Taxa",
+    subtitle = "Expressed as Percent by Weight (%W) and Percent by Number (%N)"
+  ) %>%
+  cols_label(
+    DisplayGroup = "Prey/Taxon",
+    CharacterVar = "Percent by Weight (%W)",
+    NumericVar = "Percent by Number (%N)"
+  ) %>%
+  fmt_missing(
+    columns = everything(),
+    missing_text = "-"
+  )# %>%
+  tab_style(
+    style = cell_text(weight = "bold"),
+    locations = cells_body(
+      columns = c(DisplayGroup),
+      rows = !duplicated(df$Group1)
+    )
+  )
+  
+### Trying flextable after giving the impage to copilot
+  
+  data <- data.frame(
+    Group1 = c("ANNELIDA", "", "ARTHROPODA", "", "", "", "", "", "", "", "", "", "PISCES", "", "", "", "UNIDENTIFIABLE MATERIAL"),
+    Group2 = c("", "none", "", "Crustacea", "Unidentifiable Crustacea", "Amphipoda", "Themisto sp.", "Decapoda", "Unidentifiable Decapoda", "Pandalus borealis", "Pandalus montagui", "Pandalus sp.", "", "Unidentifiable Pisces", "Unidentifiable Gadidae", "Benthosema glaciale", ""),
+    Character_Vector = c("", "Unidentifiable Polychaeta", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""),
+    Percent_by_Weight = c("", "0.2", "", "", "0.1", "", "< 0.1", "", "4.0", "68.9", "1.1", "17.1", "", "4.2", "2.8", "0.4", "1.2"),
+    Percent_by_Number = c("", "", "", "", "", "", "", "", "", "76.4", "1.4", "19.4", "", "", "1.4", "1.4", "")
+  )
+  
+  
+  ft <- flextable(data)
+  
+  ft <- compose(ft, j = "Group1", value = as_paragraph(
+    as_chunk("ANNELIDA", props = fp_text(bold = TRUE)),
+    as_chunk("", props = fp_text()),
+    as_chunk("ARTHROPODA", props = fp_text(bold = TRUE)),
+    as_chunk("", props = fp_text()),
+    as_chunk("", props = fp_text()),
+    as_chunk("", props = fp_text()),
+    as_chunk("", props = fp_text()),
+    as_chunk("", props = fp_text()),
+    as_chunk("", props = fp_text()),
+    as_chunk("", props = fp_text()),
+    as_chunk("", props = fp_text()),
+    as_chunk("", props = fp_text()),
+    as_chunk("PISCES", props = fp_text(bold = TRUE)),
+    as_chunk("", props = fp_text()),
+    as_chunk("", props = fp_text()),
+    as_chunk("", props = fp_text()),
+    as_chunk("UNIDENTIFIABLE MATERIAL", props = fp_text(bold = TRUE))
+  ))
+  
+  ft <- compose(ft, j = "Group2", value = as_paragraph(
+    as_chunk("", props = fp_text()),
+    as_chunk("none", props = fp_text(indent = 1)),
+    as_chunk("", props = fp_text()),
+    as_chunk("Crustacea", props = fp_text(indent = 1)),
+    as_chunk("Unidentifiable Crustacea", props = fp_text(indent = 2)),
+    as_chunk("Amphipoda", props = fp_text(indent = 2)),
+    as_chunk("Themisto sp.", props = fp_text(indent = 2)),
+    as_chunk("Decapoda", props = fp_text(indent = 1)),
+    as_chunk("Unidentifiable Decapoda", props = fp_text(indent = 2)),
+    as_chunk("Pandalus borealis", props = fp_text(indent = 2)),
+    as_chunk("Pandalus montagui", props = fp_text(indent = 2)),
+    as_chunk("Pandalus sp.", props = fp_text(indent = 2)),
+    as_chunk("", props = fp_text()),
+    as_chunk("Unidentifiable Pisces", props = fp_text(indent = 1)),
+    as_chunk("Unidentifiable Gadidae", props = fp_text(indent = 1)),
+    as_chunk("Benthosema glaciale", props = fp_text(indent = 1)),
+    as_chunk("", props = fp_text())
+  ))
+  
+
+  
+  
+  #################### tutorial selecting duplicate rows    ##################  
+  
+ ?distinct 
+  
+  df <- data.frame(
+    id = c(1, 2, 20, 3, 4, 40, 5),
+    value = c("apple", "banana", "apple", "cherry", "banana", "date", "apple")
+  )
+  
+  # Remove duplicates based on the 'value' column, keeping the first occurrence
+  df_unique <- df %>% distinct(value, .keep_all = TRUE)
+  
+  str(df)
+  
+  
+###################### tutorial 2 selecting duplicate rows ###################
+  
+https://stackoverflow.com/questions/50839185/identify-duplicates-in-a-list-ignoring-na-values-in-r#:~:text=I%20would%20like%20to%20identify%20whether%20there%20are%20duplicates%20in
+  
+
+  df <- data.frame(
+    Column1 = c(1,2,1,2),
+    Column2 = c(2,1,2,NA),
+    Column3 = c(NA,1,1,NA),
+    Column4 = c(NA,NA,2,1),
+    stringsAsFactors = FALSE
+  )
+
+  
+  df %>%
+    rowwise() %>%
+    mutate(dups = anyDuplicated(na.omit(c(Column1,Column2,Column3,Column4))))   %>%
+    ungroup()  %>%
+    mutate(index = row_number())  %>%
+    filter(dups > 0) # %>%
+    .$index
+  
+    burnt.toast %>%
+      ungroup() %>%
+      rowwise() %>%
+      mutate(dups = anyDuplicated(na.omit(c(Phylum, Order, ScientificName_W, taxa.weight)))) #  %>%
+    ungroup()  %>%
+      mutate(index = row_number())  %>%
+      filter(dups > 0)  %>%
+      .$index
+    
+    
+burnt.toast %>%
+  
+
+    ?rowwise    
+    
+?anyDuplicated
+anyDuplicated(jam.toast$Phylum)
+  
+jam.toast <- as_grouped_data(burnt.toast, groups = c("Phylum", "Order"))
+
+### Below identifies duplicate rows I want deleted with a TRUE
+duplicated(jam.toast$Phylum, incomparables = NA)
+
+butter <- jam.toast %>%
+  mutate(dups = duplicated(Phylum, incomparables = NA)) %>%
+  mutate(test = ifelse(dups == TRUE,
+         "1",
+         "0")) %>%
+  mutate(index = row_number()) %>%
+  filter(test == "1") %>%
+  .$index
+
+#####################   Testing arrange and group by shenanagins
+
+cone   # final clean version after data processing. It's ready for final flextable formats
+
+# first step would be sorting the columns alphebetically
+cone <- cone %>%
+  arrange(Phylum, Order, by_group = TRUE)
+
+# assigning which rows that I will want to delete within the table
+acorn <- as_grouped_data(cone, groups = c("Phylum", "Order")) # this data structure matches what flextable will produce naturally
+
+nut <- acorn %>%
+  mutate(dups = duplicated(Phylum, incomparables = NA)) %>%
+  # mutate(test = ifelse(dups == TRUE,
+  #                      "1",
+  #                      "0")) %>%
+  mutate(index = row_number()) %>%
+  filter(dups == TRUE) %>%
+  .$index
+
+str_detect(cone$Phylum, pattern = 'A')
+
+as_flextable(cone,
+             hide_grouplabel = TRUE) %>%              # removes labels flextables adds onto each group (keeps group name as is within dataset)
+  
+  set_header_labels(ScientificName_W = "Prey/Taxon",
+                    taxa.weight = "Percent by Weight (%W)") %>% 
+  delete_rows(i = nut, part = 'body') %>%
+  delete_rows(i = ~ str_detect(Order, pattern = 'A')) %>%
+  
+
+bg(bg = "lightgray", part = "header") %>%               # defines header colour
+  bold(bold = TRUE, part = "header") %>%              # header text bold
+  
+  bold(i = ~ !is.na(Phylum), j = 1) %>%                      # phylum text is bold
+  bold(i = ~ !is.na(Order), j = 1) %>%                       # Order text is bold
+  style(i = ~ str_detect(ScientificName_W,                 # making only scientific names italic by:
+                         pattern = 'Unidentifiable',       # string to search for is 'Unidentifiable'
+                         negate = TRUE),                   # select any row that DOES NOT contain 'Unidentifiable'
+        j = 1,
+        pr_t = fp_text_default(italic=TRUE)) %>%                          # make them italic
+  
+  style(i = ~ !is.na(ScientificName_W),                       # Scientific Names in 1st column
+        j = 1,                                                # first column only
+        pr_p = fp_par(text.align = "left", padding.left = 15)) %>%    # add padding to left of selected text
+  
+  
+  border(i = ~!is.na(Phylum),                                 # horizontal border per Phylum
+         border.top = fp_border(color = "black"),             # placing the border on top of the row
+         part = "body") %>%                                   # within the body of the table
+  
+  
+  width(j = 1, width = 55, unit = "mm") %>%
+  width(j = 2, width = 30, unit = "mm") # %>%
+
+
+
+########################
+
+
+burnt.toast %>%
+  ungroup() %>%
+  rowwise() %>%
+  mutate(dups = anyDuplicated(na.omit(c(Phylum, Order, ScientificName_W, taxa.weight)))) #  %>%
+ungroup()  %>%
+  mutate(index = row_number())  %>%
+  filter(dups > 0)  %>%
+  .$index
+### 
+
+burnt.toast %>%
+  mutate(dups = ifelse())
+
+##
+mutate(prey.name = ifelse(Prey_OS_ID == 8111,         # create new column 'prey.name' with values based on logical check
+                          "borealis",                        # value if logical check is TRUE
+                          ifelse(Prey_OS_ID == 8112,          # if logical check is FALSE, begin second logical test
+                                 "montagui",                  # value if second logical test is TRUE
+                                 ifelse(Prey_OS_ID == 8110,   # if second logical test is FALSE, being third logical test
+                                        "Pandalus",           # value if third logical test is TRUE
+                                        "other") 
+
+
+##### filter without replacing NA
+
+df <- data.frame(team=c('A', NA, 'A', 'B', NA, 'C', 'C', 'C'),
+                 points=c(18, 13, 19, 14, 24, 21, 20, 28),
+                 assists=c(5, 7, 17, 9, 12, 9, 5, 12))
+
+df %>% filter((team != 'A') %>% replace_na(TRUE))
+                                
+#################### Code SAving for Quick Clean to send to Dan #############
+  
+  ### Creating Table 3A Specific Dataframe
+  
+  # colSums(is.na(apple))
+  # colSums(is.na(prey))
+  # 
+  # apple %>%
+  #   replace(is.na())
+  
+  
+  #####
+  # names(apple)
+  # 
+  # table(apple$pred.name, useNA = 'always')
+  
+  t3a <- apple  %>%     # manipulate 'apple' df and save to new Table 3a df 
+    
+    # Step 1: converts NAs within PreyWt to 0s 
 
 ################################################################################
 #                   Unused Code - Filter() - Retaining NA's
