@@ -254,7 +254,7 @@ cone <- cone %>%
 
 # replacing NAs in Order with 'none'
 cone$Order <- cone$Order %>%
-  replace_na('A')
+  replace_na('AAA')
 
 
 cone <- cone %>%
@@ -274,83 +274,107 @@ nut <- acorn %>%
   filter(dups == TRUE) %>%
   .$index
 
+# Removes empty phylum row of Unidentifiable Material.
+    # We are formatting ScientificName_W -> 'Unidentifiable Material' to look like it is a phylum inside the table, while still displaying %W and %N within the same row
+acorn <- acorn[rowSums(is.na(acorn)) != ncol(acorn), ]   # removes row only if the entire row consists of 'NA'
+
 # this works to select appropriate rows, but does not work if there is only ONE Phylum.
 # Will need to adjust for that
+
 chip <- acorn %>%
-  mutate(dups = duplicated(Phylum, incomparables = NA)) %>%          
-  mutate(index = (row_number())) %>%               # will be able to remove in the future. Was handy to ensure correct rows are being removed
+  mutate(dups = duplicated(Phylum, incomparables = NA))  %>%          
+  mutate(index = (row_number()))  %>%               # will be able to remove in the future. Was handy to ensure correct rows are being removed
   slice(-c(nut))  %>%                              # removes rows that are duplicate Phylums
-  filter((Order != 'A') %>% replace_na(TRUE)) %>%  # removes rows that have 'blank' Orders
+  filter((Order != 'AAA') %>% replace_na(TRUE))  %>%  # removes rows that have 'blank' Orders
   mutate(index.final = (row_number()-1))  %>%       # adds row numbers now that data structure matches final table structure. -1 will force the row to be the one above the phylum
 # enter a code that replaces index.final = 0 with the last row number (look at fish.length separation for ideas)
   mutate(index.final = ifelse(index.final == 0,         # if index.final == 0
                               max(index.final+1),               # replace it with the highest value in index (should be the last row number)
-                              index.final)) %>%            # otherwise keep values as they are
+                              index.final))   %>%            # otherwise keep values as they are
   # then if there is only one Phylum, the line will be placed at the bottom which is fine.
   # And the bottom row should never be a Phylum, so it should add a duplicate value which may or may not mess with things
   
   # switch below code so that it removes rows where Phylum = NAs
   
-  #### Placement of below is where I think the problem is!!!!!!!
-    filter((Phylum != 'A')) %>%                     # remove rows where Phylum = NAs             
+  filter(Phylum != 'AAA') %>%
   .$index.final                                    # gives final values
 
+### Adding line above Unidentifiable Material
 
-    
-
-################ flextable time
-
-
-as_flextable(acorn,
-             hide_grouplabel = TRUE) %>%              # removes labels flextables adds onto each group (keeps group name as is within dataset)
+pizza <- acorn %>%
+  mutate(dups = duplicated(Phylum, incomparables = NA))  %>%          
+  mutate(index = (row_number()))  %>%               # will be able to remove in the future. Was handy to ensure correct rows are being removed
+  slice(-c(nut))  %>%                              # removes rows that are duplicate Phylums
+  filter((Order != 'AAA') %>% replace_na(TRUE)) %>%
+  mutate(index.final = ifelse(ScientificName_W == "UNIDENTIFIABLE MATERIAL",
+                              row_number()-1,
+                              row_number())) %>%
+  top_n(1, index.final) %>%
+  distinct(index.final) %>%
+  .$index.final
   
-  set_header_labels(ScientificName_W = "Prey/Taxon",
+
+
+##########################      Building the Table      ########################
+
+### Creating the table
+
+as_flextable(acorn,                                   # dataframe we are using
+             hide_grouplabel = TRUE) %>%              # flextable auto-adds additional labels to group heading rows. This turns that off
+
+## Formatting the header    
+  set_header_labels(ScientificName_W = "Prey/Taxon",         # rename column titles
                      taxa.weight = "Percent by Weight (%W)")  %>% 
+  
+  bg(bg = "lightgray", part = "header") %>%                   # defines header colour
+  bold(bold = TRUE, part = "header") %>%                      # header text bold
 
-  delete_rows(i = nut, part = 'body')  %>%
-  delete_rows(i = ~ str_detect(Order, pattern = 'A')) %>%
+## Removing duplicate or empty group and subgroup heading rows  
+  delete_rows(i = nut, part = 'body')  %>%                     # removes duplicate Phylum rows. Function is above table
+  delete_rows(i = ~ str_detect(Order, pattern = 'AAA')) %>%    # removes empty Order rows. In earlier code, these rows were filled with 'AAA' so that they would first order when sorted alphabetically. This way they will always be directly below the Phylum group header. 
 
-
-
-  bg(bg = "lightgray", part = "header") %>%               # defines header colour
-  bold(bold = TRUE, part = "header") %>%              # header text bold
-
+## Formatting table text
   bold(i = ~ !is.na(Phylum), j = 1) %>%                      # phylum text is bold
   bold(i = ~ !is.na(Order), j = 1) %>%                       # Order text is bold
-  style(i = ~ str_detect(ScientificName_W,                 # making only scientific names italic by:
-                         pattern = 'Unidentifiable',       # string to search for is 'Unidentifiable'
-                         negate = TRUE),                   # select any row that DOES NOT contain 'Unidentifiable'
-        j = 1,
-        pr_t = fp_text_default(italic=TRUE))  %>%                          # make them italic
+  bold(i = ~str_detect(ScientificName_W,                      # bold 'Unidentifiable material'
+                       pattern = "UNIDENTIFIABLE MATERIAL"),
+       j = 1) %>%
+  align(j = 2, align = "center", part = "body")   %>%        # centering %W and %N columns
+    
+    # making scientific names italic
+  style(i = ~ str_detect(ScientificName_W,                            # in ScientificName_W              
+                         pattern = 'Unidentifiable',                  # find the text pattern 'Unidentifiable'
+                         negate = TRUE),                              # select any row that DOES NOT contain 'Unidentifiable'
+        j = 1,                                                        # formatting changes only apply to the column 1
+        pr_t = fp_text_default(italic=TRUE))  %>%                     # make text italic
   
-  style(i = ~ str_detect(ScientificName_W,
-                         pattern = "UNIDENTIFIABLE MATERIAL",
-                         negate = TRUE),
-        j = 1,
+    # making Unidentifiable material non-italic  
+  style(i = ~ str_detect(ScientificName_W,                            # in ScientificName_W              
+                         pattern = "UNIDENTIFIABLE MATERIAL"),        # find and select the text pattern 'UNIDENTIFIABLE MATERIAL'
+        j = 1,                                                        # formatting changes only applies for column 1
+        pr_t = fp_text_default(italic=FALSE)) %>%                     # make text not italic
+  
+    # Indenting all scientific names other than 'unidentifiable material'
+  style(i = ~ str_detect(ScientificName_W,                            # in ScientificName_W
+                         pattern = "UNIDENTIFIABLE MATERIAL",         # find the text pattern 'UNIDENTIFIABLE MATERIAL'
+                         negate = TRUE),                              # select everything else
+        j = 1,                                                        # formatting changes only applies for column 1
         pr_p = fp_par(text.align = "left", padding.left = 15)) %>%    # add padding to left of selected text
 
-  # style(i = ~ !is.na(ScientificName_W),                       # Scientific Names in 1st column
-  #       j = 1,                                                # first column only
-  #       pr_p = fp_par(text.align = "left", padding.left = 15)) %>%    # add padding to left of selected text
+## Adding horizontal lines to the table body
+   hline(i = chip, part = "body")  %>%                       # inserts border line above Phylum. Function code is above the table
+   hline(i = pizza, part = "body") %>%                       # inserts border line above Unidentifiable Material if it is present. If Unidentifiable material is not present, a line is added at the bottom of the table. Function code is above the table
+  hline_bottom(border = fp_border(color = "dimgray", width = 1.5), part = "body") %>%  # adds a border to the bottom of the table. Formula to add lines above phylum overrides the normal bottom border. This was my solution to that issue.
 
-  align(j = 2, align = "center", part = "body")   %>%
+## Setting column widths
+  width(j = 1, width = 65, unit = "mm") %>%                  # sets width of column 1. All scientific names should fit on 1 line
+  width(j = 2, width = 30, unit = "mm") %>%                  # sets width of column 2.
 
- # hline(i = chip, part = "body") # %>%                       # inserts border line above Phylum
-  hline_bottom(border = fp_border(color = "dimgray", width = 1.5), part = "body") %>%
-
-
- # border(i = ~!is.na(Phylum),                                 # horizontal border per Phylum
- #         border.top = fp_border(color = "black"),             # placing the border on top of the row
- #         part = "body") %>%                                   # within the body of the table
-
-  width(j = 1, width = 55, unit = "mm") %>%
-  width(j = 2, width = 30, unit = "mm") %>%
-
-  set_caption(                                         # manual caption formatting to insert footnote numbering
-    caption = as_paragraph(                               # allows manual formatting in caption
-      as_i("Relative contribution, expressed as percent by weight (%W) and percent by number (%N), of different prey taxa found in the stomachs of Atlantic Cod ("),
-      "Gadus morhua",             # regular text
-      as_i(").")                  # italics
+## adding a caption compatible with Markdown
+  set_caption(caption = as_paragraph(                       # allows manual formatting in caption. Whatever spacing is included within "" is what will occure in the caption. So "text " vs "text" matters.
+    as_i("Relative contribution, expressed as percent by weight (%W) and percent by number (%N), of different prey taxa found in the stomachs of Atlantic Cod ("),
+    "Gadus morhua",                                   # regular text
+    as_i(").")                                        # as_i() = italics
     ))
 
   

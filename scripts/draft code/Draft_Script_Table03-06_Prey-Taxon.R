@@ -58,6 +58,16 @@
         # NA to 0 for particular column
 
 
+### Removing rows that are entirely NA
+
+    # https://statisticsglobe.com/remove-empty-rows-of-data-frame-in-r
+
+
+### Subsetting the row(s) with the highest value
+
+    # (top_n) https://stackoverflow.com/questions/24558328/select-the-row-with-the-maximum-value-in-each-group
+
+
 ################################################################################
 #                        Table Formatting - flextable package
 ################################################################################
@@ -634,6 +644,19 @@ df %>% filter((team != 'A') %>% replace_na(TRUE))
   t3a <- apple  %>%     # manipulate 'apple' df and save to new Table 3a df 
     
     # Step 1: converts NAs within PreyWt to 0s 
+  
+  
+################################################################################
+#                    Unused Code - Flextable()
+################################################################################
+
+# this code worked PERFECTLY for adding a horizontal line to the bottom of a row
+# HOWEVER markdown hates it.
+# knitting of the Word doc was halted
+
+border(i = ~!is.na(Phylum),                                 # horizontal border per Phylum
+        border.top = fp_border(color = "black"),             # placing the border on top of the row
+        part = "body") %>%                                   # within the body of the table
 
 ################################################################################
 #                   Unused Code - Filter() - Retaining NA's
