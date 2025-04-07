@@ -8,6 +8,7 @@
 # Author: Krista Kenyon (KAK)
 # Date Created: Aug 19/2024
 # Date Last Modified: Sep 3/2024 by DTE
+# Date Last Modified: April 7/2025 by KAK
 
 
 # Document Purpose: Creating Figure 8 for R Markdown document.
@@ -129,23 +130,41 @@ write.csv(fish.pandalus,
 
 ### Creating Fig 8A Base Dataframe
 
+?filter
+
+# fish.p.weight %>% filter(PreyWt_noNA == 0) %>% nrow() #268 rows with 0s
+# 
+# str(fish.p.weight) # 1235 rows. After removing NA and 0s there are 967 rows
+# 
+# 1235-268
+
 fish.p.weight <- fish.pandalus %>%   # manipulate 'fish.pandalus' df and save to Fig 8A df
   
-# Step 3: turn NAs into 0
-  mutate(PreyWt_noNA = replace_na(PreyWt, replace = 0)) |> 
-  #subset(!is.na(PreyWt))  %>%        # removes rows where PreyWt is NA    
-  
+# Step 3: Remove rows where weight is 0 or NA
+  mutate(PreyWt_noNA = replace_na(PreyWt, replace = 0))  %>%  # creates new column where NA's have been replaced with 0's
+  filter(PreyWt_noNA != 0)                          # removes all rows where PreWt_noNA = 0. If these rows are retained, then the figure will produce warnings (from omitting them) that are included in the Markdown output. AND if weight for samples within a length range are 0, then the Figure retains a column for that length-range but presents no data
+ # subset(!is.na(PreyWt)) # %>%        # removes rows where PreyWt is NA    
+ 
+
+# add unidentifiable prey to the 'other' category
+
+fish.p.weight$prey.name[fish.p.weight$prey.name == "Unknown" | fish.p.weight$prey.name == "Unidentified material"] = "other" 
   
 # Step 4: Sum Prey Weight by Prey Category (prey.name) per Predator length (length.range) 
   
   group_by(length.range, prey.name, pred.name) %>%                  # group by the categories we will want to retain after summarize()
 #  summarize(shrimp.weight = sum(PreyWt), .groups = "keep") %>%     # create new column (prey.percent) that sums PreyWt by prey.name per pred.name
-  summarize(shrimp.weight = sum(PreyWt_noNA), .groups = "keep") %>%      # set up to replace NAs with 0
+  summarize(shrimp.weight = sum(PreyWt_noNA), .groups = "keep") #%>%      # set up to replace NAs with 0
+
+
   
+    
  # Step 5: Turn Weight into Percentage for Figure 
   group_by(length.range, pred.name) %>%                                       # group by the categories I that will feed into the below mutate     
   mutate(shrimp.weight.p = (shrimp.weight/sum(shrimp.weight))*100)        # change 'prey.percent' column. OG values formatted into percentage per pred.name
   
+
+is.na(fish.p.weight)
 
 ### Saving the fish.p.weight dataframe structure
 
@@ -164,6 +183,15 @@ write.csv(fish.p.weight,
 
 ### Creating Fig 8B Base Dataframe
 
+# checking everything is removed properly
+#  fish.p.count %>% filter(Prey_Count_noNA == 0) %>% nrow() #775 rows with 0s
+# # 
+#  str(fish.p.count) # 1092 rows. After removing NA and 0s there are 317 rows
+# # 
+#  1092-775
+
+
+
 fish.p.count <- fish.pandalus %>%   # manipulate 'fish.pandalus' df and save to Fig 8A df
   
   # Step 1: Remove rows with Unidentified Material
@@ -171,9 +199,11 @@ fish.p.count <- fish.pandalus %>%   # manipulate 'fish.pandalus' df and save to 
     prey.name != "Unidentified material",   #OS_ID 9980
     prey.name != "Unknown")  %>%            # unknown sp. of any type
   
-  #subset(!is.na(Prey_Count))  %>%        # removes rows were Prey_Count is NA    
-  # Step 3: turn NAs into 0
-  mutate(Prey_Count_noNA = replace_na(Prey_Count, replace = 0)) |> 
+  #subset(!is.na(Prey_Count))  %>%        # removes rows were Prey_Count is NA 
+  
+  # Step 3: Remove rows where weight is 0 or NA
+  mutate(Prey_Count_noNA = replace_na(Prey_Count, replace = 0))  %>%  # creates new column where NA's have been replaced with 0's
+  filter(Prey_Count_noNA != 0)                                 # removes all rows where Prey_Count_noNA = 0. If these rows are retained, then the figure will produce warnings (from omitting them) that are included in the Markdown output. AND if count for samples within a length range are 0, then the Figure retains a column for that length-range but presents no data
   
   # Step 4: Sum Prey Weight by Prey Category (prey.name) per Predator length (length.range) 
   
@@ -233,8 +263,6 @@ fish_weight_fig <- fish.p.weight %>%
 
 fish_weight_fig$length.range = factor(fish_weight_fig$length.range, levels = c("6-10", "11-15", "16-20", "21-25", "26-30", "31-35", "36-40", "41-45", "46-50", 
                                                                  "51-55", "56-60", "61-65", "66-70", "71-75", "76-80", "81-85"))
-
-fish_weight_fig$prey.name[fish_weight_fig$prey.name == "Unknown" | fish_weight_fig$prey.name == "Unidentified material"] = "other"
 
 
 f8a <- ggplot(fish_weight_fig, aes(x = length.range, y = shrimp.weight.p, 
