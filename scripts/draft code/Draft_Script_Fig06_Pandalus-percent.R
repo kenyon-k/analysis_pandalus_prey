@@ -28,6 +28,37 @@
 ################################################################################
 
 
+### Filter Function in dplyr package to remove rows
+
+  # (filter multiple variables)  https://www.statology.org/dplyr-filter-multiple-conditions/
+      # I originally tried to use this method and at first it worked. But then it stopped working.
+          # e.g.    filter(Prey_OS_ID != 9998 | 
+                        #   Prey_OS_ID != 9981 |
+                        #   Prey_OS_ID != 9982 )   # etc               
+      # I switched to including the %in% operator within the filter function 
+          # e.g.  filter(!(Prey_OS_ID %in% c('9998','9981','9982'))  
+
+
+  # (%in% operator) https://stackoverflow.com/questions/25647470/filter-multiple-values-on-a-string-column-in-dplyr
+      # gave me the idea to use the %in% operator within the filter function
+
+
+  # (%in% operator) https://www.statology.org/in-operator-in-r/
+      # provides examples
+
+
+### ifelse options
+
+# Originally for the 'Unidentified Material' section I was going ot include a line that specified the Unknown A, B, C, D etc Prey_OS_ID.
+      # e.g.    ifelse(Prey_OS_ID == 10746 | Prey_OS_ID == 10747 | Prey_OS_ID == 10748 | Prey_OS_ID == 10749 | Prey_OS_ID == 10750,  etc
+
+# But then I wondered, what if more were added? So I decided to select for 'unknown' instead:
+      # e.g.    ifelse(grepl("unknown", CommonName_DB),
+
+# It turns out that one student processing the stomachs had a few constant unknowns. So she gave them a specific Unknown 'letter' label and then would keep one sample for later assistance with identificaiton
+
+
+
 ### Designing Grouped and Stacked Table
 
     # (inspiration) https://statisticsglobe.com/draw-stacked-bars-within-grouped-barplot-r
