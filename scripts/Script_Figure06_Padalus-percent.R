@@ -154,6 +154,7 @@
 
 # Figure 6 Base Dataframe is called pandalus.percent
     # Each row represents one prey item with corresponding prey categories, weight, count, and predator the sample is from
+    # Fig 8-11 will also use this base df
 
 # below code is one pipeline that is 'broken up' with annotation notes
 
@@ -167,8 +168,6 @@ pandalus.percent <- prey %>%             # manipulate 'prey' df and save to new 
 # Step 1: Subset Fig 6 Base df to desired columns  
   
   select(Prey_OS_ID,                     # subsets dataframe by selected columns
-        # Scientific.Name,
-        Prey_Detail_Code,
          CommonName_DB,
          pred.name,
          PreyWt,
@@ -177,27 +176,29 @@ pandalus.percent <- prey %>%             # manipulate 'prey' df and save to new 
 
    
 # Step 2: remove rows with 'empty stomachs'. Leave unidentified items in for now. 
+      # filter is in individual rows because the 'or' function would randomly not work
+
+  filter((!Prey_OS_ID %in%             # selects rows that do not (!) contain the following 'in' them
+             c('9998',                     # empty,
+               '9981',                     # sand
+               '9982',                     # stone
+               '9983',                     # shells
+               '10757',                    # mud
+               '9987')))  %>%               # plant material
   
-  filter(                           # selects rows that do not (!=) contain:
-    Prey_OS_ID != 9998 |                # empty, or (|)
-    Prey_OS_ID != 9981 |                # sand
-    Prey_OS_ID != 9982 |                # stone
-    Prey_OS_ID != 9983 |                # shells
-    Prey_OS_ID != 10757 |               # mud
-    Prey_OS_ID != 9987) %>%              # plant material
   
-  # Step 3: remove rows with 'parasitic' stomach contents
-  filter(!Prey_Detail_Code %in%     # selects rows that do not (!) contain the following 'in' them
-           c('40'))  %>%                  # parasites
+# Step 3: remove rows with 'parasitic' stomach contents
+  filter(!Prey_OS_ID %in% c('2585')) %>% # selects rows that do not (!) contain nematodes (Prey_OS_ID = 2585)
   
-# Step 3: create new column where Prey_OS_ID's are redefined to the 4 prey categories (Fig 6 fill)
+  
+# Step 4: create new column with 4 prey categories for Fig 6, 8-11 %N (count) panels: 
 
     # shrimp P. borealis        (OS_ID code = 8111)
     # shrimp P. montagui        (OS_ID code = 8112)
     # shrimp Pandalus. sp.      (OS_ID code = 8110)
     # other (i.e. everything not Pandalus)
 
-  mutate(prey.name = ifelse(Prey_OS_ID == 8111,         # create new column 'prey.name' with values based on logical check
+  mutate(N.prey.group = ifelse(Prey_OS_ID == 8111,         # create new column 'prey.name' with values based on logical check
                      "borealis",                        # value if logical check is TRUE
                     ifelse(Prey_OS_ID == 8112,          # if logical check is FALSE, begin second logical test
                            "montagui",                  # value if second logical test is TRUE
@@ -206,17 +207,24 @@ pandalus.percent <- prey %>%             # manipulate 'prey' df and save to new 
                                   ifelse(Prey_OS_ID == 9980,
                                          "Unidentified material",
                                          ifelse(grepl("unknown", CommonName_DB),  #check for unknown values, can incorporate anything with "unknown" in common name
-                                         #ifelse(Prey_OS_ID == 10746 | Prey_OS_ID == 10747 | Prey_OS_ID == 10748 | Prey_OS_ID == 10749 | Prey_OS_ID == 10750,
-                                  "Unknown",            # value if fourth logical test is TRUE
+                                  "Unidentified material",            # value if fourth logical test is TRUE
                                   "other")              # value if fourth logical test is FALSE
                     ))))) %>%
   
-# Step 4: Create new column to force 'other' prey category into solo column in Figure
+# Step 5: Create new column with 3 prey categories for Fig 6, 8-11 %W (weight) panels:
   
-  mutate(other.prey =                           # creating a new column called 'other.prey'
-           prey.name == "other" | prey.name == "Unknown" | prey.name == "Unidentified material") %>%            # fill column with TRUE/FALSE on whether corresponding prey.name row is 'other'
+  mutate(W.prey.group = N.prey.group,                                       # creates a duplicate column for weight prey categories
+         W.prey.group = ifelse(W.prey.group == "Unidentified material",    # if the variable within the new column matches "Unidentified material"
+                                    "other",                                       # change it to "other"
+                                    W.prey.group)) %>%                         # otherwise leave it as is
+  
+  
+# Step 6: Create new column to format Fig 6 with adjacent bars for 'shrimp' and 'other'. 
 
-  mutate(other.prey = ifelse(other.prey == FALSE, # making changes to 'other.prey'
+  mutate(other.shrimp =                           # creating a new column called 'other.prey'
+           N.prey.group == "other" | N.prey.group == "Unidentified material") %>%            # fill column with TRUE/FALSE on whether corresponding prey.name row is 'other'
+
+  mutate(other.shrimp = ifelse(other.shrimp == FALSE, # making changes to 'other.prey'
                                                   # if 'other.prey' values is FALSE
                              "Shrimp",            # enter 'Shrimp'
                              "other"))            # otherwise enter 'other'
@@ -224,17 +232,19 @@ pandalus.percent <- prey %>%             # manipulate 'prey' df and save to new 
 
 ### Saving the pandalus.percent dataframe structure
 
- str(pandalus.percent) 
+#str(pandalus.percent) 
 
-# 'data.frame':	1236 obs. of  7 variables:
-#   
-# $ Prey_OS_ID  : int  6967 9998 6967 6967 6967 6967 8020 8020 4950 8530 ...
-# $ pred.name   : chr  "Greenland halibut" "Greenland halibut" "Greenland halibut" "Greenland halibut" ...
-# $ PreyWt      : num  0.3 NA 0.286 0.091 0.079 ...
-# $ Prey_Count  : int  NA NA NA NA NA NA NA NA NA NA ...
-# $ length.range: chr  "21-25" "16-20" "16-20" "16-20" ...
-# $ prey.name   : chr  "other" "other" "other" "other" ...
-# $ other.prey  : chr  "other" "other" "other" "other" ...
+# 'data.frame':	1047 obs. of  10 variables:
+# 
+# $ Prey_OS_ID      : int  6967 6967 6967 6967 6967 8020 8020 4950 8530 8290 ...
+# $ CommonName_DB   : chr  "HYPERID AMPHIPOD" "HYPERID AMPHIPOD" "HYPERID AMPHIPOD" "HYPERID AMPHIPOD" ...
+# $ pred.name       : chr  "Greenland halibut" "Greenland halibut" "Greenland halibut" "Greenland halibut" ...
+# $ PreyWt          : num  0.3 0.286 0.091 0.079 0.076 ...
+# $ Prey_Count      : int  NA NA NA NA NA NA NA NA NA NA ...
+# $ length.range    : chr  "21-25" "16-20" "16-20" "16-20" ...
+# $ N.prey.group : chr  "other" "other" "other" "other" ...
+# $ W.prey.group: chr  "other" "other" "other" "other" ...
+# $ other.shrimp      : chr  "other" "other" "other" "other" ...
 
 
 
@@ -259,33 +269,34 @@ write.csv(pandalus.percent,
 pandalus.f6a <- pandalus.percent  %>%     # manipulate 'prandalus.percent' df and save to new Fig 6a df 
   
   
-# Step 1: removes rows where PreyWt is NA  
-
-  subset(!is.na(PreyWt)) %>%        # removes rows were PreyWt is NA    
-
+# Step 1: Remove rows where weight is NA or 0
   
+  subset(!is.na(PreyWt)) %>%        # removes rows were PreyWt is NA    
+  filter(PreyWt != 0) %>%           # removes all rows where PreyWt = 0. In case one year all prey weight for one category is 0. If that happens warnings will be written into the Markdown document and a blank column will be included in the figure
+  
+
 # Step 2: Sum Prey Weight by Prey Category (prey.name) per Predator Category (pred.name) 
   
-  group_by(pred.name, prey.name, other.prey) %>%                  # group by the categories we will want to retain after summarize()
-  summarize(prey.percent = sum(PreyWt), .groups = "keep") %>%     # create new column (prey.percent) that sums PreyWt by prey.name per pred.name
+  group_by(pred.name, W.prey.group, other.shrimp) %>%                  # group by the categories we will want to retain after summarize()
+  summarize(Weight.percent = sum(PreyWt), .groups = "keep") %>%        # create new column (Weight.percent) that sums PreyWt by W.prey.group per pred.name
  
   
 # Step 3: Turn Weight into Percentage for Figure 
-  group_by(pred.name) %>%                                       # group by the categories I that will feed into the below mutate     
-  mutate(prey.percent = (prey.percent/sum(prey.percent))*100)   # change 'prey.percent' column. OG values formatted into percentage per pred.name
+  
+  group_by(pred.name) %>%                                             # group by the categories I that will feed into the below mutate     
+  mutate(Weight.percent = (Weight.percent/sum(Weight.percent))*100)   # change 'Weight.percent' column. OG values formatted into percentage per pred.name
 
 
-pandalus.f6a$prey.name[pandalus.f6a$prey.name == "Unknown" | pandalus.f6a$prey.name == "Unidentified material"] = "other"
 ### Saving the Figure 6a dataframe structure
 
-# str(pandalus.f6a) 
+#str(pandalus.f6a) 
 
 # gropd_df [14 × 4] (S3: grouped_df/tbl_df/tbl/data.frame)
-
-# $ pred.name   : chr [1:14] "Atlantic cod" "Atlantic cod" "Atlantic cod" "Greenland halibut" ...
-# $ prey.name   : chr [1:14] "Pandalus" "borealis" "other" "Pandalus" ...
-# $ other.prey  : chr [1:14] "Shrimp" "Shrimp" "other" "Shrimp" ...
-# $ prey.percent: num [1:14] 29.73 64.52 5.75 2.07 10.99 ...
+# 
+# $ pred.name       : chr [1:14] "Atlantic cod" "Atlantic cod" "Atlantic cod" "Greenland halibut" ...
+# $ W.prey.group: chr [1:14] "Pandalus" "borealis" "other" "Pandalus" ...
+# $ other.shrimp    : chr [1:14] "Shrimp" "Shrimp" "other" "Shrimp" ...
+# $ Weight.percent  : num [1:14] 29.73 64.52 5.75 2.07 10.99 ...
 # - attr(*, "groups")= tibble [4 × 2] (S3: tbl_df/tbl/data.frame)
 # ..$ pred.name: chr [1:4] "Atlantic cod" "Greenland halibut" "Redfish" "Skate"
 # ..$ .rows    : list<int> [1:4] 
@@ -321,22 +332,22 @@ pandalus.f6b <- pandalus.percent %>%   # manipulate 'prandalus.percent' df and s
 
 
 # Step 1: Remove rows with Unidentified Material
-  filter(                           # selects rows that do not contain:
-    prey.name != "Unidentified material",   #OS_ID 9980
-    prey.name != "Unknown")  %>%            # unknown sp. of any type
+  filter(N.prey.group != "Unidentified material") %>%   # selects rows that do not contain unknowns or unidentified material
   
-# Step 2: removes rows where Prey_Count is NA  
+  
+# Step 2: Remove rows where weight is NA or 0 
   subset(!is.na(Prey_Count)) %>%        # removes rows where Prey_Count is NA
-
+  filter(Prey_Count != 0) %>%           # removes all rows where Prey_Count = 0. In case one year all prey weight for one category is 0. If that happens warnings will be written into the Markdown document and a blank column will be included in the figure
+  
   
 # Step 3: Sum Prey Count by Prey Category (prey.name) per Predator Category (pred.name) 
-  group_by(pred.name, prey.name, other.prey) %>%                         # group by the categories we will want to retain after summarize()
-  summarize(prey.count.percent = sum(Prey_Count), .groups = "keep") %>%  # create new column (prey.count.percent) that sums Prey_Count by prey.name per pred.name
+  group_by(pred.name, N.prey.group, other.shrimp) %>%                    # group by the categories we will want to retain after summarize()
+  summarize(n.percent = sum(Prey_Count), .groups = "keep") %>%           # create new column (n.percent) that sums Prey_Count by prey.name per pred.name
 
   
-  # Step 4: Turn Weight into Percentage for Figure 
+# Step 4: Turn Weight into Percentage for Figure
   group_by(pred.name) %>%                                               # group by the categories I that will feed into the below mutate 
-  mutate(prey.count.percent = (prey.count.percent/sum(prey.count.percent))*100) # change 'prey.count.percent' column. OG values formatted into percentage per pred.name
+  mutate(n.percent = (n.percent/sum(n.percent))*100)                    # change 'n.percent' column. OG values formatted into percentage per pred.name
 
 
 
@@ -348,7 +359,7 @@ pandalus.f6b <- pandalus.percent %>%   # manipulate 'prandalus.percent' df and s
 # $ pred.name         : chr [1:13] "Atlantic cod" "Atlantic cod" "Greenland halibut" "Greenland halibut" ...
 # $ prey.name         : chr [1:13] "Pandalus" "borealis" "Pandalus" "borealis" ...
 # $ other.prey        : chr [1:13] "Shrimp" "Shrimp" "Shrimp" "Shrimp" ...
-# $ prey.count.percent: num [1:13] 57.14 42.86 1.16 7.72 12.74 ...
+# $ n.percent: num [1:13] 57.14 42.86 1.16 7.72 12.74 ...
 # - attr(*, "groups")= tibble [4 × 2] (S3: tbl_df/tbl/data.frame)
 # ..$ pred.name: chr [1:4] "Atlantic cod" "Greenland halibut" "Redfish" "Skate"
 # ..$ .rows    : list<int> [1:4] 
@@ -389,12 +400,12 @@ write.csv(pandalus.f6b,
 ### Build Figure 6a
 
 f6a <- ggplot(pandalus.f6a,
-       aes(x = factor(other.prey, levels = c('Shrimp', 'other')),               # orders x-axis discrete data for figure
-           y = prey.percent, 
-           fill = factor(prey.name, levels = c('other',                        # orders pray.name variables in bars
-                                               'Pandalus', 
-                                               'montagui', 
-                                               'borealis')) )) + 
+       aes(x = factor(other.shrimp, levels = c('Shrimp', 'other')),               # orders x-axis discrete data for figure
+           y = Weight.percent, 
+           fill = factor(W.prey.group, levels = c('other',                        # orders pray.name variables in bars
+                                                    'Pandalus', 
+                                                    'montagui', 
+                                                    'borealis')) )) + 
   theme_minimal(                                                               # pre-set 'minimal' theme
     base_size = 16) +                                                          # sets base text (minus titles) to size 16
   
@@ -461,12 +472,12 @@ f6a <- ggplot(pandalus.f6a,
 ### Build Figure 6B
 
 f6b <- ggplot(pandalus.f6b,
-              aes(x = factor(other.prey, levels = c('Shrimp', 'other')),               # orders x-axis discrete data for figure
-                  y = prey.count.percent, 
-                  fill = factor(prey.name, levels = c('other',                  # orders pray.name variables in bars
-                                                      'Pandalus', 
-                                                      'montagui', 
-                                                      'borealis')) )) +
+              aes(x = factor(other.shrimp, levels = c('Shrimp', 'other')),               # orders x-axis discrete data for figure
+                  y = n.percent, 
+                  fill = factor(N.prey.group, levels = c('other',                  # orders pray.name variables in bars
+                                                          'Pandalus', 
+                                                          'montagui', 
+                                                          'borealis')) )) +
   
   theme_minimal(                                                               # pre-set 'minimal' theme
     base_size = 16) +                                                          # sets base text (minus titles) to size 16
